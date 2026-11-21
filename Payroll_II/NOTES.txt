@@ -1,0 +1,13 @@
+INSTALLATION
+------------
+
+
+FRONT END
+---------
+login screen --kohedha thiyenne
+front end validation: blank not allowed -->kohedha thiyenne
+user/pwd validation -->komadh wenne kohedha thiyene
+
+BACKEND
+-------
+user/pwd validation -->komadh wenne kohedha thiyene
