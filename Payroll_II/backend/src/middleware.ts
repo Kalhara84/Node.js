@@ -12,7 +12,10 @@ declare module 'express-serve-static-core' {
 /** protects a route: no valid "Authorization: Bearer <token>" -> 401 */
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
-  const user = header.startsWith('Bearer ') ? verifyToken(header.slice(7)) : null;
+  let user: TokenPayload | null = null;
+  if (header && header.startsWith('Bearer ')) {
+    user = verifyToken(header.slice(7));
+  }
   if (!user) {
     res.status(401).json({ message: 'Unauthorized' });
     return;
@@ -22,11 +25,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 }
 
 /** wraps an async controller so errors go to the error handler */
-export const wrap =
-  (fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown> | unknown): RequestHandler =>
-  (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+export function wrap(
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown> | unknown,
+): RequestHandler {
+  return (req, res, next) => {
+    Promise.resolve().then(() => fn(req, res, next)).catch(next);
   };
+}
 
 export function notFound(_req: Request, res: Response): void {
   res.status(404).json({ message: 'Not found' });
