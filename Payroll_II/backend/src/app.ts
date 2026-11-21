@@ -6,11 +6,13 @@ import { notFound, errorHandler } from './middleware';
 const app = express();
 
 app.use(cors({ origin: process.env.FRONTEND_URL}));
+
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/', (_req, res) => {
   res.send('Payroll API is running');
 });
+
 app.use('/api', routes);
 
 app.use(notFound);

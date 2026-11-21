@@ -1,4 +1,5 @@
 import app from './app';
 
 const port = parseInt(process.env.PORT, 10);
+
 app.listen(port, () => console.log(`Payroll API running on http://localhost:${port}`));

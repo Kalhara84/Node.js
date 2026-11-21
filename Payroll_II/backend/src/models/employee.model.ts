@@ -18,7 +18,10 @@ export const EmployeeModel = {
       where = `WHERE (e.empnam ILIKE $1 OR CAST(e.empeno AS TEXT) LIKE $1 OR e.empidno ILIKE $1 OR e.empdesig ILIKE $1)`;
     }
 
-    const count = await pool.query<{ count: string }>(`SELECT COUNT(*) FROM p_empmast e ${where}`, params);
+    const count = await pool.query<{ count: string }>(
+      `SELECT COUNT(*) FROM p_empmast e ${where}`, params
+    );
+    
     const total = Number(count.rows[0].count);
 
     const rows = await pool.query<Employee>(

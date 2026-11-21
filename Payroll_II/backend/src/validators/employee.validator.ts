@@ -1,10 +1,7 @@
 import type { EmployeeInput } from '../types';
 
-/**
- * Describes every employee field once: name, type, max length.
- * Only these fields are ever read from the request (unknown fields are ignored).
- */
 type Kind = 'int' | 'intn' | 'float' | 'date' | 'yn' | 'cat' | 'mf' | 'str';
+
 type Spec = [name: keyof EmployeeInput & string, kind: Kind, max?: number];
 
 const SPEC: Spec[] = [
