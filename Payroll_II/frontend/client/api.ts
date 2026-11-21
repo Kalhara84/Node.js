@@ -57,6 +57,9 @@ export const api = {
     get: (id: number) => {
         return request<Employee>(`/employees/${id}`);
     },
+    nextEmployeeNumber: () => {
+        return request<{ empeno: number }>('/employees/next-number');
+    },
     create: (body: EmployeeBody) => {
         return request<Employee>('/employees', { method: 'POST', body: JSON.stringify(body) });
     },

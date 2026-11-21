@@ -10,6 +10,12 @@ const SELECT_JOINED = `
 
 
   export const EmployeeModel = {
+    async nextNumber(): Promise<number> {
+        const r = await pool.query<{ empeno: number }>(
+            'SELECT GREATEST(COALESCE(MAX(empeno), 0), 0) + 1 AS empeno FROM p_empmast',
+        );
+        return r.rows[0].empeno;
+    },
     /** list with search + paging */
     async list(search: string, page: number, limit: number): Promise<Paged<Employee>> {
         const params: unknown[] = [];
@@ -47,16 +53,33 @@ const SELECT_JOINED = `
     },
     /** column names come from the validator whitelist, values are always parameters */
     async create(data: EmployeeInput): Promise<number> {
-        const cols = Object.keys(data);
-        const marks = cols.map((_, i) => {
-            return `$${i + 1}`;
-        });
-        const r = await pool.query<{
-            empsno: number;
-        }>(`INSERT INTO p_empmast (${cols.join(', ')}) VALUES (${marks.join(', ')}) RETURNING empsno`, Object.values(data));
-        return r.rows[0].empsno;
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            // Allocate and insert under the same lock so simultaneous saves get different numbers.
+            await client.query('LOCK TABLE p_empmast IN SHARE ROW EXCLUSIVE MODE');
+            const next = await client.query<{ empeno: number }>(
+                'SELECT GREATEST(COALESCE(MAX(empeno), 0), 0) + 1 AS empeno FROM p_empmast',
+            );
+            const generated = { ...data, empeno: next.rows[0].empeno };
+            const cols = Object.keys(generated);
+            const marks = cols.map((_, i) => `$${i + 1}`);
+            const r = await client.query<{ empsno: number }>(
+                `INSERT INTO p_empmast (${cols.join(', ')}) VALUES (${marks.join(', ')}) RETURNING empsno`,
+                Object.values(generated),
+            );
+            await client.query('COMMIT');
+            return r.rows[0].empsno;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
     },
     async update(id: number, data: EmployeeInput): Promise<void> {
+        data = { ...data };
+        delete data.empeno;
         const cols = Object.keys(data);
         if (cols.length === 0) {
             return;

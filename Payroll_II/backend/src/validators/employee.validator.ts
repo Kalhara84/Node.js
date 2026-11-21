@@ -6,7 +6,6 @@ type Spec = [
     max?: number
 ];
 const SPEC: Spec[] = [
-    ['empeno', 'int'],
     ['empinital', 'str', 20],
     ['empnam', 'str', 80],
     ['empcat', 'cat'],
@@ -68,9 +67,6 @@ export function validateEmployee(body: Record<string, unknown>, partial: boolean
     // values are checked one by one below, so a loose record is fine while we fill it
     const data: Record<string, unknown> = {};
     if (!partial) {
-        if (isBlank(body.empeno)) {
-            errors.push('empeno is required');
-        }
         if (isBlank(body.empnam) || !String(body.empnam).trim()) {
             errors.push('empnam is required');
         }

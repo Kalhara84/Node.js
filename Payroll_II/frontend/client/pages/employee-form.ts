@@ -205,7 +205,8 @@ function fieldHtml(fd: Field, values: Values, lookups: Lookups | null): string {
         else {
             style = '';
         }
-        input = `<input class="form-control" type="${t}" name="${key}" value="${esc(v)}"${step}${max}${style}>`;
+        const readOnly = key === 'empeno' ? ' readonly aria-readonly="true"' : '';
+        input = `<input class="form-control" type="${t}" name="${key}" value="${esc(v)}"${step}${max}${style}${readOnly}>`;
     }
     return `<div class="${size}"><label class="form-label">${esc(label)}</label>${input}</div>`;
 }
@@ -236,6 +237,9 @@ function toPayload(form: HTMLFormElement): EmployeeBody {
     // built as a loose record, then handed to the API as EmployeeBody
     const body: Record<string, string | number | null> = {};
     for (const { key, type } of FIELDS) {
+        if (key === 'empeno') {
+            continue;
+        }
         let v;
         if (type === 'radio') {
             v = form.querySelector<HTMLInputElement>(`[name="${key}"]:checked`)?.value ?? '';
@@ -292,14 +296,15 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         if (id !== null) {
             employeeRequest = api.get(id);
         }
-        const [lk, emp]: [
-            Lookups | null,
-            Employee | null
-        ] = await Promise.all([
+        const [lk, emp, next] = await Promise.all([
             lookupRequest,
             employeeRequest,
+            id === null ? api.nextEmployeeNumber() : Promise.resolve(null),
         ]);
         lookups = lk;
+        if (next) {
+            values.empeno = String(next.empeno);
+        }
         if (emp) {
             values = {};
             for (const { key } of FIELDS) {
@@ -360,9 +365,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             errBox.innerHTML = alertBox(m);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
-        if (body.empeno === null || body.empeno === undefined) {
-            return fail('Employee No is required');
-        }
         if (!body.empnam) {
             return fail('Employee Name is required');
         }

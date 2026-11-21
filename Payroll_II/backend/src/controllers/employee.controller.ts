@@ -35,6 +35,9 @@ async function duplicateError(data: EmployeeInput, ignoreId?: number): Promise<s
     return null;
 }
 export const EmployeeController = {
+    async nextNumber(_req: Request, res: Response): Promise<void> {
+        res.json({ empeno: await EmployeeModel.nextNumber() });
+    },
     /** GET /api/employees?search=&page=1&limit=10 */
     async list(req: Request, res: Response): Promise<void> {
         const search = String(req.query.search || '').trim();

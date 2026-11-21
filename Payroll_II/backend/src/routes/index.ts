@@ -17,6 +17,7 @@ router.get('/lookups', wrap(LookupController.all));
 
 router.get('/employees', wrap(EmployeeController.list));
 router.post('/employees', wrap(EmployeeController.create));
+router.get('/employees/next-number', wrap(EmployeeController.nextNumber));
 router.get('/employees/:id', wrap(EmployeeController.get));
 router.put('/employees/:id', wrap(EmployeeController.update));
 router.delete('/employees/:id', wrap(EmployeeController.remove));
