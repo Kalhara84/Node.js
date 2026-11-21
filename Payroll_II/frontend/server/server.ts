@@ -2,8 +2,17 @@ import path from 'path';
 import express from 'express';
 
 const app = express();
-const port = parseInt(process.env.PORT, 10);
-const apiUrl = process.env.API_URL';
+let port = 3000;
+
+if (process.env.PORT && process.env.PORT.trim() !== '') {
+    port = Number(process.env.PORT);
+}
+
+if (!Number.isInteger(port) || port < 0 || port >= 65536) {
+    throw new Error('PORT must be a whole number between 0 and 65535.');
+}
+
+const apiUrl = process.env.API_URL;
 
 // project root (works both for server/server.ts and dist/server.js)
 const root = path.resolve(__dirname, '..');
