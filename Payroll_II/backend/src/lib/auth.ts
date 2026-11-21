@@ -5,9 +5,11 @@ const TOKEN_HOURS = 8;
 const secret = (): string => {
     return process.env.AUTH_SECRET || 'change-this-secret';
 };
+
 const b64 = (v: string): string => {
     return Buffer.from(v).toString('base64url');
 };
+
 export function signToken(user: {
     sub: number;
     usr: string;
@@ -18,6 +20,7 @@ export function signToken(user: {
     const sig = crypto.createHmac('sha256', secret()).update(body).digest('base64url');
     return `${body}.${sig}`;
 }
+
 export function verifyToken(token: string): TokenPayload | null {
     const [body, sig] = String(token).split('.');
     if (!body || !sig) {
@@ -42,12 +45,14 @@ export function verifyToken(token: string): TokenPayload | null {
         return null;
     }
 }
+
 /** stored format:  scrypt$<salt>$<hash> */
 export function hashPassword(password: string): string {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.scryptSync(password, salt, 64).toString('hex');
     return `scrypt$${salt}$${hash}`;
 }
+
 export function verifyPassword(password: string, stored: string): boolean {
     const [scheme, salt, hash] = String(stored).split('$');
     if (scheme !== 'scrypt' || !salt || !hash) {

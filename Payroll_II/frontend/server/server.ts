@@ -2,8 +2,8 @@ import path from 'path';
 import express from 'express';
 
 const app = express();
-const port = parseInt(process.env.PORT || '3000', 10);
-const apiUrl = process.env.API_URL || 'http://localhost:3001/api';
+const port = parseInt(process.env.PORT, 10);
+const apiUrl = process.env.API_URL';
 
 // project root (works both for server/server.ts and dist/server.js)
 const root = path.resolve(__dirname, '..');

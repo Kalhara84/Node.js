@@ -1,8 +1,11 @@
 import { Pool, types } from 'pg';
+
+
 // return DATE columns as plain 'YYYY-MM-DD' text (no timezone shifting)
 types.setTypeParser(1082, (v: string) => {
     return v;
 });
+
 export const pool = new Pool({
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT || '5432', 10),

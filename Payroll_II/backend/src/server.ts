@@ -1,7 +1,7 @@
 import app from './app';
 
 
-const port = parseInt(process.env.PORT || '3001', 10);
+const port = parseInt(process.env.PORT as string, 10);
 
 
 app.listen(port, () => {

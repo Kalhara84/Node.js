@@ -25,10 +25,12 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 }
 /** wraps an async controller so errors go to the error handler */
 export function wrap(fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown> | unknown): RequestHandler {
-    return (req, res, next) => {
-        Promise.resolve().then(() => {
-            return fn(req, res, next);
-        }).catch(next);
+    return async (req, res, next) => {
+        try {
+            await fn(req, res, next);
+        } catch (error) {
+            next(error);
+        }
     };
 }
 export function notFound(_req: Request, res: Response): void {
