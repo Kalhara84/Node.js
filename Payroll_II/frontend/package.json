@@ -1,0 +1,28 @@
+{
+  "name": "payroll-frontend",
+  "version": "4.0.0",
+  "private": true,
+  "description": "Payroll UI - Node.js + Express + TypeScript (browser code is TypeScript compiled to public/js)",
+  "main": "dist/server.js",
+  "scripts": {
+    "build:client": "tsc -p tsconfig.client.json",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build": "npm run build:client && npm run build:server",
+    "dev": "concurrently -k -n client,server \"tsc -p tsconfig.client.json --watch --preserveWatchOutput\" \"tsx watch --env-file=.env server/server.ts\"",
+    "start": "npm run build && node --env-file=.env dist/server.js",
+    "typecheck": "tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.server.json --noEmit"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "concurrently": "^9.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
