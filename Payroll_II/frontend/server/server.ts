@@ -14,14 +14,16 @@ app.use('/vendor/icons', express.static(path.join(root, 'node_modules/bootstrap-
 
 // tells the browser where the backend API is
 app.get('/config.js', (_req, res) => {
-  res.type('js').send(`window.APP_CONFIG = ${JSON.stringify({ API_URL: apiUrl })};`);
+    res.type('js').send(`window.APP_CONFIG = ${JSON.stringify({ API_URL: apiUrl })};`);
 });
 
 app.use(express.static(path.join(root, 'public')));
 
 // any other URL -> the single page app (client side routing)
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(root, 'public/index.html'));
+    res.sendFile(path.join(root, 'public/index.html'));
 });
 
-app.listen(port, () => console.log(`Payroll UI running on http://localhost:${port}  (API: ${apiUrl})`));
+app.listen(port, () => {
+    return console.log(`Payroll UI running on http://localhost:${port}  (API: ${apiUrl})`);
+});

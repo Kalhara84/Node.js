@@ -3,27 +3,29 @@ import { currentUser } from '../auth.js';
 import { esc, money, errMsg, qs, CATEGORY, GENDER, loading, alertBox, emptyState } from '../ui.js';
 import type { DashboardData, PageContext } from '../types.js';
 import { donutChart, barList, columnChart, PALETTE } from '../charts.js';
-
-const stat = (icon: string, tone: string, label: string, value: string | number): string => `
+const stat = (icon: string, tone: string, label: string, value: string | number): string => {
+    return `
   <div class="col">
     <div class="card-soft stat-card">
       <span class="stat-icon tone-${tone}"><i class="bi ${icon}"></i></span>
       <div><div class="stat-value">${esc(value)}</div><div class="stat-label">${esc(label)}</div></div>
     </div>
   </div>`;
-
-const chartCard = (title: string, icon: string, body: string): string => `
+};
+const chartCard = (title: string, icon: string, body: string): string => {
+    return `
   <div class="card-soft h-100">
     <div class="card-head"><i class="bi ${icon}"></i> ${esc(title)}</div>
     <div class="card-body-pad">${body}</div>
   </div>`;
-
+};
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
-  const user = currentUser();
-  if (!user) return;
-  const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-  el.innerHTML = `
+    const user = currentUser();
+    if (!user) {
+        return;
+    }
+    const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    el.innerHTML = `
     <div class="hero-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 fade-in">
       <div>
         <div class="sub small mb-1"><i class="bi bi-calendar3 me-1"></i>${esc(today)}</div>
@@ -36,31 +38,36 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
       </div>
     </div>
     <div id="dash-body"></div>`;
-
-  const body = qs(el, '#dash-body');
-  const icon = qs(el, '#refresh i');
-
-  async function load(): Promise<void> {
-    icon.classList.add('spin');
-    body.innerHTML = loading('Loading dashboard...');
-    try {
-      const d = await api.dashboard();
-      if (!ctx.alive()) return;
-      body.innerHTML = view(d);
-    } catch (e) {
-      if (ctx.alive()) body.innerHTML = alertBox(errMsg(e));
-    } finally {
-      icon.classList.remove('spin');
+    const body = qs(el, '#dash-body');
+    const icon = qs(el, '#refresh i');
+    async function load(): Promise<void> {
+        icon.classList.add('spin');
+        body.innerHTML = loading('Loading dashboard...');
+        try {
+            const d = await api.dashboard();
+            if (!ctx.alive()) {
+                return;
+            }
+            body.innerHTML = view(d);
+        }
+        catch (e) {
+            if (ctx.alive()) {
+                body.innerHTML = alertBox(errMsg(e));
+            }
+        }
+        finally {
+            icon.classList.remove('spin');
+        }
     }
-  }
-  qs(el, '#refresh').onclick = load;
-  await load();
+    qs(el, '#refresh').onclick = load;
+    await load();
 }
-
 function view(d: DashboardData): string {
-  const t = d.totals;
-  const recent = d.recent.length
-    ? d.recent.map((r) => `
+    const t = d.totals;
+    let recent;
+    if (d.recent.length) {
+        recent = d.recent.map((r) => {
+            return `
         <tr>
           <td class="fw-semibold">${r.empeno}</td>
           <td><a href="/employees/${r.empsno}" data-link class="text-decoration-none d-flex align-items-center gap-2 fw-semibold">
@@ -68,10 +75,13 @@ function view(d: DashboardData): string {
           <td>${esc(r.empdesig || '-')}</td>
           <td>${esc(r.department_name ?? '-')}</td>
           <td>${esc(r.empjoin ?? '-')}</td>
-        </tr>`).join('')
-    : `<tr><td colspan="5">${emptyState('No employees yet')}</td></tr>`;
-
-  return `
+        </tr>`;
+        }).join('');
+    }
+    else {
+        recent = `<tr><td colspan="5">${emptyState('No employees yet')}</td></tr>`;
+    }
+    return `
   <div class="fade-in">
     <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-3">
       ${stat('bi-people-fill', 'blue', 'Total employees', t.total)}
@@ -83,10 +93,16 @@ function view(d: DashboardData): string {
     </div>
 
     <div class="row g-3 mb-3">
-      <div class="col-lg-6">${chartCard('Active employees by category', 'bi-pie-chart',
-        donutChart(d.byCategory.map((c) => ({ label: CATEGORY[String(c.label)] ?? String(c.label), value: c.value })), 'Active'))}</div>
-      <div class="col-lg-6">${chartCard('Gender', 'bi-gender-ambiguous',
-        donutChart(d.byGender.map((g, i) => ({ label: GENDER[String(g.label)] ?? String(g.label), value: g.value, color: i === 0 ? '#6d4aff' : '#ff7a3d' })), 'Active'))}</div>
+      <div class="col-lg-6">${chartCard('Active employees by category', 'bi-pie-chart', donutChart(d.byCategory.map((c) => {
+        return ({ label: CATEGORY[String(c.label)] ?? String(c.label), value: c.value });
+    }), 'Active'))}</div>
+      <div class="col-lg-6">${chartCard('Gender', 'bi-gender-ambiguous', donutChart(d.byGender.map((g, i) => {
+        let color = '#ff7a3d';
+        if (i === 0) {
+            color = '#6d4aff';
+        }
+        return { label: GENDER[String(g.label)] ?? String(g.label), value: g.value, color };
+    }), 'Active'))}</div>
     </div>
 
     <div class="row g-3 mb-3">

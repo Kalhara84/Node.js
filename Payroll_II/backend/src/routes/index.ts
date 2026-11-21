@@ -20,5 +20,4 @@ router.post('/employees', wrap(EmployeeController.create));
 router.get('/employees/:id', wrap(EmployeeController.get));
 router.put('/employees/:id', wrap(EmployeeController.update));
 router.delete('/employees/:id', wrap(EmployeeController.remove));
-
 export default router;

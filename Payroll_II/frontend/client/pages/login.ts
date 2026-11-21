@@ -1,9 +1,8 @@
 import { login } from '../auth.js';
 import { esc, errMsg, qs } from '../ui.js';
 import type { PageContext } from '../types.js';
-
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
-  el.innerHTML = `
+    el.innerHTML = `
   <div class="login-page">
     <section class="login-hero">
       <div class="hero-inner">
@@ -48,38 +47,47 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
       </form>
     </section>
   </div>`;
-
-  const $ = <T extends HTMLElement = HTMLElement>(s: string): T => qs<T>(el, s);
-  const errBox = $('#login-error');
-  const btn = $<HTMLButtonElement>('#login-btn');
-
-  $('#toggle-pw').onclick = () => {
-    const pw = $<HTMLInputElement>('#password');
-    const show = pw.type === 'password';
-    pw.type = show ? 'text' : 'password';
-    $('#toggle-pw i').className = `bi ${show ? 'bi-eye-slash' : 'bi-eye'}`;
-  };
-
-  $<HTMLFormElement>('#login-form').onsubmit = async (e) => {
-    e.preventDefault();
-    errBox.innerHTML = '';
-    const username = $<HTMLInputElement>('#username').value.trim();
-    const password = $<HTMLInputElement>('#password').value;
-    const showError = (m: string): void => {
-      errBox.innerHTML = `<div class="alert alert-danger py-2 d-flex align-items-center gap-2"><i class="bi bi-exclamation-circle"></i> ${esc(m)}</div>`;
+    const $ = <T extends HTMLElement = HTMLElement>(s: string): T => {
+        return qs<T>(el, s);
     };
-
-    if (!username || !password) return showError('Please enter your user name and password');
-
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
-    try {
-      await login(username, password);
-      ctx.navigate('/dashboard', true);
-    } catch (err) {
-      showError(errMsg(err));
-      btn.disabled = false;
-      btn.innerHTML = 'Sign in <i class="bi bi-arrow-right ms-1"></i>';
-    }
-  };
+    const errBox = $('#login-error');
+    const btn = $<HTMLButtonElement>('#login-btn');
+    $('#toggle-pw').onclick = () => {
+        const pw = $<HTMLInputElement>('#password');
+        const show = pw.type === 'password';
+        if (show) {
+            pw.type = 'text';
+        }
+        else {
+            pw.type = 'password';
+        }
+        if (show) {
+            $('#toggle-pw i').className = 'bi bi-eye-slash';
+        } else {
+            $('#toggle-pw i').className = 'bi bi-eye';
+        }
+    };
+    $<HTMLFormElement>('#login-form').onsubmit = async (e) => {
+        e.preventDefault();
+        errBox.innerHTML = '';
+        const username = $<HTMLInputElement>('#username').value.trim();
+        const password = $<HTMLInputElement>('#password').value;
+        const showError = (m: string): void => {
+            errBox.innerHTML = `<div class="alert alert-danger py-2 d-flex align-items-center gap-2"><i class="bi bi-exclamation-circle"></i> ${esc(m)}</div>`;
+        };
+        if (!username || !password) {
+            return showError('Please enter your user name and password');
+        }
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+        try {
+            await login(username, password);
+            ctx.navigate('/dashboard', true);
+        }
+        catch (err) {
+            showError(errMsg(err));
+            btn.disabled = false;
+            btn.innerHTML = 'Sign in <i class="bi bi-arrow-right ms-1"></i>';
+        }
+    };
 }
