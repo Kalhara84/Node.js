@@ -3,6 +3,21 @@ import { hashPassword } from '../lib/auth';
 import { pool } from '../lib/db';
 import { fail } from '../lib/errors';
 
+// Return profile fields only; never include password hashes in user responses.
+const publicUserColumns = 'usdsno, usdcomsno, usdusd, usduno, usdnam, usdad1, usdad2, usdad3, usdtel, usdfax, usdmail, usdnic, usddes, usdactive';
+
+// Check the stored administrator flag before allowing account changes.
+async function isAdministrator(id: number): Promise<boolean> {
+    const result = await pool.query('SELECT 1 FROM usdmast WHERE usdsno=$1 AND usdadmin=true', [id]);
+    return !!result.rowCount;
+}
+
+// Confirm a selected location exists before assigning it to an account.
+async function locationExists(id: unknown): Promise<boolean> {
+    const result = await pool.query('SELECT 1 FROM s_locmast WHERE locsno=$1', [id]);
+    return !!result.rowCount;
+}
+
 // Administration input checks live here with the request handlers.
 const rightFlags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'] as const;
 
@@ -252,18 +267,26 @@ export const AdministrationController = {
 
     // List application users
     async users(_req: Request, res: Response): Promise<void> {
-        res.json(await AdministrationModel.users());
+        const result = await pool.query(`SELECT ${publicUserColumns} FROM usdmast ORDER BY usdusd`);
+        res.json(result.rows);
     },
 
     // Create new user account
     async createUser(req: Request, res: Response): Promise<void> {
         const { data, password } = validateUser(bodyOf(req), true);
-        if (data.usdcomsno && !(await AdministrationModel.locationExists(data.usdcomsno))) {
+        if (data.usdcomsno && !(await locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
         if (password) data.usdpwd = hashPassword(password);
 
-        res.status(201).json(await AdministrationModel.createUser(data, req.user!.usr));
+        // Column names come only from validated fields; values are SQL parameters.
+        const keys = Object.keys(data);
+        const result = await pool.query(`
+            INSERT INTO usdmast(${keys.join(',')}, usducdnew, usdentddt, usdenttime)
+            VALUES(${keys.map((_, i) => `$${i + 1}`).join(',')}, $${keys.length + 1}, CURRENT_DATE, LOCALTIME)
+            RETURNING ${publicUserColumns}
+        `, [...Object.values(data), req.user!.usr]);
+        res.status(201).json(result.rows[0]);
     },
 
     // Update user account details
@@ -271,22 +294,30 @@ export const AdministrationController = {
         const id = integer(req.params.id, 'User');
 
         // Only an administrator may change an administrator account (stops password takeover)
-        if (!res.locals.access?.admin && (await AdministrationModel.isAdministrator(id))) {
+        if (!res.locals.access?.admin && (await isAdministrator(id))) {
             res.status(403).json({ message: 'Only an administrator can change an administrator account' });
             return;
         }
 
         const { data, password } = validateUser(bodyOf(req), false);
-        if (data.usdcomsno && !(await AdministrationModel.locationExists(data.usdcomsno))) {
+        if (data.usdcomsno && !(await locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
         if (password) data.usdpwd = hashPassword(password);
 
-        if (data.usdactive === 'N' && (await AdministrationModel.isAdministrator(id))) {
+        if (data.usdactive === 'N' && (await isAdministrator(id))) {
             fail('Administrator accounts cannot be disabled here');
         }
 
-        const user = await AdministrationModel.updateUser(id, data, req.user!.usr);
+        // Update the URL account ID and record the signed-in user making the change.
+        const keys = Object.keys(data);
+        const result = await pool.query(`
+            UPDATE usdmast
+            SET ${keys.map((key, i) => `${key}=$${i + 1}`).join(',')}, usducdame=$${keys.length + 1}, usdameddt=CURRENT_DATE, usdametime=LOCALTIME
+            WHERE usdsno=$${keys.length + 2}
+            RETURNING ${publicUserColumns}
+        `, [...Object.values(data), req.user!.usr, id]);
+        const user = result.rows[0] ?? null;
         res.status(user ? 200 : 404).json(user ?? { message: 'User not found' });
     },
 
@@ -295,7 +326,16 @@ export const AdministrationController = {
     // Get program rights assigned to a specific user
     async rights(req: Request, res: Response): Promise<void> {
         const id = integer(req.params.id, 'User');
-        res.json(await AdministrationModel.rights(id));
+        // Include every program, even if this user has no saved rights for it.
+        const result = await pool.query(`
+            SELECT p.*, m.sysdes AS module, s.sysdes AS submodule, r.usryn, r.usraddyn, r.usrameyn, r.usrdelyn
+            FROM prgmast p
+            LEFT JOIN a_sysmast m ON m.syssno = p.prgmodsno
+            LEFT JOIN a_sysmast s ON s.syssno = p.prgsmdsno
+            LEFT JOIN usrmast r ON r.usrprgsno = p.prgsno AND r.usrusdsno = $1
+            ORDER BY p.prgmodsno, p.prgsmdsno, p.prgorder
+        `, [id]);
+        res.json(result.rows);
     },
 
     // Update program rights for a user
@@ -303,7 +343,46 @@ export const AdministrationController = {
         const id = integer(req.params.id, 'User');
         const { rows, ids, clear } = validateRights(bodyOf(req));
 
-        await AdministrationModel.saveRights(id, rows, ids, clear, req.user!.usr);
+        const client = await pool.connect();
+        try {
+            // Keep the selected user and program list stable while saving all rights.
+            await client.query('BEGIN');
+            await client.query('LOCK TABLE prgmast IN SHARE MODE');
+            if (!(await client.query('SELECT 1 FROM usdmast WHERE usdsno=$1 FOR UPDATE', [id])).rowCount) {
+                fail('User not found');
+            }
+            const programs = await client.query('SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[])', [ids]);
+            if (programs.rowCount !== ids.length) {
+                fail('Program no longer exists; reload');
+            }
+            const levels = new Map<number, string>(programs.rows.map((program) => [program.prgsno, program.prglvl]));
+
+            for (const row of rows) {
+                if (clear) {
+                    // Remove only the submitted user/program pairs.
+                    await client.query('DELETE FROM usrmast WHERE usrusdsno=$1 AND usrprgsno=$2', [id, row.prgsno]);
+                    continue;
+                }
+
+                // Single programs use View; Multi programs use Add, Amend and Delete.
+                const level = levels.get(Number(row.prgsno));
+                const values = rightFlags.map((flag, i) => (level === 'S' && i > 0) || (level === 'M' && i === 0) ? 'n' : row[flag]);
+                await client.query(`
+                    INSERT INTO usrmast(usrusdsno, usrprgsno, usryn, usraddyn, usrameyn, usrdelyn, usrucdnew, usrentddt, usrenttime)
+                    VALUES($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, LOCALTIME)
+                    ON CONFLICT(usrusdsno, usrprgsno)
+                    DO UPDATE SET usryn=$3, usraddyn=$4, usrameyn=$5, usrdelyn=$6, usrucdame=$7, usrameddt=CURRENT_DATE, usrametime=LOCALTIME
+                `, [id, row.prgsno, ...values, req.user!.usr]);
+            }
+            await client.query('COMMIT');
+        } catch (error) {
+            // Undo the complete save if validation or any SQL operation fails.
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            // Always return the database connection to the pool.
+            client.release();
+        }
         res.json({ message: `${rows.length} program rights updated` });
     },
 };
