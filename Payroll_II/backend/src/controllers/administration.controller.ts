@@ -2,51 +2,109 @@ import type { NextFunction, Request, Response } from 'express';
 import { hashPassword } from '../lib/auth';
 import { pool } from '../lib/db';
 import { fail } from '../lib/errors';
-import { AdministrationModel } from '../models/administration.model';
-import {
-    integer,
-    validateRights,
-    validateUser
-} from '../validators/administration.validator';
+
+// Administration input checks live here with the request handlers.
+const rightFlags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'] as const;
+
+// Field max lengths for user table validation
+const userFields: Record<string, number> = {
+    usdusd: 8,
+    usdnam: 50,
+    usdad1: 50,
+    usdad2: 50,
+    usdad3: 50,
+    usdtel: 25,
+    usdfax: 25,
+    usdmail: 25,
+    usdnic: 10,
+    usddes: 25
+};
+
+// Integer validation helper
+function integer(v: unknown, label: string, min = 1): number {
+    if ((typeof v !== 'string' && typeof v !== 'number') || String(v).trim() === '') {
+        fail(`${label} is required`);
+    }
+    const n = Number(v);
+    if (!Number.isSafeInteger(n) || n < min || n > 2147483647) {
+        fail(`${label} is invalid`);
+    }
+    return n;
+}
+
+// String validation helper
+function string(v: unknown, label: string, max: number, required = false): string {
+    if (v != null && typeof v !== 'string') {
+        fail(`${label} must be text`);
+    }
+    const s = String(v ?? '').trim();
+    if ((required && !s) || s.length > max) {
+        fail(`${label} is required and must be at most ${max} characters`);
+    }
+    return s;
+}
+
+// Validate user profile input (password is returned as plain text; the controller hashes it)
+function validateUser(body: Record<string, unknown>, create: boolean) {
+    const data: Record<string, unknown> = {};
+
+    for (const [key, max] of Object.entries(userFields)) {
+        if (key === 'usdusd' && !create) continue;
+        data[key] = string(body[key], key, max, key === 'usdusd');
+    }
+
+    data.usduno = body.usduno === '' || body.usduno == null ? null : integer(body.usduno, 'User number', 0);
+    data.usdcomsno = body.usdcomsno === '' || body.usdcomsno == null ? 0 : integer(body.usdcomsno, 'Location');
+
+    if (!['Y', 'N'].includes(String(body.usdactive ?? 'Y'))) {
+        fail('Invalid active status');
+    }
+    data.usdactive = body.usdactive ?? 'Y';
+
+    let password: string | null = null;
+    if (create || body.usdpwd) {
+        if (typeof body.usdpwd !== 'string' || !body.usdpwd.length || body.usdpwd.length > 256) {
+            fail('Password is required (maximum 256 characters)');
+        }
+        password = body.usdpwd;
+    }
+
+    return { data, password };
+}
+
+// Validate the rights list sent from the user rights screen
+function validateRights(body: Record<string, unknown>) {
+    const rows = body.rows;
+
+    if (!Array.isArray(rows) || rows.length > 10000) {
+        fail('Invalid rights list');
+    }
+
+    const ids = rows.map((r) => integer(r?.prgsno, 'Program'));
+    if (new Set(ids).size !== ids.length) {
+        fail('Duplicate programs');
+    }
+
+    for (const row of rows) {
+        for (const flag of rightFlags) {
+            if (!['y', 'n'].includes(row[flag])) {
+                fail('Rights must be y or n');
+            }
+        }
+    }
+
+    return { rows, ids, clear: body.clear === true };
+}
 
 // Request body as a plain object (empty object when missing)
 const bodyOf = (req: Request): Record<string, unknown> => req.body ?? {};
 
-// Stop Program Master requests with a readable validation error.
-function programError(message: string): never {
-    throw Object.assign(new Error(message), { status: 400 });
-}
-
-// Read a positive database ID and reject blank, decimal or out-of-range values.
-function programInteger(value: unknown, label: string): number {
-    if ((typeof value !== 'string' && typeof value !== 'number') || String(value).trim() === '') {
-        programError(`${label} is required`);
-    }
-    const number = Number(value);
-    if (!Number.isSafeInteger(number) || number < 1 || number > 2147483647) {
-        programError(`${label} is invalid`);
-    }
-    return number;
-}
-
-// Trim required text and check the database column's maximum length.
-function programText(value: unknown, label: string, max: number): string {
-    if (value != null && typeof value !== 'string') {
-        programError(`${label} must be text`);
-    }
-    const text = String(value ?? '').trim();
-    if (!text || text.length > max) {
-        programError(`${label} is required and must be at most ${max} characters`);
-    }
-    return text;
-}
-
 // Check Program Master inputs here and keep SQL values in column order.
 function programValues(body: Record<string, unknown>): { module: number; submodule: number; values: unknown[] } {
-    const module = programInteger(body.prgmodsno, 'Module');
-    const submodule = programInteger(body.prgsmdsno, 'Submodule');
+    const module = integer(body.prgmodsno, 'Module');
+    const submodule = integer(body.prgsmdsno, 'Submodule');
     if (!['S', 'M'].includes(String(body.prglvl))) {
-        programError('Choose Single or Multi level');
+        fail('Choose Single or Multi level');
     }
     return {
         module,
@@ -54,10 +112,10 @@ function programValues(body: Record<string, unknown>): { module: number; submodu
         values: [
             module,
             submodule,
-            programText(body.prgorder, 'Order', 5),
+            string(body.prgorder, 'Order', 5, true),
             body.prglvl,
-            programText(body.prgnam, 'Name', 35),
-            programText(body.prgdes, 'Description', 60)
+            string(body.prgnam, 'Name', 35, true),
+            string(body.prgdes, 'Description', 60, true)
         ]
     };
 }
@@ -69,7 +127,7 @@ async function checkProgramScope(module: number, submodule: number): Promise<voi
         [module, submodule]
     );
     if (result.rowCount !== 2) {
-        programError('Choose a valid module and submodule');
+        fail('Choose a valid module and submodule');
     }
 }
 
@@ -104,12 +162,12 @@ export const AdministrationController = {
     // Add new lookup record (module or submodule)
     async addLookup(req: Request, res: Response): Promise<void> {
         const body = bodyOf(req);
-        const type = programInteger(body.sysrtp, 'Type');
+        const type = integer(body.sysrtp, 'Type');
         if (![32, 33].includes(type)) {
-            programError('Only modules and submodules can be added here');
+            fail('Only modules and submodules can be added here');
         }
-        const code = programText(body.sysrno, 'Code', 10);
-        const description = programText(body.sysdes, 'Description', 40);
+        const code = string(body.sysrno, 'Code', 10, true);
+        const description = string(body.sysdes, 'Description', 40, true);
 
         // Insert only validated values and return the new lookup ID.
         const result = await pool.query(
@@ -150,7 +208,7 @@ export const AdministrationController = {
 
     // Update existing program
     async updateProgram(req: Request, res: Response): Promise<void> {
-        const id = programInteger(req.params.id, 'Program');
+        const id = integer(req.params.id, 'Program');
         const { module, submodule, values } = programValues(bodyOf(req));
         await checkProgramScope(module, submodule);
 
@@ -168,7 +226,7 @@ export const AdministrationController = {
 
     // Delete program and all assigned user rights
     async deleteProgram(req: Request, res: Response): Promise<void> {
-        const id = programInteger(req.params.id, 'Program');
+        const id = integer(req.params.id, 'Program');
         const client = await pool.connect();
         let deleted: boolean;
         try {

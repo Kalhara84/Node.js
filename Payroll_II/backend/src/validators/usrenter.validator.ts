@@ -1,5 +1,15 @@
 import { fail } from '../lib/errors';
-import { integer } from './administration.validator';
+// Check IDs locally so this validator does not depend on a removed administration file.
+function integer(v: unknown, label: string, min = 1): number {
+    if ((typeof v !== 'string' && typeof v !== 'number') || String(v).trim() === '') {
+        fail(`${label} is required`);
+    }
+    const n = Number(v);
+    if (!Number.isSafeInteger(n) || n < min || n > 2147483647) {
+        fail(`${label} is invalid`);
+    }
+    return n;
+}
 
 export const usrFlags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'] as const;
 type UsrInput = Record<string, unknown>;
