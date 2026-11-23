@@ -5,7 +5,7 @@ import { fail } from '../lib/errors';
 import { SCREENS } from '../lib/permissions';
 
 // Return profile fields only; never include password hashes in user responses.
-const publicUserColumns = 'usdsno, usdcomsno, usdusd, usduno, usdnam, usdad1, usdad2, usdad3, usdtel, usdfax, usdmail, usdnic, usddes, usdactive';
+const publicUserColumns = 'usdsno, usdcomsno, usdusd, usduno, usdnam, usdad1, usdad2, usdad3, usdtel, usdfax, usdmail, usdnic, usddes, usdactive, usdadmin';
 
 // Check the stored administrator flag before allowing account changes.
 async function isAdministrator(id: number): Promise<boolean> {
@@ -114,6 +114,21 @@ function validateRights(body: Record<string, unknown>) {
 
 // Request body as a plain object (empty object when missing)
 const bodyOf = (req: Request): Record<string, unknown> => req.body ?? {};
+
+// Only an existing admin may create another admin or change an account's admin status.
+function applyRole(req: Request, res: Response, data: Record<string, unknown>): boolean {
+    const role = bodyOf(req).usdadmin;
+    if (role === undefined) return true;
+    if (!res.locals.access?.admin) {
+        res.status(403).json({ message: 'Only an administrator can change administrator status' });
+        return false;
+    }
+    if (![true, false, 'true', 'false'].includes(role as boolean | string)) {
+        fail('Choose User or Administrator');
+    }
+    data.usdadmin = role === true || role === 'true';
+    return true;
+}
 
 // Check Program Master inputs here and keep SQL values in column order.
 function programValues(body: Record<string, unknown>): { module: number; submodule: number; values: unknown[] } {
@@ -294,6 +309,7 @@ export const AdministrationController = {
     // Create new user account
     async createUser(req: Request, res: Response): Promise<void> {
         const { data, password } = validateUser(bodyOf(req), true);
+        if (!applyRole(req, res, data)) return;
         if (data.usdcomsno && !(await locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
@@ -320,14 +336,11 @@ export const AdministrationController = {
         }
 
         const { data, password } = validateUser(bodyOf(req), false);
+        if (!applyRole(req, res, data)) return;
         if (data.usdcomsno && !(await locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
         if (password) data.usdpwd = hashPassword(password);
-
-        if (data.usdactive === 'N' && (await isAdministrator(id))) {
-            fail('Administrator accounts cannot be disabled here');
-        }
 
         // Update the URL account ID and record the signed-in user making the change.
         const keys = Object.keys(data);
@@ -348,8 +361,13 @@ export const AdministrationController = {
         const id = integer(req.params.id, 'User');
         // Include every program, even if this user has no saved rights for it.
         const result = await pool.query(`
-            SELECT p.*, m.sysdes AS module, s.sysdes AS submodule, r.usryn, r.usraddyn, r.usrameyn, r.usrdelyn
+            SELECT p.*, m.sysdes AS module, s.sysdes AS submodule,
+                CASE WHEN r.usrsno IS NULL AND u.usdadmin THEN 'y' ELSE COALESCE(r.usryn,'n') END AS usryn,
+                CASE WHEN r.usrsno IS NULL AND u.usdadmin THEN 'y' ELSE COALESCE(r.usraddyn,'n') END AS usraddyn,
+                CASE WHEN r.usrsno IS NULL AND u.usdadmin THEN 'y' ELSE COALESCE(r.usrameyn,'n') END AS usrameyn,
+                CASE WHEN r.usrsno IS NULL AND u.usdadmin THEN 'y' ELSE COALESCE(r.usrdelyn,'n') END AS usrdelyn
             FROM prgmast p
+            LEFT JOIN usdmast u ON u.usdsno=$1
             LEFT JOIN a_sysmast m ON m.syssno = p.prgmodsno
             LEFT JOIN a_sysmast s ON s.syssno = p.prgsmdsno
             LEFT JOIN usrmast r ON r.usrprgsno = p.prgsno AND r.usrusdsno = $1
@@ -369,7 +387,8 @@ export const AdministrationController = {
             // Keep the selected user and program list stable while saving all rights.
             await client.query('BEGIN');
             await client.query('LOCK TABLE prgmast IN SHARE MODE');
-            if (!(await client.query('SELECT 1 FROM usdmast WHERE usdsno=$1 FOR UPDATE', [id])).rowCount) {
+            const target = await client.query('SELECT usdadmin FROM usdmast WHERE usdsno=$1 FOR UPDATE', [id]);
+            if (!target.rowCount) {
                 fail('User not found');
             }
             const programs = await client.query("SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[]) AND prgapp='payroll-web'", [ids]);
@@ -379,7 +398,7 @@ export const AdministrationController = {
             const levels = new Map<number, string>(programs.rows.map((program) => [program.prgsno, program.prglvl]));
 
             for (const row of rows) {
-                if (clear) {
+                if (clear && !target.rows[0].usdadmin) {
                     // Remove only the submitted user/program pairs.
                     await client.query('DELETE FROM usrmast WHERE usrusdsno=$1 AND usrprgsno=$2', [id, row.prgsno]);
                     continue;
@@ -387,7 +406,8 @@ export const AdministrationController = {
 
                 // Single programs use View only; Multi programs allow all four independent ticks.
                 const level = levels.get(Number(row.prgsno));
-                const values = rightFlags.map((flag, i) => level === 'M' || (level === 'S' && i === 0) ? row[flag] : 'n');
+                // Explicit No flags keep restrictions effective even when the account is an admin.
+                const values = rightFlags.map((flag, i) => !clear && (level === 'M' || (level === 'S' && i === 0)) ? row[flag] : 'n');
                 await client.query(`
                     INSERT INTO usrmast(usrusdsno, usrprgsno, usryn, usraddyn, usrameyn, usrdelyn, usrucdnew, usrentddt, usrenttime)
                     VALUES($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, LOCALTIME)

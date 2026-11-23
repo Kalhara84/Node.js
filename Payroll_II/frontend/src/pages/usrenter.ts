@@ -331,7 +331,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
         qs(el, '#usr-summary').textContent = `${result.usrusdsnoauto} - ${result.usdnam} | ${te_rows.length} programs`;
         qs(el, '#usr-admin-note').innerHTML = result.usdadmin
-            ? '<div class="alert alert-info py-2 small">This administrator has full application access. These program rights apply when the account uses ordinary user permissions.</div>'
+            ? '<div class="alert alert-info py-2 small">Administrator account: saved rights below override default access. Untick a page or action to block it for this administrator.</div>'
             : '';
 
         paint();

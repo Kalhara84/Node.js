@@ -1,9 +1,9 @@
 import { request } from '../services/api.ts';
-import { can } from '../services/auth.ts';
+import { can, currentUser } from '../services/auth.ts';
 import { esc, qs, errMsg, alertBox, loading, confirmModal } from '../utils/ui.ts';
 import type { PageContext } from '../types.ts';
 
-type Row = Record<string, string | number | null>;
+type Row = Record<string, string | number | boolean | null>;
 type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[]; programOptions: Row[] };
 
 const flags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
@@ -169,7 +169,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
         $('#head').innerHTML = `<tr>${(
             users
-                ? ['Code', 'Name', 'Location', 'Telephone', 'Email', 'Status', 'Actions']
+                ? ['Code', 'Name', 'Location', 'Telephone', 'Email', 'Role', 'Status', 'Actions']
                 : rights
                 ? ['Program', 'Module / submodule', ...flagLabels]
                 : ['Code', 'Name / description', 'Module', 'Submodule', 'Order', 'Level', 'Actions']
@@ -186,6 +186,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                         <td>${esc(locationName)}</td>
                         <td>${esc(r.usdtel)}</td>
                         <td>${esc(r.usdmail)}</td>
+                        <td>${r.usdadmin ? 'Administrator' : 'User'}</td>
                         <td><span class="badge ${r.usdactive === 'Y' ? 'bg-success' : 'bg-secondary'}">${r.usdactive === 'Y' ? 'Active' : 'Inactive'}</span></td>
                         <td>${can('users', 'amend') ? `<button class="btn btn-sm btn-outline-primary" data-edit="${r.usdsno}">Edit</button>` : ''}</td>
                       </tr>`;
@@ -212,7 +213,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                     </td>
                   </tr>`;
               }).join('')
-            : `<tr><td colspan="7" class="text-center py-5 text-muted">${rights && !selectedUser ? 'Select a user to load program rights.' : 'No records found.'}</td></tr>`;
+            : `<tr><td colspan="${users ? 8 : 7}" class="text-center py-5 text-muted">${rights && !selectedUser ? 'Select a user to load program rights.' : 'No records found.'}</td></tr>`;
 
         $('#count').textContent = `${list.length} records`;
 
@@ -242,7 +243,8 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                     ? userFields.map(([k, l, max]) => input(k, l, r[k], max, k === 'usdusd', k === 'usdmail' ? 'email' : 'text', k === 'usdusd' && !!row)).join('') +
                       input('usdpwd', row ? 'New password (leave blank to keep current)' : 'Password', '', 256, !row, 'password') +
                       select('usdcomsno', 'Location', options(lookups.locations, 'locsno', 'locnam', r.usdcomsno, 'No location')) +
-                      select('usdactive', 'Status', `<option value="Y">Active</option><option value="N" ${r.usdactive === 'N' ? 'selected' : ''}>Inactive</option>`)
+                      select('usdactive', 'Status', `<option value="Y">Active</option><option value="N" ${r.usdactive === 'N' ? 'selected' : ''}>Inactive</option>`) +
+                      (currentUser()?.access?.admin ? select('usdadmin', 'Role', `<option value="false">User</option><option value="true" ${r.usdadmin === true ? 'selected' : ''}>Administrator</option>`) : '')
                     : select('prgmodsno', 'Module', options(lookups.modules, 'syssno', 'sysdes', r.prgmodsno), true) +
                       select('prgsmdsno', 'Submodule', options(lookups.submodules, 'syssno', 'sysdes', r.prgsmdsno), true) +
                       input('prgorder', 'Order', r.prgorder, 5, true) +

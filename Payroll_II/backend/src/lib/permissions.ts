@@ -30,22 +30,20 @@ export async function accountAccess(id: number): Promise<Access | null> {
     const user = (await pool.query('SELECT usdactive,usdadmin FROM usdmast WHERE usdsno=$1',[id])).rows[0];
     if (!user || user.usdactive !== 'Y') return null;
 
-    // Administrators can use every screen
-    if (user.usdadmin) {
-        const everything = { admin: true } as Access;
-        for (const s of SCREEN_NAMES) everything[s] = { ...allRights };
-        return everything;
-    }
-
     const rights = (await pool.query(`SELECT p.prgnam,p.prglvl,r.usryn,r.usraddyn,r.usrameyn,r.usrdelyn
       FROM usrmast r JOIN prgmast p ON p.prgsno=r.usrprgsno
       WHERE r.usrusdsno=$1 AND p.prgapp='payroll-web' AND p.prgnam=ANY($2::text[])`,
       [id,ALL_PROGRAMS])).rows;
 
-    const access = { admin: false } as Access;
+    const access = { admin: !!user.usdadmin } as Access;
     for (const s of SCREEN_NAMES) {
         const screen = SCREENS[s];
         const mine = rights.filter((r) => screen.programs.includes(r.prgnam));
+        // Admins start with all rights, but saved page restrictions override that default.
+        if (user.usdadmin && mine.length === 0) {
+            access[s] = { ...allRights };
+            continue;
+        }
         const entry = mine.filter((r) => screen.entry.includes(r.prgnam) && r.prglvl === 'M');
         const action = (flag: string) => entry.some((r) => r[flag] === 'y');
         const add = action('usraddyn'), amend = action('usrameyn'), remove = action('usrdelyn');

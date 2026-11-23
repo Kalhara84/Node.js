@@ -2015,6 +2015,7 @@ CREATE TABLE IF NOT EXISTS "prgmast" (
   "prgsmdsno" INTEGER NOT NULL default '0',
   "prgorder" varchar(5) NOT NULL default '',
   "prglvl" char(1) default NULL,
+  "prgapp" varchar(30) NOT NULL DEFAULT 'payroll-web',
   "prgnam" varchar(35) default NULL,
   "prgdes" varchar(60) default NULL,
   "prgucdnew" varchar(30) default NULL,
@@ -2027,59 +2028,8 @@ CREATE TABLE IF NOT EXISTS "prgmast" (
   UNIQUE ("prgsno")
 );
 
--- prgmast: 50 original source rows.
-INSERT INTO "prgmast" ("prgsno","prgmodsno","prgsmdsno","prgorder","prglvl","prgnam","prgdes","prgucdnew","prgentddt","prgenttime","prgucdame","prgameddt","prgametime") VALUES
-(1,54,50,E'1',E'S',E'p_empm.php',E'Employee Master File -M',E'2000',E'2012-10-05',E'10:15:44',NULL,NULL,NULL),
-(2,54,50,E'2',E'M',E'p_empenter.php',E'Employee Master File -Ent',E'2000',E'2012-10-05',E'10:16:19',NULL,NULL,NULL),
-(3,54,52,E'3',E'S',E'a_trfattmast.php',E'Transfer Attendance Data Payroll',E'2000',E'2012-10-05',E'10:18:30',NULL,NULL,NULL),
-(4,54,50,E'4',E'S',E'a_dlym.php',E'Working Hours Master File -S',E'2000',E'2012-10-05',E'10:20:09',NULL,NULL,NULL),
-(5,54,50,E'6',E'M',E'a_dlyenter.php',E'Working Hours Master File -M',E'2000',E'2012-10-05',E'10:20:40',NULL,NULL,NULL),
-(6,54,50,E'7',E'S',E'a_holm.php',E'Holiday Master File -S',E'2000',E'2012-10-05',E'10:22:18',NULL,NULL,NULL),
-(7,54,50,E'8',E'M',E'a_holenter.php',E'Holiday Master File -M',E'2000',E'2012-10-05',E'10:22:53',NULL,NULL,NULL),
-(8,54,50,E'9',E'S',E'a_workdm.php',E'Working Days Master File -S',E'2000',E'2012-10-05',E'10:24:11',NULL,NULL,NULL),
-(9,54,50,E'10',E'M',E'a_wrkdayenter.php',E'Working Days Master File -M',E'2000',E'2012-10-05',E'10:24:38',NULL,NULL,NULL),
-(10,54,50,E'11',E'S',E'p_workdayent.php',E'Working Days Master File New',E'2000',E'2012-10-05',E'10:25:28',NULL,NULL,NULL),
-(11,54,52,E'12',E'S',E'p_uploadatt.php',E'Upload Attendance Xl File',E'2000',E'2012-10-05',E'10:26:32',NULL,NULL,NULL),
-(12,54,52,E'13',E'S',E'a_deltrfotden.php',E'Delete Row Data Corection',E'2000',E'2012-10-05',E'10:27:21',NULL,NULL,NULL),
-(13,54,52,E'14',E'S',E'a_delleaverec.php',E'Delete Leave Records',E'2000',E'2012-10-05',E'10:28:15',NULL,NULL,NULL),
-(14,54,52,E'15',E'S',E'a_attenterall1.php',E'Comparing Employee Master File/Capture File',E'2000',E'2012-10-05',E'10:28:55',NULL,NULL,NULL),
-(15,54,52,E'16',E'S',E'a_attenterallinout.php',E'Row Data Correct/Trnsfer OT',E'2000',E'2012-10-05',E'10:32:59',NULL,NULL,NULL),
-(16,54,52,E'17',E'S',E'a_correctatt.php',E'Correct Capture In/Out',E'2000',E'2012-10-05',E'10:34:05',NULL,NULL,NULL),
-(17,54,52,E'18',E'S',E'a_correctattdep.php',E'Delete /Correct Data',E'2000',E'2012-10-05',E'10:35:20',NULL,NULL,NULL),
-(18,54,52,E'19',E'S',E'a_leaveent.php',E'Transfer Leave Records Absent Workers',E'2000',E'2012-10-05',E'10:36:35',NULL,NULL,NULL),
-(19,54,52,E'20',E'S',E'a_leaveentwor.php',E'Transfer Leave Records Workers',E'2000',E'2012-10-05',E'10:37:53',NULL,NULL,NULL),
-(20,54,52,E'21',E'S',E'a_leaveentshortl.php',E'Transfer Short Leave Records Workers',E'2000',E'2012-10-05',E'10:38:54',NULL,NULL,NULL),
-(21,54,52,E'22',E'S',E'a_nightwor.php',E'Night Attendance Records Workers',E'2000',E'2012-10-05',E'10:39:54',NULL,NULL,NULL),
-(22,54,53,E'23',E'S',E'a_inqempatt.php',E'Inquiry Row Data Correct Ot/Late',E'2000',E'2012-10-05',E'10:41:04',NULL,NULL,NULL),
-(23,54,53,E'24',E'S',E'a_attrptday.php',E'Attendance Reports For Given Date',E'2000',E'2012-10-05',E'10:41:48',NULL,NULL,NULL),
-(24,54,53,E'25',E'S',E'a_otreportamtday.php',E'Ot Reports For Given Date',E'2000',E'2012-10-05',E'10:42:18',NULL,NULL,NULL),
-(25,54,53,E'26',E'S',E'a_otreport.php',E'Ot Detial Reports For Given Month',E'2000',E'2012-10-05',E'10:43:41',NULL,NULL,NULL),
-(26,54,53,E'27',E'S',E'a_otreportamt.php',E'Ot Reports For Given Month',E'2000',E'2012-10-05',E'10:44:41',NULL,NULL,NULL),
-(27,54,53,E'28',E'S',E'a_ltreport.php',E'Late Reports For Given Month',E'2000',E'2012-10-05',E'10:45:27',NULL,NULL,NULL),
-(28,54,53,E'29',E'S',E'a_leaverptday.php',E'Leave Reports For Given Date',E'2000',E'2012-10-05',E'10:45:53',NULL,NULL,NULL),
-(29,54,53,E'30',E'S',E'a_leaverptmon.php',E'Leave Reports For Given Month',E'2000',E'2012-10-05',E'10:46:26',NULL,NULL,NULL),
-(30,54,53,E'31',E'S',E'a_leaverptyer.php',E'Leave Reports For Given Year',E'2000',E'2012-10-05',E'10:47:18',NULL,NULL,NULL),
-(31,54,53,E'32',E'S',E'a_nopaymon.php',E'Nopay Reports For Given Month',E'2000',E'2012-10-05',E'10:47:53',NULL,NULL,NULL),
-(32,54,53,E'33',E'S',E'a_nightdayr.php',E'Night Attendance Reports For Given Date',E'2000',E'2012-10-05',E'10:48:48',NULL,NULL,NULL),
-(33,55,50,E'34',E'S',E'f_depm.php',E'Department Master File-S',E'2000',E'2012-10-05',E'10:53:33',NULL,NULL,NULL),
-(34,55,50,E'35',E'M',E'f_depenter.php',E'Department Master File-M',E'2000',E'2012-10-05',E'10:54:09',NULL,NULL,NULL),
-(35,55,50,E'36',E'S',E'p_lonm.php',E'Loan Master Maintenance-S',E'2000',E'2012-10-05',E'10:55:20',NULL,NULL,NULL),
-(36,55,50,E'37',E'M',E'p_lonenter.php',E'Loan Master Maintenance-M',E'2000',E'2012-10-05',E'10:55:54',NULL,NULL,NULL),
-(37,55,50,E'38',E'S',E'p_ptrenter.php',E'Permanent Transactions',E'2000',E'2012-10-05',E'10:57:26',NULL,NULL,NULL),
-(38,55,50,E'39',E'S',E'p_mobnoenter.php',E'Add Mobile No',E'2000',E'2012-10-05',E'10:58:07',NULL,NULL,NULL),
-(39,55,50,E'40',E'S',E'p_delmobno.php',E'Delete Mobile No',E'2000',E'2012-10-05',E'10:58:46',NULL,NULL,NULL),
-(40,55,52,E'41',E'S',E'p_uplloadmobtrfpay.php',E'Transfer Mobile Bill Payroll',E'2000',E'2012-10-05',E'10:59:16',NULL,NULL,NULL),
-(41,55,52,E'42',E'S',E'a_transferotpay.php',E'Transfer Ot Payroll',E'2000',E'2012-10-05',E'11:01:05',NULL,NULL,NULL),
-(42,55,52,E'43',E'S',E'a_transferltepay.php',E'Transfer Late Attendance',E'2000',E'2012-10-05',E'11:01:49',NULL,NULL,NULL),
-(43,55,52,E'44',E'S',E'a_transfernop.php',E'Transfer Nopay Days',E'2000',E'2012-10-05',E'11:02:40',NULL,NULL,NULL),
-(44,55,52,E'45',E'S',E'saladvm.php',E'Salary Advance Payment Txt',E'2000',E'2012-10-05',E'11:05:28',NULL,NULL,NULL),
-(45,55,52,E'46',E'S',E'salpaym.php',E'Salary Payment Txt',E'2000',E'2012-10-05',E'11:06:03',NULL,NULL,NULL),
-(46,55,52,E'47',E'S',E'alopaym.php',E'Allowance Payment Txt',E'2000',E'2012-10-05',E'11:06:39',NULL,NULL,NULL),
-(47,55,51,E'48',E'S',E'p_noptrn.php',E'Enter Direct Transaction',E'2000',E'2012-10-05',E'11:07:15',NULL,NULL,NULL),
-(48,55,51,E'49',E'S',E'p_noptrn1.php',E'Enter Direct Transaction-Rabbukkana',E'2000',E'2012-10-05',E'11:08:28',NULL,NULL,NULL),
-(49,55,51,E'50',E'S',E'p_trnenter.php',E'Monthly Transactions',E'2000',E'2012-10-05',E'11:09:02',NULL,NULL,NULL),
-(50,55,51,E'51',E'S',E'p_salenter.php',E'Salary Advance',E'2000',E'2012-10-05',E'11:09:54',NULL,NULL,NULL)
-ON CONFLICT DO NOTHING;
+ALTER TABLE prgmast ADD COLUMN IF NOT EXISTS prgapp varchar(30) NOT NULL DEFAULT '';
+-- Current application pages are registered below after all tables exist.
 
 CREATE TABLE IF NOT EXISTS "s_locmast" (
   "locsno" SERIAL,
@@ -2239,18 +2189,18 @@ CREATE TABLE IF NOT EXISTS "usdmast" (
 );
 
 -- usdmast: 11 original source rows.
-INSERT INTO "usdmast" ("usdsno","usdcomsno","usdusd","usdpwd","usduno","usdnam","usdad1","usdad2","usdad3","usdtel","usdfax","usdmail","usdnic","usddes","usducdnew","usdentddt","usdenttime","usducdame","usdameddt","usdametime") VALUES
-(3,0,E'umesh',E'pwIkkzkRCAnVM',99,E'HRM',E'',E'',E'',E'',E'',E'hr@mikeflora.com',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(23,0,E'madhu',E'pwY6bjfQbMAXM',99,E'madhu',E'',E'',E'',E'',E'',E'',E'',E'USR',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(6,0,E'rajika',E'pwYOfUEu2Zrls',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(22,0,E'sumedha',E'pwoG6UBobec96',99,E'sumedha',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(19,0,E'nalaka',E'pwIkkzkRCAnVM',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(11,4,E'Manuja',E'pwIkkzkRCAnVM',0,E'',E'',E'',E'',E'',E'',E'',E'',E'USR',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(21,0,E'inokahr',E'pw3qsnUYD0tUc',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(15,0,E'nathasha',E'pws3mzxTSJCFs',99,E'NATHASHA',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(18,0,E'2000',E'pws3mzxTSJCFs',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(17,0,E'inoka',E'pwYFwpjReVGRw',99,E'inoka',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
-(20,0,E'ravi',E'pwrgiP1WACGfA',0,E'',E'',E'',E'',E'',E'',E'',E'',E'',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00')
+INSERT INTO "usdmast" ("usdsno","usdcomsno","usdusd","usdpwd","usduno","usdnam","usdad1","usdad2","usdad3","usdtel","usdfax","usdmail","usdnic","usddes","usducdnew","usdentddt","usdenttime","usducdame","usdameddt","usdametime","usdadmin") VALUES
+(3,0,E'umesh',E'pwIkkzkRCAnVM',99,E'HRM',E'',E'',E'',E'',E'',E'hr@mikeflora.com',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(23,0,E'madhu',E'pwY6bjfQbMAXM',99,E'madhu',E'',E'',E'',E'',E'',E'',E'',E'USR',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',false),
+(6,0,E'rajika',E'pwYOfUEu2Zrls',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(22,0,E'sumedha',E'pwoG6UBobec96',99,E'sumedha',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(19,0,E'nalaka',E'pwIkkzkRCAnVM',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(11,4,E'Manuja',E'pwIkkzkRCAnVM',0,E'',E'',E'',E'',E'',E'',E'',E'',E'USR',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',false),
+(21,0,E'inokahr',E'pw3qsnUYD0tUc',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(15,0,E'nathasha',E'pws3mzxTSJCFs',99,E'NATHASHA',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(18,0,E'2000',E'pws3mzxTSJCFs',99,E'',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(17,0,E'inoka',E'pwYFwpjReVGRw',99,E'inoka',E'',E'',E'',E'',E'',E'',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',true),
+(20,0,E'ravi',E'pwrgiP1WACGfA',0,E'',E'',E'',E'',E'',E'',E'',E'',E'',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',false)
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS "usrmast" (
@@ -2274,59 +2224,7 @@ CREATE TABLE IF NOT EXISTS "usrmast" (
   UNIQUE ("usrsno")
 );
 
--- usrmast: 50 original source rows.
-INSERT INTO "usrmast" ("usrsno","usrusdsno","usrprgsno","usryn","usraddyn","usrameyn","usrdelyn","usrdisyn","usrupdyn","usrvssyn","usrucdnew","usrentddt","usrenttime","usrucdame","usrameddt","usrametime") VALUES
-(1269,1,39,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1268,1,38,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1267,1,37,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1217,1,1,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1218,1,9,E'n',E'y',E'y',E'y',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1219,1,10,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1220,1,2,E'n',E'y',E'y',E'y',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1221,1,4,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1222,1,57,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1223,1,58,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1224,1,5,E'n',E'y',E'y',E'y',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1225,1,6,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1226,1,7,E'n',E'y',E'y',E'y',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1227,1,8,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1228,1,22,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1229,1,23,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1230,1,24,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1231,1,25,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1232,1,26,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1233,1,27,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1234,1,28,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1235,1,29,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1236,1,30,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1237,1,31,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1238,1,32,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1239,1,61,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1240,1,11,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1241,1,12,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1242,1,13,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1243,1,14,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1244,1,15,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1245,1,16,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1246,1,17,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1247,1,18,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1248,1,19,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1249,1,20,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1250,1,21,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1251,1,3,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1252,1,59,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1253,1,60,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1254,1,47,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1255,1,48,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1256,1,49,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
-(1757,9,39,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL),
-(1758,9,40,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL),
-(1759,9,41,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL),
-(1708,9,2,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL),
-(1709,9,4,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL),
-(1710,9,57,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL),
-(1711,9,58,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL)
-ON CONFLICT DO NOTHING;
+-- Ordinary accounts receive page rights through the User Rights screen.
 
 CREATE INDEX IF NOT EXISTS "a_atttran_idx_a_atttran_attcrdno" ON "a_atttran" ("attcrdno");
 CREATE INDEX IF NOT EXISTS "a_denmast_idx_a_denmast_denddt_denempsno" ON "a_denmast" ("denddt","denempsno");
@@ -2488,66 +2386,36 @@ SELECT setval(pg_get_serial_sequence('usrmast', 'usrsno'),
   GREATEST(COALESCE(MAX("usrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'usrmast_usrsno_seq'), 1)),
   MAX("usrsno") IS NOT NULL) FROM "usrmast";
--- Register the current web pages using generated IDs, after the legacy import.
--- Register the two implemented business pages without deleting the old system catalog.
--- Run once on an existing database, or after importing payroll_db.sql on a new database.
-SELECT pg_advisory_xact_lock(740219853);
-
--- Keep different applications' program catalogs in the same database.
-ALTER TABLE prgmast ADD COLUMN IF NOT EXISTS prgapp varchar(30) NOT NULL DEFAULT '';
+-- BEGIN WEB APP PROGRAM REGISTRATION
+-- This import contains the complete setup; no second SQL file is needed.
 LOCK TABLE a_sysmast, prgmast, usrmast IN SHARE ROW EXCLUSIVE MODE;
-CREATE UNIQUE INDEX IF NOT EXISTS prgmast_web_name ON prgmast(prgapp, prgnam) WHERE prgapp = 'payroll-web';
 
--- Imported databases may have sequences behind their existing IDs; only advance them.
+-- Remove obsolete programs and orphaned rights, keeping rights for this web app.
+DELETE FROM usrmast r WHERE NOT EXISTS (
+    SELECT 1 FROM prgmast p WHERE p.prgsno=r.usrprgsno AND p.prgapp='payroll-web'
+);
+DELETE FROM prgmast WHERE prgapp <> 'payroll-web';
+CREATE UNIQUE INDEX IF NOT EXISTS prgmast_web_name ON prgmast(prgapp, prgnam) WHERE prgapp='payroll-web';
+
+-- Keep generated IDs above rows already in the database.
 SELECT setval(pg_get_serial_sequence('a_sysmast', 'syssno'),
     GREATEST(COALESCE(MAX(syssno), 0), COALESCE(pg_sequence_last_value(pg_get_serial_sequence('a_sysmast', 'syssno')::regclass), 0), 1), true) FROM a_sysmast;
 SELECT setval(pg_get_serial_sequence('prgmast', 'prgsno'),
     GREATEST(COALESCE(MAX(prgsno), 0), COALESCE(pg_sequence_last_value(pg_get_serial_sequence('prgmast', 'prgsno')::regclass), 0), 1), true) FROM prgmast;
-SELECT setval(pg_get_serial_sequence('usrmast', 'usrsno'),
-    GREATEST(COALESCE(MAX(usrsno), 0), COALESCE(pg_sequence_last_value(pg_get_serial_sequence('usrmast', 'usrsno')::regclass), 0), 1), true) FROM usrmast;
 
 INSERT INTO a_sysmast(sysrtp, sysrno, sysdes) VALUES
     (32, 'WEBAPP', 'Payroll Web App'),
     (33, 'WEBPAGES', 'Application Pages')
 ON CONFLICT DO NOTHING;
 
-DO $
-DECLARE
-    page record;
-    new_id integer;
-    module_id integer;
-    submodule_id integer;
-BEGIN
-    SELECT syssno INTO module_id FROM a_sysmast WHERE sysrtp=32 AND sysrno='WEBAPP';
-    SELECT syssno INTO submodule_id FROM a_sysmast WHERE sysrtp=33 AND sysrno='WEBPAGES';
-
-    FOR page IN SELECT * FROM (VALUES
-        ('employees', 'Employee Master', '001'),
-        ('users', 'User Master', '002')
-    ) AS pages(name, description, display_order)
-    LOOP
-        new_id := NULL;
-        INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgapp, prgucdnew, prgentddt, prgenttime)
-        VALUES(module_id, submodule_id, page.display_order, 'M', page.name, page.description, 'payroll-web', 'web-setup', CURRENT_DATE, LOCALTIME)
-        ON CONFLICT DO NOTHING RETURNING prgsno INTO new_id;
-
-        -- Copy existing equivalent rights only when the page is first registered.
-        -- Running setup again must never restore permissions that an admin later removed.
-        IF new_id IS NOT NULL THEN
-            INSERT INTO usrmast(usrusdsno, usrprgsno, usryn, usraddyn, usrameyn, usrdelyn, usrucdnew, usrentddt, usrenttime)
-            SELECT r.usrusdsno, new_id,
-                CASE WHEN bool_or(r.usryn='y' OR (r.usraddyn='y' OR r.usrameyn='y' OR r.usrdelyn='y') AND
-                    regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
-                CASE WHEN bool_or(r.usraddyn='y' AND regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
-                CASE WHEN bool_or(r.usrameyn='y' AND regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
-                CASE WHEN bool_or(r.usrdelyn='y' AND regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
-                'web-setup', CURRENT_DATE, LOCALTIME
-            FROM usrmast r JOIN prgmast p ON p.prgsno=r.usrprgsno
-            WHERE p.prgapp='' AND regexp_replace(p.prgnam, '\.php, '') = ANY(
-                CASE WHEN page.name='employees' THEN ARRAY['p_empm','p_empmastview','p_empm1','p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)
-            GROUP BY r.usrusdsno
-            ON CONFLICT(usrusdsno, usrprgsno) DO NOTHING;
-        END IF;
-    END LOOP;
-END $;
+-- Register the actual Employee and User pages with all four permission choices.
+INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgapp, prgucdnew, prgentddt, prgenttime)
+SELECT m.syssno, s.syssno, page.display_order, 'M', page.name, page.description, 'payroll-web', 'web-setup', CURRENT_DATE, LOCALTIME
+FROM a_sysmast m CROSS JOIN a_sysmast s CROSS JOIN (VALUES
+    ('employees', 'Employee Master', '001'),
+    ('users', 'User Master', '002')
+) AS page(name, description, display_order)
+WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
+ON CONFLICT DO NOTHING;
+-- END WEB APP PROGRAM REGISTRATION
 COMMIT;
