@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import routes from './routes';
 import { notFound, errorHandler } from './middleware';
+import { requestLogger } from './request-logger';
 
 const app = express();
+app.use(requestLogger);
 
 // Enable CORS for frontend requests
 app.use(cors({ origin: process.env.FRONTEND_URL }));

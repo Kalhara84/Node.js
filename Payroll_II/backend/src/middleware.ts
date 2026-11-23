@@ -1,6 +1,7 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { verifyToken } from './lib/auth';
 import type { TokenPayload } from './types';
+import { errorDetails, log } from './lib/logger';
 
 // Extend Express Request object to include authenticated user
 declare module 'express-serve-static-core' {
@@ -46,10 +47,12 @@ export function notFound(_req: Request, res: Response): void {
 // Global server error handler middleware
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
     if ((err as { type?: string })?.type === 'entity.parse.failed') {
+        log('warn', 'Invalid JSON body', { requestId: res.locals.requestId });
         res.status(400).json({ message: 'Invalid JSON body' });
         return;
     }
 
-    console.error(err);
+    log('error', 'API request error', { requestId: res.locals.requestId, ...errorDetails(err) });
+    if (res.headersSent) return _next(err);
     res.status(500).json({ message: 'Server error' });
 }
