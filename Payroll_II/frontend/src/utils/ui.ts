@@ -30,8 +30,12 @@ export const GENDER: Record<string, string> = {
 
 // Convert Y/N database values to readable Yes/No text
 export const yn = (v: string | null | undefined): string => {
-    if (v === 'Y') return 'Yes';
-    if (v === 'N') return 'No';
+    if (v === 'Y') {
+        return 'Yes';
+    }
+    if (v === 'N') {
+        return 'No';
+    }
     return v || '-';
 };
 

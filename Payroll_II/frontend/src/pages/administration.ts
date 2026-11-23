@@ -83,11 +83,15 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             call<Lookups>('/lookups'),
             call<Row[]>(users || rights ? '/users' : '/programs')
         ]);
-        if (!ctx.alive()) return;
+        if (!ctx.alive()) {
+            return;
+        }
         lookups = result[0];
         rows = result[1];
     } catch (e) {
-        if (ctx.alive()) el.innerHTML = alertBox(errMsg(e));
+        if (ctx.alive()) {
+            el.innerHTML = alertBox(errMsg(e));
+        }
         return;
     }
 
@@ -171,15 +175,15 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             users
                 ? ['Code', 'Name', 'Location', 'Telephone', 'Email', 'Role', 'Status', 'Actions']
                 : rights
-                ? ['Program', 'Module / submodule', ...flagLabels]
-                : ['Code', 'Name / description', 'Module', 'Submodule', 'Order', 'Level', 'Actions']
+                    ? ['Program', 'Module / submodule', ...flagLabels]
+                    : ['Code', 'Name / description', 'Module', 'Submodule', 'Order', 'Level', 'Actions']
         ).map((t, i) => `<th>${rights && i > 1 ? `<label class="d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" data-column="${flags[i - 2]}" aria-label="Select all shown ${t} permissions" ${list.length && list.filter((r) => (i === 2 ? r.prglvl === 'S' || r.prglvl === 'M' : r.prglvl === 'M')).length && list.filter((r) => (i === 2 ? r.prglvl === 'S' || r.prglvl === 'M' : r.prglvl === 'M')).every((r) => r[flags[i - 2]] === 'y') ? 'checked' : ''}>${t}</label>` : t}</th>`).join('')}</tr>`;
 
         $('#rows').innerHTML = list.length
             ? list.map((r) => {
-                  if (users) {
-                      const locationName = lookups.locations.find((l) => String(l.locsno) === String(r.usdcomsno))?.locnam || '—';
-                      return `
+                if (users) {
+                    const locationName = lookups.locations.find((l) => String(l.locsno) === String(r.usdcomsno))?.locnam || '—';
+                    return `
                       <tr>
                         <td>${esc(r.usdusd)}</td>
                         <td>${esc(r.usdnam)}</td>
@@ -190,16 +194,16 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                         <td><span class="badge ${r.usdactive === 'Y' ? 'bg-success' : 'bg-secondary'}">${r.usdactive === 'Y' ? 'Active' : 'Inactive'}</span></td>
                         <td>${can('users', 'amend') ? `<button class="btn btn-sm btn-outline-primary" data-edit="${r.usdsno}">Edit</button>` : ''}</td>
                       </tr>`;
-                  }
-                  if (rights) {
-                      return `
+                }
+                if (rights) {
+                    return `
                       <tr>
                         <td>${esc(r.prgdes)}<div class="small text-muted">${esc(r.prgnam)} · ${r.prglvl === 'M' ? 'Multi' : 'Single'}</div></td>
                         <td>${esc(r.module)} / ${esc(r.submodule)}</td>
                         ${flags.map((f, i) => `<td><input type="checkbox" class="form-check-input" data-id="${r.prgsno}" data-flag="${f}" aria-label="${flagLabels[i]} ${esc(r.prgdes)}" ${r[f] === 'y' ? 'checked' : ''} ${r.prglvl === 'S' && i > 0 ? 'disabled' : ''}></td>`).join('')}
                       </tr>`;
-                  }
-                  return `
+                }
+                return `
                   <tr>
                     <td>${r.prgsno}</td>
                     <td>${esc(r.prgnam)}<div class="small text-muted">${esc(r.prgdes)}</div></td>
@@ -212,7 +216,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                       ${can('programs', 'delete') ? `<button class="btn btn-sm btn-outline-danger" data-delete="${r.prgsno}">Delete</button>` : ''}
                     </td>
                   </tr>`;
-              }).join('')
+            }).join('')
             : `<tr><td colspan="${users ? 8 : 7}" class="text-center py-5 text-muted">${rights && !selectedUser ? 'Select a user to load program rights.' : 'No records found.'}</td></tr>`;
 
         $('#count').textContent = `${list.length} records`;
@@ -240,17 +244,17 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             <form id="form">
               <div class="row g-3">
                 ${users
-                    ? userFields.map(([k, l, max]) => input(k, l, r[k], max, k === 'usdusd', k === 'usdmail' ? 'email' : 'text', k === 'usdusd' && !!row)).join('') +
-                      input('usdpwd', row ? 'New password (leave blank to keep current)' : 'Password', '', 256, !row, 'password') +
-                      select('usdcomsno', 'Location', options(lookups.locations, 'locsno', 'locnam', r.usdcomsno, 'No location')) +
-                      select('usdactive', 'Status', `<option value="Y">Active</option><option value="N" ${r.usdactive === 'N' ? 'selected' : ''}>Inactive</option>`) +
-                      (currentUser()?.access?.admin ? select('usdadmin', 'Role', `<option value="false">User</option><option value="true" ${r.usdadmin === true ? 'selected' : ''}>Administrator</option>`) : '')
-                    : select('prgmodsno', 'Module', options(lookups.modules, 'syssno', 'sysdes', r.prgmodsno), true) +
-                      select('prgsmdsno', 'Submodule', options(lookups.submodules, 'syssno', 'sysdes', r.prgsmdsno), true) +
-                      input('prgorder', 'Order', r.prgorder, 5, true) +
-                      select('prglvl', 'Permissions', `<option value="S" ${r.prglvl === 'S' ? 'selected' : ''}>View only</option><option value="M" ${r.prglvl !== 'S' ? 'selected' : ''}>View, Add, Amend and Delete</option>`) +
-                      input('prgnam', 'Program key (example: attendance)', r.prgnam, 35, true) +
-                      input('prgdes', 'Description', r.prgdes, 60, true)}
+                ? userFields.map(([k, l, max]) => input(k, l, r[k], max, k === 'usdusd', k === 'usdmail' ? 'email' : 'text', k === 'usdusd' && !!row)).join('') +
+                input('usdpwd', row ? 'New password (leave blank to keep current)' : 'Password', '', 256, !row, 'password') +
+                select('usdcomsno', 'Location', options(lookups.locations, 'locsno', 'locnam', r.usdcomsno, 'No location')) +
+                select('usdactive', 'Status', `<option value="Y">Active</option><option value="N" ${r.usdactive === 'N' ? 'selected' : ''}>Inactive</option>`) +
+                (currentUser()?.access?.admin ? select('usdadmin', 'Role', `<option value="false">User</option><option value="true" ${r.usdadmin === true ? 'selected' : ''}>Administrator</option>`) : '')
+                : select('prgmodsno', 'Module', options(lookups.modules, 'syssno', 'sysdes', r.prgmodsno), true) +
+                select('prgsmdsno', 'Submodule', options(lookups.submodules, 'syssno', 'sysdes', r.prgsmdsno), true) +
+                input('prgorder', 'Order', r.prgorder, 5, true) +
+                select('prglvl', 'Permissions', `<option value="S" ${r.prglvl === 'S' ? 'selected' : ''}>View only</option><option value="M" ${r.prglvl !== 'S' ? 'selected' : ''}>View, Add, Amend and Delete</option>`) +
+                input('prgnam', 'Program key (example: attendance)', r.prgnam, 35, true) +
+                input('prgdes', 'Description', r.prgdes, 60, true)}
               </div>
               <div id="form-error" class="mt-3" role="alert"></div>
               <div class="d-flex gap-2 mt-3">
@@ -285,12 +289,16 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             try {
                 await call(`/${mode}${editing ? '/' + editing[users ? 'usdsno' : 'prgsno'] : ''}`, editing ? 'PUT' : 'POST', body);
                 rows = await call<Row[]>('/' + mode);
-                if (!ctx.alive()) return;
+                if (!ctx.alive()) {
+                    return;
+                }
                 $('#editor').innerHTML = '';
                 draw();
                 notice('Record saved.');
             } catch (err) {
-                if (ctx.alive()) $('#form-error').innerHTML = alertBox(errMsg(err));
+                if (ctx.alive()) {
+                    $('#form-error').innerHTML = alertBox(errMsg(err));
+                }
             } finally {
                 button.disabled = false;
             }
@@ -306,7 +314,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 try {
                     await call('/lookups', 'POST', Object.fromEntries(new FormData(form)));
                     lookups = await call<Lookups>('/lookups');
-                    if (!ctx.alive()) return;
+                    if (!ctx.alive()) {
+                        return;
+                    }
 
                     for (const [name, items] of [
                         ['prgmodsno', lookups.modules],
@@ -332,7 +342,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     }
 
     const addButton = el.querySelector<HTMLButtonElement>('#add');
-    if (addButton) addButton.onclick = () => editor(null);
+    if (addButton) {
+        addButton.onclick = () => editor(null);
+    }
     $('#search').oninput = draw;
 
     if (!users) {
@@ -347,7 +359,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             selectedUser = $<HTMLSelectElement>('#user').value;
             rows = [];
             draw();
-            if (!selectedUser) return;
+            if (!selectedUser) {
+                return;
+            }
 
             try {
                 const data = await call<Row[]>('/rights/' + selectedUser);
@@ -356,7 +370,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                     draw();
                 }
             } catch (err) {
-                if (ctx.alive() && current === version) notice(errMsg(err), true);
+                if (ctx.alive() && current === version) {
+                    notice(errMsg(err), true);
+                }
             }
         };
     }
@@ -374,14 +390,18 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         }
         if (t.dataset.flag) {
             const r = rows.find((row) => String(row.prgsno) === t.dataset.id);
-            if (r) r[t.dataset.flag] = t.checked ? 'y' : 'n';
+            if (r) {
+                r[t.dataset.flag] = t.checked ? 'y' : 'n';
+            }
         }
     });
 
     // Button clicks (Edit, Delete, Bulk select, Save rights)
     el.addEventListener('click', async (e) => {
         const t = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
-        if (!t) return;
+        if (!t) {
+            return;
+        }
 
         if (t.dataset.edit) {
             editor(rows.find((r) => String(r[users ? 'usdsno' : 'prgsno']) === t.dataset.edit)!);
@@ -394,7 +414,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                     title: 'Delete program?',
                     message: 'This removes the program and its assigned user rights.'
                 });
-                if (!confirmed) return;
+                if (!confirmed) {
+                    return;
+                }
                 t.disabled = true;
 
                 await call('/programs/' + t.dataset.delete, 'DELETE');
@@ -431,7 +453,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                         title: 'Delete shown rights?',
                         message: `Remove rights for these ${selected.length} programs? Other programs remain unchanged.`
                     });
-                    if (!confirmed) return;
+                    if (!confirmed) {
+                        return;
+                    }
                 }
 
                 t.disabled = true;
@@ -443,7 +467,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 }
             }
         } catch (err) {
-            if (ctx.alive()) notice(errMsg(err), true);
+            if (ctx.alive()) {
+                notice(errMsg(err), true);
+            }
         } finally {
             t.disabled = false;
         }

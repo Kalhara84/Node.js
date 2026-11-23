@@ -52,23 +52,33 @@ export const EmployeeController = {
     // Fetch employee by primary key ID
     async get(req: Request, res: Response): Promise<void> {
         const n = parseId(req.params.id);
-        if (!n) return fail(res, 'Invalid id', 400);
+        if (!n) {
+            return fail(res, 'Invalid id', 400);
+        }
 
         const emp = await EmployeeModel.findById(n);
-        if (!emp) return fail(res, `Employee #${n} not found`, 404);
+        if (!emp) {
+            return fail(res, `Employee #${n} not found`, 404);
+        }
 
         res.json(emp);
     },
 
     // Create a new employee
     async create(req: Request, res: Response): Promise<void> {
-        if (!isObject(req.body)) return fail(res, 'Invalid JSON body', 400);
+        if (!isObject(req.body)) {
+            return fail(res, 'Invalid JSON body', 400);
+        }
 
         const { errors, data } = validateEmployee(req.body, false);
-        if (errors.length) return fail(res, errors, 400);
+        if (errors.length) {
+            return fail(res, errors, 400);
+        }
 
         const dup = await duplicateError(data);
-        if (dup) return fail(res, dup, 409);
+        if (dup) {
+            return fail(res, dup, 409);
+        }
 
         const id = await EmployeeModel.create(data);
         res.status(201).json(await EmployeeModel.findById(id));
@@ -77,19 +87,27 @@ export const EmployeeController = {
     // Update existing employee
     async update(req: Request, res: Response): Promise<void> {
         const n = parseId(req.params.id);
-        if (!n) return fail(res, 'Invalid id', 400);
+        if (!n) {
+            return fail(res, 'Invalid id', 400);
+        }
 
         if (!(await EmployeeModel.findById(n))) {
             return fail(res, `Employee #${n} not found`, 404);
         }
 
-        if (!isObject(req.body)) return fail(res, 'Invalid JSON body', 400);
+        if (!isObject(req.body)) {
+            return fail(res, 'Invalid JSON body', 400);
+        }
 
         const { errors, data } = validateEmployee(req.body, true);
-        if (errors.length) return fail(res, errors, 400);
+        if (errors.length) {
+            return fail(res, errors, 400);
+        }
 
         const dup = await duplicateError(data, n);
-        if (dup) return fail(res, dup, 409);
+        if (dup) {
+            return fail(res, dup, 409);
+        }
 
         await EmployeeModel.update(n, data);
         res.json(await EmployeeModel.findById(n));
@@ -98,10 +116,14 @@ export const EmployeeController = {
     // Delete employee by ID
     async remove(req: Request, res: Response): Promise<void> {
         const n = parseId(req.params.id);
-        if (!n) return fail(res, 'Invalid id', 400);
+        if (!n) {
+            return fail(res, 'Invalid id', 400);
+        }
 
         const emp = await EmployeeModel.findById(n);
-        if (!emp) return fail(res, `Employee #${n} not found`, 404);
+        if (!emp) {
+            return fail(res, `Employee #${n} not found`, 404);
+        }
 
         await EmployeeModel.remove(n);
         res.json({ message: `Employee ${emp.empeno} deleted` });

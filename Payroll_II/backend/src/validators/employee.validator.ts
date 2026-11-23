@@ -74,7 +74,8 @@ export function validateEmployee(body: Record<string, unknown>, partial: boolean
     for (const [name, kind, max] of SPEC) {
         if (!(name in body)) {
             continue;
-        } // not sent -> leave as is (update) / DB default (create)
+        }
+        // not sent -> leave as is (update) / DB default (create)
         const v = body[name];
         switch (kind) {
             case 'int':

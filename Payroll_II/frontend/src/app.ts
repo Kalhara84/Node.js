@@ -106,7 +106,9 @@ export function navigate(path: string, replace = false): void {
 
 // Check menu item access permission for user
 function canShowMenuItem(item: MenuItem, user: AuthUser): boolean {
-    if (!item.screen) return true;
+    if (!item.screen) {
+        return true;
+    }
     return !!user.access?.[item.screen]?.view;
 }
 
@@ -165,7 +167,9 @@ async function show(): Promise<void> {
             root.innerHTML = '<div class="alert alert-danger m-4">Unable to load your account. Check the server connection and reload.</div>';
             return;
         }
-        if (id !== renderId) return;
+        if (id !== renderId) {
+            return;
+        }
     }
 
     // Determine default home page
@@ -227,7 +231,9 @@ async function show(): Promise<void> {
 
     // Rebuild menus when refreshed permissions or user details have changed.
     const profile = JSON.stringify(user);
-    if (shellProfile !== profile) shellShown = false;
+    if (shellProfile !== profile) {
+        shellShown = false;
+    }
 
     // Render app shell layout once
     if (!shellShown) {

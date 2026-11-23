@@ -22,12 +22,25 @@ export const requestLogger: RequestHandler = (req, res, next) => {
             ? `\x1b[${methodColors[req.method] ?? 37}m${req.method}\x1b[0m`
             : req.method;
         const line = `  ${time}  ${method}${' '.repeat(Math.max(0, 7 - req.method.length))} ${path}  ${status}  ${Math.round(performance.now() - started)} ms  ${res.getHeader('content-length') ?? 0} B${error}`;
-        if (aborted || res.statusCode >= 500) console.error(line);
-        else if (res.statusCode >= 400) console.warn(line);
-        else console.log(line);
+        if (aborted || res.statusCode >= 500) {
+            console.error(line);
+        }
+        else if (res.statusCode >= 400) {
+            console.warn(line);
+        }
+        else {
+            console.log(line);
+        }
     };
-    res.once('finish', () => { completed = true; print(); });
-    res.once('close', () => { if (!completed) print(true); });
+    res.once('finish', () => {
+        completed = true;
+        print();
+    });
+    res.once('close', () => {
+        if (!completed) {
+            print(true);
+        }
+    });
     next();
 };
 
@@ -81,6 +94,8 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     }
 
     res.locals.logError = (err instanceof Error ? err.message : 'Unknown error').replace(/[\x00-\x1f\x7f-\x9f]/g, ' ');
-    if (res.headersSent) return _next(err);
+    if (res.headersSent) {
+        return _next(err);
+    }
     res.status(500).json({ message: 'Server error' });
 }

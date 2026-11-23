@@ -31,7 +31,9 @@ async function start(): Promise<void> {
     });
     server.on('error', (error) => {
         console.error(`  ${color(31, '✗')} HTTP server failed: ${errorMessage(error)}`);
-        void pool.end().finally(() => { process.exitCode = 1; });
+        void pool.end().finally(() => {
+            process.exitCode = 1;
+        });
     });
 }
 

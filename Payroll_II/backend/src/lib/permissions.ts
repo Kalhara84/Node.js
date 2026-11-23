@@ -14,8 +14,10 @@ const BUILTIN_SCREENS = ['dashboard', 'employees', 'programs', 'users', 'rights'
 const allRights: Rights = { view: true, add: true, amend: true, delete: true };
 
 export async function accountAccess(id: number): Promise<Access | null> {
-    const user = (await pool.query('SELECT usdactive,usdadmin FROM usdmast WHERE usdsno=$1',[id])).rows[0];
-    if (!user || user.usdactive !== 'Y') return null;
+    const user = (await pool.query('SELECT usdactive,usdadmin FROM usdmast WHERE usdsno=$1', [id])).rows[0];
+    if (!user || user.usdactive !== 'Y') {
+        return null;
+    }
 
     // Load every registered page, including new pages with no assigned rights yet.
     const rights = (await pool.query(`SELECT p.prgnam,p.prglvl,
@@ -30,7 +32,9 @@ export async function accountAccess(id: number): Promise<Access | null> {
     const names = new Set([...BUILTIN_SCREENS, ...rights.map(row => row.prgnam)]);
     for (const s of names) {
         // Never treat special object fields as page permissions.
-        if (typeof s !== 'string' || ['admin', '__proto__', 'constructor', 'prototype'].includes(s)) continue;
+        if (typeof s !== 'string' || ['admin', '__proto__', 'constructor', 'prototype'].includes(s)) {
+            continue;
+        }
         const mine = rights.filter((r) => r.prgnam === s);
         // Admins start with all rights, but saved page restrictions override that default.
         if (user.usdadmin && mine.length === 0) {
@@ -45,16 +49,22 @@ export async function accountAccess(id: number): Promise<Access | null> {
     return access;
 }
 
-export const requireActiveAccount: RequestHandler = wrap(async(req,res,next)=>{
-    const access=await accountAccess(req.user!.sub);
-    if (!access) {res.status(401).json({message:'Account is inactive or no longer exists'});return;}
-    res.locals.access=access;
+export const requireActiveAccount: RequestHandler = wrap(async (req, res, next) => {
+    const access = await accountAccess(req.user!.sub);
+    if (!access) {
+        res.status(401).json({ message: 'Account is inactive or no longer exists' });
+        return;
+    }
+    res.locals.access = access;
     next();
 });
 
 export function requireEmployee(action: keyof EmployeePermissions): RequestHandler {
-    return (_req,res,next)=>{
-        if(!res.locals.access?.employees?.[action]) {res.status(403).json({message:`You do not have permission to ${action} employee records`});return;}
+    return (_req, res, next) => {
+        if (!res.locals.access?.employees?.[action]) {
+            res.status(403).json({ message: `You do not have permission to ${action} employee records` });
+            return;
+        }
         next();
     };
 }

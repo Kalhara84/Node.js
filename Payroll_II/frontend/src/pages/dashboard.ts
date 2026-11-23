@@ -26,7 +26,9 @@ const chartCard = (title: string, icon: string, body: string): string => `
 // Render main dashboard page
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     const user = currentUser();
-    if (!user) return;
+    if (!user) {
+        return;
+    }
 
     const today = new Date().toLocaleDateString('en-GB', {
         weekday: 'long',
@@ -58,10 +60,14 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         body.innerHTML = loading('Loading dashboard...');
         try {
             const data = await api.dashboard();
-            if (!ctx.alive()) return;
+            if (!ctx.alive()) {
+                return;
+            }
             body.innerHTML = view(data);
         } catch (e) {
-            if (ctx.alive()) body.innerHTML = alertBox(errMsg(e));
+            if (ctx.alive()) {
+                body.innerHTML = alertBox(errMsg(e));
+            }
         } finally {
             icon.classList.remove('spin');
         }
@@ -108,16 +114,16 @@ function view(d: DashboardData): string {
         <div class="row g-3 mb-3">
           <div class="col-lg-6">
             ${chartCard('Active employees by category', 'bi-pie-chart', donutChart(d.byCategory.map((c) => ({
-                label: CATEGORY[String(c.label)] ?? String(c.label),
-                value: c.value
-            })), 'Active'))}
+        label: CATEGORY[String(c.label)] ?? String(c.label),
+        value: c.value
+    })), 'Active'))}
           </div>
           <div class="col-lg-6">
             ${chartCard('Gender', 'bi-gender-ambiguous', donutChart(d.byGender.map((g, i) => ({
-                label: GENDER[String(g.label)] ?? String(g.label),
-                value: g.value,
-                color: i === 0 ? '#6d4aff' : '#ff7a3d'
-            })), 'Active'))}
+        label: GENDER[String(g.label)] ?? String(g.label),
+        value: g.value,
+        color: i === 0 ? '#6d4aff' : '#ff7a3d'
+    })), 'Active'))}
           </div>
         </div>
 

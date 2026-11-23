@@ -5,7 +5,9 @@ import type { TokenPayload } from '../types';
 const TOKEN_HOURS = 8;
 const secret = (): string => {
     const value = process.env.AUTH_SECRET;
-    if (!value) throw new Error('AUTH_SECRET is required');
+    if (!value) {
+        throw new Error('AUTH_SECRET is required');
+    }
     return value;
 };
 

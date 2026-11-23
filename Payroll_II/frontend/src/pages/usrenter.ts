@@ -72,11 +72,15 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             request<Usd[]>('/administration/usrenter/users')
         ]);
     } catch (error) {
-        if (ctx.alive()) el.innerHTML = alertBox(errMsg(error));
+        if (ctx.alive()) {
+            el.innerHTML = alertBox(errMsg(error));
+        }
         return;
     }
 
-    if (!ctx.alive()) return;
+    if (!ctx.alive()) {
+        return;
+    }
 
     el.innerHTML = `
       <nav class="admin-tabs mb-3" aria-label="Administration">
@@ -212,7 +216,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
         for (const flag of flags) {
             const checkbox = matrix.querySelector<HTMLInputElement>(`[data-column="${flag}"]`);
-            if (!checkbox) continue;
+            if (!checkbox) {
+                continue;
+            }
             const applicable = te_rows.filter((row) => editable(row, flag));
             const checkedCount = applicable.filter((row) => row[flag] === 'y').length;
             checkbox.disabled = applicable.length === 0;
@@ -323,7 +329,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     async function load(scope: Scope): Promise<void> {
         const version = ++te_version;
         const result = await request<Checked>(`${api}?${new URLSearchParams(scope)}`);
-        if (!ctx.alive() || version !== te_version) return;
+        if (!ctx.alive() || version !== te_version) {
+            return;
+        }
 
         te_scope = scope;
         te_rows = result.rows;
@@ -355,7 +363,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     // Check or uncheck an entire column
     function checkCol(checkyn: boolean, colnam: UsrFlag): void {
         for (const row of te_rows) {
-            if (editable(row, colnam)) row[colnam] = checkyn ? 'y' : 'n';
+            if (editable(row, colnam)) {
+                row[colnam] = checkyn ? 'y' : 'n';
+            }
         }
         paint();
     }
@@ -364,7 +374,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     function checkAll(checkyn: boolean): void {
         for (const row of te_rows) {
             for (const flag of flags) {
-                if (editable(row, flag)) row[flag] = checkyn ? 'y' : 'n';
+                if (editable(row, flag)) {
+                    row[flag] = checkyn ? 'y' : 'n';
+                }
             }
         }
         paint();
@@ -373,7 +385,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     // Handle form submit (CHECK action)
     form.onsubmit = async (event) => {
         event.preventDefault();
-        if (te_busy || !form.reportValidity()) return;
+        if (te_busy || !form.reportValidity()) {
+            return;
+        }
 
         const scope = selectedScope();
         notice.innerHTML = '';
@@ -387,7 +401,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 notice.innerHTML = alertBox(errMsg(error));
             }
         } finally {
-            if (ctx.alive()) busy(false);
+            if (ctx.alive()) {
+                busy(false);
+            }
         }
     };
 
@@ -401,8 +417,12 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Save or delete permissions
     async function save(remove: boolean): Promise<void> {
-        if (!can('rights', remove ? 'delete' : 'amend')) return;
-        if (te_busy || !te_scope || !te_rows.length) return;
+        if (!can('rights', remove ? 'delete' : 'amend')) {
+            return;
+        }
+        if (te_busy || !te_scope || !te_rows.length) {
+            return;
+        }
         const scope = { ...te_scope };
         const version = te_version;
 
@@ -412,10 +432,14 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 message: `Remove all rights for ${scope.usrusdsnoauto} in the checked selection (${te_rows.length} programs)?`,
                 confirmText: 'Delete rights'
             });
-            if (!confirmed) return;
+            if (!confirmed) {
+                return;
+            }
         }
 
-        if (!ctx.alive() || version !== te_version || te_busy) return;
+        if (!ctx.alive() || version !== te_version || te_busy) {
+            return;
+        }
 
         const payload = {
             ...scope,
@@ -437,7 +461,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
-            if (!ctx.alive()) return;
+            if (!ctx.alive()) {
+                return;
+            }
 
             try {
                 await load(scope);
@@ -451,12 +477,20 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 notice.innerHTML = `<div class="alert alert-success py-2">${esc(result.message)}</div>`;
             }
         } catch (error) {
-            if (ctx.alive()) notice.innerHTML = alertBox(errMsg(error));
+            if (ctx.alive()) {
+                notice.innerHTML = alertBox(errMsg(error));
+            }
         } finally {
-            if (ctx.alive()) busy(false);
+            if (ctx.alive()) {
+                busy(false);
+            }
         }
     }
 
-    control<HTMLButtonElement>('save').onclick = () => { void save(false); };
-    control<HTMLButtonElement>('delete').onclick = () => { void save(true); };
+    control<HTMLButtonElement>('save').onclick = () => {
+        void save(false);
+    };
+    control<HTMLButtonElement>('delete').onclick = () => {
+        void save(true);
+    };
 }

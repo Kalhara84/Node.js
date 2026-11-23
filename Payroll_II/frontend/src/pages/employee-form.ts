@@ -247,7 +247,9 @@ function toPayload(form: HTMLFormElement): EmployeeBody {
     const body: Record<string, string | number | null> = {};
 
     for (const { key, type } of FIELDS) {
-        if (key === 'empeno') continue;
+        if (key === 'empeno') {
+            continue;
+        }
 
         let v = '';
         if (type === 'radio') {
@@ -290,7 +292,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         ]);
 
         lookups = lk;
-        if (next) values.empeno = String(next.empeno);
+        if (next) {
+            values.empeno = String(next.empeno);
+        }
 
         if (emp) {
             values = {};
@@ -300,11 +304,15 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             }
         }
     } catch (e) {
-        if (ctx.alive()) el.innerHTML = alertBox(errMsg(e));
+        if (ctx.alive()) {
+            el.innerHTML = alertBox(errMsg(e));
+        }
         return;
     }
 
-    if (!ctx.alive()) return;
+    if (!ctx.alive()) {
+        return;
+    }
 
     const pageTitle = id !== null ? 'Edit Employee' : 'Add Employee';
     const saveLabel = id !== null ? 'Update' : 'Save';
@@ -351,7 +359,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             return fail('Employee Name is required');
         }
 
-        buttons.forEach((btn) => { btn.disabled = true; });
+        buttons.forEach((btn) => {
+            btn.disabled = true;
+        });
 
         try {
             if (id !== null) {
@@ -362,7 +372,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             ctx.navigate('/employees');
         } catch (err) {
             fail(errMsg(err));
-            buttons.forEach((btn) => { btn.disabled = false; });
+            buttons.forEach((btn) => {
+                btn.disabled = false;
+            });
         }
     };
 }

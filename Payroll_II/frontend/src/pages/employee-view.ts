@@ -43,7 +43,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         return;
     }
 
-    if (!ctx.alive()) return;
+    if (!ctx.alive()) {
+        return;
+    }
 
     // Lookup description helper
     const name = (list: SysItem[] | undefined, key: number | null, field: 'sysdes' | 'sysrno' = 'sysdes'): string | undefined => {
@@ -78,73 +80,73 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
       <!-- Personal details -->
       ${section('bi-person', 'Personal', [
-          item('Initial', emp.empinital),
-          item('Employee Name', emp.empnam),
-          item('Sex', gender),
-          item('Married', yn(emp.empmrdtst)),
-          item('National ID', emp.empidno),
-          item('Passport No', emp.emppasportno),
-          item('Date of Birth', emp.empdob),
-          item('Status', emp.empsts),
-      ])}
+        item('Initial', emp.empinital),
+        item('Employee Name', emp.empnam),
+        item('Sex', gender),
+        item('Married', yn(emp.empmrdtst)),
+        item('National ID', emp.empidno),
+        item('Passport No', emp.emppasportno),
+        item('Date of Birth', emp.empdob),
+        item('Status', emp.empsts),
+    ])}
 
       <!-- Job & Department details -->
       ${section('bi-briefcase', 'Job', [
-          item('Category', CATEGORY[emp.empcat] ?? emp.empcat),
-          item('Designation', emp.empdesig),
-          item('Department', emp.department_name),
-          item('Location', emp.location_name),
-          item('Section', name(lookups?.sections, emp.empsecsno)),
-          item('Area', name(lookups?.areas, emp.emparesno)),
-          item('Cost Center', name(lookups?.costCenters, emp.empcossno, 'sysrno')),
-          item('Basis', name(lookups?.basis, emp.empbasisno)),
-          item('Date Joined', emp.empjoin),
-          item('Date Left', emp.empleft),
-          item('Map Code', emp.empmapcode),
-          item('Active', yn(emp.empactflg)),
-      ])}
+        item('Category', CATEGORY[emp.empcat] ?? emp.empcat),
+        item('Designation', emp.empdesig),
+        item('Department', emp.department_name),
+        item('Location', emp.location_name),
+        item('Section', name(lookups?.sections, emp.empsecsno)),
+        item('Area', name(lookups?.areas, emp.emparesno)),
+        item('Cost Center', name(lookups?.costCenters, emp.empcossno, 'sysrno')),
+        item('Basis', name(lookups?.basis, emp.empbasisno)),
+        item('Date Joined', emp.empjoin),
+        item('Date Left', emp.empleft),
+        item('Map Code', emp.empmapcode),
+        item('Active', yn(emp.empactflg)),
+    ])}
 
       <!-- Salary and statutory records -->
       ${section('bi-cash-stack', 'Salary & Statutory', [
-          item('Basic Salary', emp.empsal),
-          item('E.P.F', yn(emp.empepfyn)),
-          item('E.P.F #', emp.empepfno),
-          item('PAYE', yn(emp.emppayeyn)),
-          item('Tax Table No', emp.emptno),
-          item('PAYE Relief', emp.empprl),
-          item('Up To Date Gross Earnings', emp.empgin),
-          item('Up To Date Tax', emp.emptax),
-          item('TIN No', emp.emptin),
-          item('Coin Op Bal', emp.empcob),
-          item('Service Charge %', emp.empscgpcn),
-      ])}
+        item('Basic Salary', emp.empsal),
+        item('E.P.F', yn(emp.empepfyn)),
+        item('E.P.F #', emp.empepfno),
+        item('PAYE', yn(emp.emppayeyn)),
+        item('Tax Table No', emp.emptno),
+        item('PAYE Relief', emp.empprl),
+        item('Up To Date Gross Earnings', emp.empgin),
+        item('Up To Date Tax', emp.emptax),
+        item('TIN No', emp.emptin),
+        item('Coin Op Bal', emp.empcob),
+        item('Service Charge %', emp.empscgpcn),
+    ])}
 
       <!-- Bank information -->
       ${section('bi-bank', 'Bank', [
-          item('Bank A/C #', emp.empbnkacno),
-          item('Bank Code', emp.empbnkcode),
-          item('Bank Branch', emp.empbnkbranch),
-          item('Bank Id', emp.empbnkid),
-      ])}
+        item('Bank A/C #', emp.empbnkacno),
+        item('Bank Code', emp.empbnkcode),
+        item('Bank Branch', emp.empbnkbranch),
+        item('Bank Id', emp.empbnkid),
+    ])}
 
       <!-- Contact details -->
       ${section('bi-telephone', 'Contact', [
-          item('Address', [emp.empad1, emp.empad2, emp.empad3, emp.empad4].filter(Boolean).join(', ')),
-          item('Email', emp.empemail),
-          item('Telephone', emp.emptel),
-      ])}
+        item('Address', [emp.empad1, emp.empad2, emp.empad3, emp.empad4].filter(Boolean).join(', ')),
+        item('Email', emp.empemail),
+        item('Telephone', emp.emptel),
+    ])}
 
       <!-- Leave & attendance rules -->
       ${section('bi-calendar-check', 'Leave & Flags', [
-          item('Annual', emp.empanual),
-          item('Casual', emp.empcasal),
-          item('L/L', emp.empleuleu),
-          item('OT', yn(emp.empotflg)),
-          item('No Pay', yn(emp.empnopflg)),
-          item('Attendance Incentive', yn(emp.empattincflg)),
-          item('Late', yn(emp.emplateflg)),
-          item('Sat Leave', yn(emp.empnsatlflg)),
-      ])}`;
+        item('Annual', emp.empanual),
+        item('Casual', emp.empcasal),
+        item('L/L', emp.empleuleu),
+        item('OT', yn(emp.empotflg)),
+        item('No Pay', yn(emp.empnopflg)),
+        item('Attendance Incentive', yn(emp.empattincflg)),
+        item('Late', yn(emp.emplateflg)),
+        item('Sat Leave', yn(emp.empnsatlflg)),
+    ])}`;
 
     // Handle delete button click
     const deleteButton = el.querySelector<HTMLButtonElement>('#del');
@@ -154,7 +156,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 title: 'Delete employee',
                 message: `Delete ${emp.empnam} (Emp No ${emp.empeno})? This cannot be undone.`
             });
-            if (!confirmed) return;
+            if (!confirmed) {
+                return;
+            }
 
             try {
                 await api.remove(emp.empsno);

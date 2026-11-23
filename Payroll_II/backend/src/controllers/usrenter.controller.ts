@@ -16,7 +16,9 @@ export const UsrEnterController = {
         const scope = usrScope(req.query);
 
         const user = await UsrEnterModel.findUser(scope.usrusdsno);
-        if (!user) fail('User not found');
+        if (!user) {
+            fail('User not found');
+        }
 
         const rows = await UsrEnterModel.programs(scope);
         res.json({ ...scope, usrusdsnoauto: user.usdusd, usdnam: user.usdnam, usdadmin: user.usdadmin, rows });

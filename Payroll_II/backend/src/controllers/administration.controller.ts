@@ -64,7 +64,9 @@ function validateUser(body: Record<string, unknown>, create: boolean) {
     const data: Record<string, unknown> = {};
 
     for (const [key, max] of Object.entries(userFields)) {
-        if (key === 'usdusd' && !create) continue;
+        if (key === 'usdusd' && !create) {
+            continue;
+        }
         data[key] = string(body[key], key, max, key === 'usdusd');
     }
 
@@ -117,7 +119,9 @@ const bodyOf = (req: Request): Record<string, unknown> => req.body ?? {};
 // Only an existing admin may create another admin or change an account's admin status.
 function applyRole(req: Request, res: Response, data: Record<string, unknown>): boolean {
     const role = bodyOf(req).usdadmin;
-    if (role === undefined) return true;
+    if (role === undefined) {
+        return true;
+    }
     if (!res.locals.access?.admin) {
         res.status(403).json({ message: 'Only an administrator can change administrator status' });
         return false;
@@ -301,11 +305,15 @@ export const AdministrationController = {
     // Create new user account
     async createUser(req: Request, res: Response): Promise<void> {
         const { data, password } = validateUser(bodyOf(req), true);
-        if (!applyRole(req, res, data)) return;
+        if (!applyRole(req, res, data)) {
+            return;
+        }
         if (data.usdcomsno && !(await locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
-        if (password) data.usdpwd = hashPassword(password);
+        if (password) {
+            data.usdpwd = hashPassword(password);
+        }
 
         // Column names come only from validated fields; values are SQL parameters.
         const keys = Object.keys(data);
@@ -328,11 +336,15 @@ export const AdministrationController = {
         }
 
         const { data, password } = validateUser(bodyOf(req), false);
-        if (!applyRole(req, res, data)) return;
+        if (!applyRole(req, res, data)) {
+            return;
+        }
         if (data.usdcomsno && !(await locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
-        if (password) data.usdpwd = hashPassword(password);
+        if (password) {
+            data.usdpwd = hashPassword(password);
+        }
 
         // Update the URL account ID and record the signed-in user making the change.
         const keys = Object.keys(data);

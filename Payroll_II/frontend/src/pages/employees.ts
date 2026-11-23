@@ -54,11 +54,15 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         $('#err').innerHTML = '';
         try {
             const r = await api.list(search, page);
-            if (!ctx.alive()) return;
+            if (!ctx.alive()) {
+                return;
+            }
             result = r;
             draw();
         } catch (e) {
-            if (!ctx.alive()) return;
+            if (!ctx.alive()) {
+                return;
+            }
             $('#err').innerHTML = `<div class="alert alert-danger py-2">${esc(errMsg(e))}</div>`;
             $('#rows').innerHTML = '';
         }
@@ -66,7 +70,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Render employee rows and pagination controls
     function draw(): void {
-        if (!result) return;
+        if (!result) {
+            return;
+        }
 
         $('#count').textContent = `${result.total} employees in total`;
 
@@ -148,16 +154,22 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         }
 
         const del = target.closest<HTMLElement>('[data-del]');
-        if (!del || !result) return;
+        if (!del || !result) {
+            return;
+        }
 
         const emp = result.data.find((x) => x.empsno === Number(del.dataset.del));
-        if (!emp) return;
+        if (!emp) {
+            return;
+        }
 
         const confirmed = await confirmModal({
             title: 'Delete employee',
             message: `Delete ${emp.empnam} (Emp No ${emp.empeno})? This cannot be undone.`
         });
-        if (!confirmed) return;
+        if (!confirmed) {
+            return;
+        }
 
         try {
             await api.remove(emp.empsno);
