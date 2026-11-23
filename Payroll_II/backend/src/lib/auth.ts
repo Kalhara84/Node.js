@@ -4,7 +4,9 @@ import type { TokenPayload } from '../types';
 /** Token + password helpers using only Node's built-in crypto. */
 const TOKEN_HOURS = 8;
 const secret = (): string => {
-    return process.env.AUTH_SECRET;
+    const value = process.env.AUTH_SECRET;
+    if (!value) throw new Error('AUTH_SECRET is required');
+    return value;
 };
 
 const b64 = (v: string): string => {

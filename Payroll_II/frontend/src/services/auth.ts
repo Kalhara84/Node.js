@@ -50,5 +50,8 @@ export function homeFor(user: AuthUser | null): string {
     if (!user) return '/login';
     if (user.access?.dashboard?.view) return '/dashboard';
     if (user.access?.employees?.view) return '/employees';
+    if (user.access?.users?.view) return '/administration/users';
+    if (user.access?.programs?.view) return '/administration/programs';
+    if (user.access?.rights?.view) return '/usrenter';
     return '/account';
 }

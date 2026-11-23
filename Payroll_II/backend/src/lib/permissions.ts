@@ -7,24 +7,22 @@ export type EmployeePermissions = Rights;
 export type Screen = 'dashboard' | 'employees' | 'programs' | 'users' | 'rights';
 export type Access = { admin: boolean } & Record<Screen, Rights>;
 
-// Every screen of the web app and the programs (prgmast.prgnam) that control it.
+// Program keys match actual pages. Register the same key in Program Master before assigning rights.
 // "programs": any right on these programs lets the user open the screen.
 // "entry":    the add / amend / delete flags are read from these programs only.
 // To control a new screen: add it here, add its program to prgmast (see the prgmast rows in db/payroll_db.sql).
-// A ".php" ending on a program name in the database is ignored.
 export const SCREENS: Record<Screen, { programs: string[]; entry: string[] }> = {
     dashboard: { programs: ['dashboard'], entry: [] },
     employees: {
-        programs: ['p_empenter', 'p_empm', 'p_empmastview', 'p_empenter1', 'p_empm1'],
-        entry: ['p_empenter', 'p_empenter1'],
+        programs: ['employees'],
+        entry: ['employees'],
     },
-    programs: { programs: ['a_programs'], entry: ['a_programs'] },
-    users: { programs: ['a_users'], entry: ['a_users'] },
-    rights: { programs: ['usrenter'], entry: [] },
+    programs: { programs: ['programs'], entry: ['programs'] },
+    users: { programs: ['users'], entry: ['users'] },
+    rights: { programs: ['rights'], entry: ['rights'] },
 };
 const SCREEN_NAMES = Object.keys(SCREENS) as Screen[];
 const ALL_PROGRAMS = [...new Set(SCREEN_NAMES.flatMap((s) => SCREENS[s].programs))];
-const programName = (name: string) => name.replace(/\.php$/, '');
 
 const allRights: Rights = { view: true, add: true, amend: true, delete: true };
 
@@ -39,16 +37,16 @@ export async function accountAccess(id: number): Promise<Access | null> {
         return everything;
     }
 
-    const rights = (await pool.query(`SELECT p.prgnam,r.usryn,r.usraddyn,r.usrameyn,r.usrdelyn
+    const rights = (await pool.query(`SELECT p.prgnam,p.prglvl,r.usryn,r.usraddyn,r.usrameyn,r.usrdelyn
       FROM usrmast r JOIN prgmast p ON p.prgsno=r.usrprgsno
-      WHERE r.usrusdsno=$1 AND regexp_replace(p.prgnam,'\\.php$','')=ANY($2::text[])`,
+      WHERE r.usrusdsno=$1 AND p.prgapp='payroll-web' AND p.prgnam=ANY($2::text[])`,
       [id,ALL_PROGRAMS])).rows;
 
     const access = { admin: false } as Access;
     for (const s of SCREEN_NAMES) {
         const screen = SCREENS[s];
-        const mine = rights.filter((r) => screen.programs.includes(programName(r.prgnam)));
-        const entry = mine.filter((r) => screen.entry.includes(programName(r.prgnam)));
+        const mine = rights.filter((r) => screen.programs.includes(r.prgnam));
+        const entry = mine.filter((r) => screen.entry.includes(r.prgnam) && r.prglvl === 'M');
         const action = (flag: string) => entry.some((r) => r[flag] === 'y');
         const add = action('usraddyn'), amend = action('usrameyn'), remove = action('usrdelyn');
         access[s] = { view: add || amend || remove || mine.some((r) => r.usryn === 'y'), add, amend, delete: remove };

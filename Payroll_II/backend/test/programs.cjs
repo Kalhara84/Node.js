@@ -6,8 +6,8 @@ const administration = require('../dist/routes/administration').default;
 const { pool } = require('../dist/lib/db');
 
 // Use a valid Program Master form; tests change individual fields as needed.
-const form = () => ({ prgmodsno: '32', prgsmdsno: '33', prgorder: ' 01 ', prglvl: 'M', prgnam: ' example ', prgdes: ' Example program ' });
-const program = { prgsno: 21, prgnam: 'example', module: 'Administration', submodule: 'Setup' };
+const form = () => ({ prgmodsno: '32', prgsmdsno: '33', prgorder: ' 01 ', prglvl: 'M', prgnam: ' employees ', prgdes: ' Example program ' });
+const program = { prgsno: 21, prgnam: 'employees', module: 'Administration', submodule: 'Setup' };
 
 // Exercise the real routes with simulated SQL; do not write to a real database.
 async function fixture(context, options = {}) {
@@ -76,7 +76,7 @@ test('User Master can still load the shared administration dropdowns', async con
     const api = await fixture(context, { programAccess: { view: false, add: false, amend: false, delete: false } });
     const result = await api.send('/lookups');
     assert.equal(result.status, 200);
-    assert.deepEqual(result.data, {
+    assert.deepEqual({ modules: result.data.modules, submodules: result.data.submodules, locations: result.data.locations }, {
         modules: [{ syssno: 32, sysdes: 'Administration' }],
         submodules: [{ syssno: 33, sysdes: 'Setup' }],
         locations: [{ locsno: 1, locnam: 'Main' }]
@@ -86,11 +86,11 @@ test('User Master can still load the shared administration dropdowns', async con
 // The signed-in identity, rather than form input, supplies the audit username.
 test('creating a program trims fields and uses parameterized values and signed-in audit details', async context => {
     const api = await fixture(context);
-    const result = await api.send('/programs', 'POST', { ...form(), prgnam: " x'); DROP TABLE prgmast;-- ", prgucdnew: 'FORGED' });
+    const result = await api.send('/programs', 'POST', { ...form(), prgdes: " x'); DROP TABLE prgmast;-- ", prgucdnew: 'FORGED' });
     assert.equal(result.status, 201);
     assert.deepEqual(result.data, program);
     const insert = api.calls.find(call => call.sql.startsWith('INSERT'));
-    assert.deepEqual(insert.values, [32, 33, '01', 'M', "x'); DROP TABLE prgmast;--", 'Example program', 'SIGNED_IN_USER']);
+    assert.deepEqual(insert.values, [32, 33, '01', 'M', 'employees', "x'); DROP TABLE prgmast;--", 'SIGNED_IN_USER']);
     assert.equal(insert.sql.includes('DROP TABLE'), false);
 });
 
@@ -100,7 +100,7 @@ test('invalid program fields and IDs are rejected before writes', async context 
     for (const changes of [
         { prgmodsno: '' }, { prgmodsno: 1.5 }, { prgsmdsno: 2147483648 },
         { prglvl: 'X' }, { prgorder: '123456' }, { prgnam: ' ' },
-        { prgnam: 42 }, { prgdes: 'x'.repeat(61) }
+        { prgnam: 42 }, { prgnam: 'missing-page' }, { prgdes: 'x'.repeat(61) }
     ]) {
         assert.equal((await api.send('/programs', 'POST', { ...form(), ...changes })).status, 400);
     }
@@ -123,7 +123,7 @@ test('updating a program uses the URL ID and signed-in audit details', async con
     const api = await fixture(context);
     assert.equal((await api.send('/programs/21', 'PUT', form())).status, 200);
     const update = api.calls.find(call => call.sql.startsWith('UPDATE'));
-    assert.deepEqual(update.values, [32, 33, '01', 'M', 'example', 'Example program', 'SIGNED_IN_USER', 21]);
+    assert.deepEqual(update.values, [32, 33, '01', 'M', 'employees', 'Example program', 'SIGNED_IN_USER', 21]);
 });
 
 test('updating a missing program returns 404', async context => {
@@ -137,7 +137,8 @@ test('program deletion locks, removes rights, commits and releases its connectio
     assert.deepEqual(await api.send('/programs/21', 'DELETE'), { status: 200, data: { message: 'Program deleted' } });
     assert.deepEqual(api.calls.map(call => call.sql), [
         'BEGIN', 'LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE',
-        'DELETE FROM usrmast WHERE usrprgsno=$1', 'DELETE FROM prgmast WHERE prgsno=$1', 'COMMIT'
+        "SELECT prgsno FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'",
+        'DELETE FROM usrmast WHERE usrprgsno=$1', "DELETE FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'", 'COMMIT'
     ]);
     assert.deepEqual(api.calls[2].values, [21]);
     assert.deepEqual(api.calls[3].values, [21]);

@@ -1,5 +1,5 @@
 import { api } from '../services/api.ts';
-import { currentUser } from '../services/auth.ts';
+import { currentUser, canEmployee } from '../services/auth.ts';
 import { esc, money, errMsg, qs, CATEGORY, GENDER, loading, alertBox, emptyState } from '../utils/ui.ts';
 import type { DashboardData, PageContext } from '../types.ts';
 import { donutChart, barList, columnChart, PALETTE } from '../utils/charts.ts';
@@ -44,7 +44,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         </div>
         <div class="d-flex gap-2">
           <button class="btn btn-ghost" id="refresh"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
-          <a href="/employees/new" data-link class="btn btn-light"><i class="bi bi-plus-lg me-1"></i>Add Employee</a>
+          ${canEmployee('add') ? '<a href="/employees/new" data-link class="btn btn-light"><i class="bi bi-plus-lg me-1"></i>Add Employee</a>' : ''}
         </div>
       </div>
       <div id="dash-body"></div>`;

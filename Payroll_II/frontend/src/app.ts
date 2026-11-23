@@ -92,6 +92,7 @@ function matchRoute(routePath: string, currentPath: string): { matched: boolean;
 
 let renderId = 0;
 let shellShown = false;
+let shellProfile = "";
 
 // SPA navigation function
 export function navigate(path: string, replace = false): void {
@@ -157,7 +158,7 @@ async function show(): Promise<void> {
     let user = currentUser();
 
     // Verify session when logged in
-    if (user && !shellShown) {
+    if (user) {
         try {
             user = await refreshUser();
         } catch {
@@ -224,6 +225,10 @@ async function show(): Promise<void> {
         return;
     }
 
+    // Rebuild menus when refreshed permissions or user details have changed.
+    const profile = JSON.stringify(user);
+    if (shellProfile !== profile) shellShown = false;
+
     // Render app shell layout once
     if (!shellShown) {
         root.innerHTML = shellHtml(user);
@@ -232,6 +237,7 @@ async function show(): Promise<void> {
             navigate('/login', true);
         };
         shellShown = true;
+        shellProfile = profile;
     }
 
     // Update topbar breadcrumbs and active menu state

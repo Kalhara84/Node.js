@@ -925,9 +925,7 @@ INSERT INTO "a_sysmast" ("syssno","sysrtp","sysrno","sysdes","sysdes1","sysdes2"
 (47,1,E'9',E'visits',E'Leave type',NULL,1,E'2000',E'2012-03-06',E'18:49:38',NULL,NULL,NULL),
 (48,1,E'10',E'Short leave',E'Leave type',NULL,1,E'2000',E'2012-03-06',E'18:53:31',NULL,NULL,NULL),
 (49,1,E'11',E'Half Day',E'Leave type',NULL,1,E'2000',E'2012-03-06',E'18:53:53',NULL,NULL,NULL),
-(50,33,E'1',E'MASTER FILE',E'',NULL,0,E'2000',E'2012-10-05',E'10:08:56',NULL,NULL,NULL),
-(60,32,E'WEB',E'PAYROLL WEB APP',E'',NULL,0,E'2000',E'2026-11-23',E'12:00:00',NULL,NULL,NULL),
-(61,33,E'WEB',E'WEB SCREENS',E'',NULL,0,E'2000',E'2026-11-23',E'12:00:00',NULL,NULL,NULL)
+(50,33,E'1',E'MASTER FILE',E'',NULL,0,E'2000',E'2012-10-05',E'10:08:56',NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS "a_wormast" (
@@ -2080,11 +2078,7 @@ INSERT INTO "prgmast" ("prgsno","prgmodsno","prgsmdsno","prgorder","prglvl","prg
 (47,55,51,E'48',E'S',E'p_noptrn.php',E'Enter Direct Transaction',E'2000',E'2012-10-05',E'11:07:15',NULL,NULL,NULL),
 (48,55,51,E'49',E'S',E'p_noptrn1.php',E'Enter Direct Transaction-Rabbukkana',E'2000',E'2012-10-05',E'11:08:28',NULL,NULL,NULL),
 (49,55,51,E'50',E'S',E'p_trnenter.php',E'Monthly Transactions',E'2000',E'2012-10-05',E'11:09:02',NULL,NULL,NULL),
-(50,55,51,E'51',E'S',E'p_salenter.php',E'Salary Advance',E'2000',E'2012-10-05',E'11:09:54',NULL,NULL,NULL),
-(51,60,61,E'901',E'S',E'dashboard',E'Dashboard',E'2000',E'2026-11-23',E'12:00:00',NULL,NULL,NULL),
-(52,60,61,E'902',E'M',E'a_programs',E'Program Master',E'2000',E'2026-11-23',E'12:00:00',NULL,NULL,NULL),
-(53,60,61,E'903',E'M',E'a_users',E'User Master',E'2000',E'2026-11-23',E'12:00:00',NULL,NULL,NULL),
-(54,60,61,E'904',E'S',E'usrenter',E'User Rights',E'2000',E'2026-11-23',E'12:00:00',NULL,NULL,NULL)
+(50,55,51,E'51',E'S',E'p_salenter.php',E'Salary Advance',E'2000',E'2012-10-05',E'11:09:54',NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS "s_locmast" (
@@ -2494,15 +2488,66 @@ SELECT setval(pg_get_serial_sequence('usrmast', 'usrsno'),
   GREATEST(COALESCE(MAX("usrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'usrmast_usrsno_seq'), 1)),
   MAX("usrsno") IS NOT NULL) FROM "usrmast";
--- OPTIONAL: before the Dashboard had its own program it was open to every user who could view employees.
--- To keep that for existing users, remove the leading "-- " from the lines below.
--- INSERT INTO usrmast (usrusdsno, usrprgsno, usryn, usraddyn, usrameyn, usrdelyn, usrucdnew, usrentddt, usrenttime)
--- SELECT DISTINCT r.usrusdsno, d.prgsno, 'y', 'n', 'n', 'n', '2000', CURRENT_DATE, LOCALTIME
--- FROM usrmast r
--- JOIN prgmast e ON e.prgsno = r.usrprgsno
---   AND regexp_replace(e.prgnam, '\.php$', '') IN ('p_empenter','p_empm','p_empmastview','p_empenter1','p_empm1')
--- CROSS JOIN prgmast d
--- WHERE regexp_replace(d.prgnam, '\.php$', '') = 'dashboard'
---   AND (r.usryn = 'y' OR r.usraddyn = 'y' OR r.usrameyn = 'y' OR r.usrdelyn = 'y')
--- ON CONFLICT (usrusdsno, usrprgsno) DO NOTHING;
+-- Register the current web pages using generated IDs, after the legacy import.
+-- Register the two implemented business pages without deleting the old system catalog.
+-- Run once on an existing database, or after importing payroll_db.sql on a new database.
+SELECT pg_advisory_xact_lock(740219853);
+
+-- Keep different applications' program catalogs in the same database.
+ALTER TABLE prgmast ADD COLUMN IF NOT EXISTS prgapp varchar(30) NOT NULL DEFAULT '';
+LOCK TABLE a_sysmast, prgmast, usrmast IN SHARE ROW EXCLUSIVE MODE;
+CREATE UNIQUE INDEX IF NOT EXISTS prgmast_web_name ON prgmast(prgapp, prgnam) WHERE prgapp = 'payroll-web';
+
+-- Imported databases may have sequences behind their existing IDs; only advance them.
+SELECT setval(pg_get_serial_sequence('a_sysmast', 'syssno'),
+    GREATEST(COALESCE(MAX(syssno), 0), COALESCE(pg_sequence_last_value(pg_get_serial_sequence('a_sysmast', 'syssno')::regclass), 0), 1), true) FROM a_sysmast;
+SELECT setval(pg_get_serial_sequence('prgmast', 'prgsno'),
+    GREATEST(COALESCE(MAX(prgsno), 0), COALESCE(pg_sequence_last_value(pg_get_serial_sequence('prgmast', 'prgsno')::regclass), 0), 1), true) FROM prgmast;
+SELECT setval(pg_get_serial_sequence('usrmast', 'usrsno'),
+    GREATEST(COALESCE(MAX(usrsno), 0), COALESCE(pg_sequence_last_value(pg_get_serial_sequence('usrmast', 'usrsno')::regclass), 0), 1), true) FROM usrmast;
+
+INSERT INTO a_sysmast(sysrtp, sysrno, sysdes) VALUES
+    (32, 'WEBAPP', 'Payroll Web App'),
+    (33, 'WEBPAGES', 'Application Pages')
+ON CONFLICT DO NOTHING;
+
+DO $
+DECLARE
+    page record;
+    new_id integer;
+    module_id integer;
+    submodule_id integer;
+BEGIN
+    SELECT syssno INTO module_id FROM a_sysmast WHERE sysrtp=32 AND sysrno='WEBAPP';
+    SELECT syssno INTO submodule_id FROM a_sysmast WHERE sysrtp=33 AND sysrno='WEBPAGES';
+
+    FOR page IN SELECT * FROM (VALUES
+        ('employees', 'Employee Master', '001'),
+        ('users', 'User Master', '002')
+    ) AS pages(name, description, display_order)
+    LOOP
+        new_id := NULL;
+        INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgapp, prgucdnew, prgentddt, prgenttime)
+        VALUES(module_id, submodule_id, page.display_order, 'M', page.name, page.description, 'payroll-web', 'web-setup', CURRENT_DATE, LOCALTIME)
+        ON CONFLICT DO NOTHING RETURNING prgsno INTO new_id;
+
+        -- Copy existing equivalent rights only when the page is first registered.
+        -- Running setup again must never restore permissions that an admin later removed.
+        IF new_id IS NOT NULL THEN
+            INSERT INTO usrmast(usrusdsno, usrprgsno, usryn, usraddyn, usrameyn, usrdelyn, usrucdnew, usrentddt, usrenttime)
+            SELECT r.usrusdsno, new_id,
+                CASE WHEN bool_or(r.usryn='y' OR (r.usraddyn='y' OR r.usrameyn='y' OR r.usrdelyn='y') AND
+                    regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
+                CASE WHEN bool_or(r.usraddyn='y' AND regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
+                CASE WHEN bool_or(r.usrameyn='y' AND regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
+                CASE WHEN bool_or(r.usrdelyn='y' AND regexp_replace(p.prgnam, '\.php, '') = ANY(CASE WHEN page.name='employees' THEN ARRAY['p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)) THEN 'y' ELSE 'n' END,
+                'web-setup', CURRENT_DATE, LOCALTIME
+            FROM usrmast r JOIN prgmast p ON p.prgsno=r.usrprgsno
+            WHERE p.prgapp='' AND regexp_replace(p.prgnam, '\.php, '') = ANY(
+                CASE WHEN page.name='employees' THEN ARRAY['p_empm','p_empmastview','p_empm1','p_empenter','p_empenter1'] ELSE ARRAY['a_users'] END)
+            GROUP BY r.usrusdsno
+            ON CONFLICT(usrusdsno, usrprgsno) DO NOTHING;
+        END IF;
+    END LOOP;
+END $;
 COMMIT;

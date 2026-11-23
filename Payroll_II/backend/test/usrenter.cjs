@@ -69,7 +69,7 @@ test('SAVE applies single/multiple program rules and retains hidden legacy field
     const api = await fixture(context);
     assert.equal((await api.send(body())).status, 200);
     const inserts = api.calls.filter(call => call.sql.startsWith('INSERT'));
-    assert.deepEqual(inserts.map(call => call.values), [[7, 21, 'y', 'n', 'n', 'n', 'ADMIN'], [7, 22, 'n', 'y', 'n', 'y', 'ADMIN']]);
+    assert.deepEqual(inserts.map(call => call.values), [[7, 21, 'y', 'n', 'n', 'n', 'ADMIN'], [7, 22, 'y', 'y', 'n', 'y', 'ADMIN']]);
     assert.ok(inserts.every(call => !/usrdisyn|usrupdyn|usrvssyn/.test(call.sql)));
     assert.equal(api.calls.at(-1).sql, 'COMMIT');
     assert.equal(api.released(), true);
@@ -113,14 +113,23 @@ test('failed permission writes roll back and release the database connection', a
 });
 
 test('ordinary users get only the screens their program rights allow', async context => {
-    const api = await fixture(context, { admin: false, rights: [{ prgnam: 'usrenter', usryn: 'y', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n' }] });
+    const api = await fixture(context, { admin: false, rights: [{ prgnam: 'rights', prglvl: 'S', usryn: 'y', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n' }] });
     assert.equal((await api.send(null, '?usrusdsno=7&modopt=A&smodopt=A')).status, 200);
     assert.equal((await api.get('/programs')).status, 403);
-    assert.equal((await api.get('/users')).status, 403);
+    assert.equal((await api.get('/users')).status, 200);
 });
 test('program master needs its own program rights', async context => {
-    const api = await fixture(context, { admin: false, rights: [{ prgnam: 'a_programs.php', usryn: 'n', usraddyn: 'n', usrameyn: 'y', usrdelyn: 'n' }] });
+    const api = await fixture(context, { admin: false, rights: [{ prgnam: 'programs', prglvl: 'M', usryn: 'n', usraddyn: 'n', usrameyn: 'y', usrdelyn: 'n' }] });
     assert.equal((await api.get('/programs')).status, 200);
     assert.equal((await api.get('/lookups')).status, 200);
     assert.equal((await api.send(null, '?usrusdsno=7&modopt=A&smodopt=A')).status, 403);
+});
+
+// Seeing the rights table alone must not allow users to give themselves more access.
+test('view-only User Rights access cannot save or delete permissions', async context => {
+    const api = await fixture(context, { admin: false, rights: [{ prgnam: 'rights', prglvl: 'M', usryn: 'y', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n' }] });
+    assert.equal((await api.send(null, '?usrusdsno=7&modopt=A&smodopt=A')).status, 200);
+    assert.equal((await api.send(body())).status, 403);
+    assert.equal((await api.send({ ...body(), save: false, delete: true })).status, 403);
+    assert.equal(api.calls.some(call => call.sql === 'BEGIN'), false);
 });

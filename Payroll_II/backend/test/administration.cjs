@@ -110,7 +110,7 @@ test('administration rights saving normalizes flags and commits all changes toge
     const inserts = db.calls.filter(call => call.sql.startsWith('INSERT'));
     assert.deepEqual(inserts.map(call => call.values), [
         [7, 21, 'y', 'n', 'n', 'n', 'EDITOR'],
-        [7, 22, 'n', 'y', 'y', 'y', 'EDITOR']
+        [7, 22, 'y', 'y', 'y', 'y', 'EDITOR']
     ]);
     assert.equal(db.calls.at(-1).sql, 'COMMIT');
     assert.equal(db.released(), true);

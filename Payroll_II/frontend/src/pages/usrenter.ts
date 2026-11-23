@@ -35,7 +35,7 @@ type Checked = {
 };
 
 const flags: UsrFlag[] = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
-const labels = ['Y/N', 'Add', 'Amend', 'Delete'];
+const labels = ['View', 'Add', 'Amend', 'Delete'];
 const api = '/administration/usrenter';
 
 // Helper to render <option> elements from lookup list
@@ -138,7 +138,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             <div id="usr-tools" class="d-flex flex-wrap gap-2 mb-3" hidden>
               <button type="button" class="btn btn-sm btn-outline-primary" name="check_all">Check all</button>
               <button type="button" class="btn btn-sm btn-outline-secondary" name="clear_all">Clear all</button>
-              <span class="text-muted small align-self-center ms-md-auto">Y/N: Single programs &middot; Add / Amend / Delete: Multiple programs</span>
+              <span class="text-muted small align-self-center ms-md-auto">Single: View only &middot; Multi: View / Add / Amend / Delete</span>
             </div>
             <div id="usr-admin-note"></div>
             <div id="usr-matrix">
@@ -154,9 +154,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             <div id="usr-actions" class="usr-actions mt-3 pt-3 d-flex flex-wrap justify-content-between align-items-center gap-3" hidden>
               <span id="usr-changes" class="text-muted small" aria-live="polite"></span>
               <div class="d-flex flex-wrap gap-2">
-                <button type="button" name="delete" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>DELETE</button>
+                <button type="button" name="delete" class="btn btn-outline-danger" ${can('rights', 'delete') ? '' : 'disabled'}><i class="bi bi-trash me-1"></i>DELETE</button>
                 <button type="button" name="reset" class="btn btn-light">RESET</button>
-                <button type="button" name="save" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>SAVE</button>
+                <button type="button" name="save" class="btn btn-primary" ${can('rights', 'amend') ? '' : 'disabled'}><i class="bi bi-check2 me-1"></i>SAVE</button>
               </div>
             </div>
           </section>
@@ -177,7 +177,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Check if permission flag is editable based on Single or Multiple program level
     const editable = (row: Prg, flag: UsrFlag) =>
-        row.prglvl === 'S' ? flag === 'usryn' : row.prglvl === 'M' && flag !== 'usryn';
+        row.prglvl === 'M' || (row.prglvl === 'S' && flag === 'usryn');
 
     // Enable/disable dropdowns based on All / Select radio choices
     function selectors(): void {
@@ -401,6 +401,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Save or delete permissions
     async function save(remove: boolean): Promise<void> {
+        if (!can('rights', remove ? 'delete' : 'amend')) return;
         if (te_busy || !te_scope || !te_rows.length) return;
         const scope = { ...te_scope };
         const version = te_version;

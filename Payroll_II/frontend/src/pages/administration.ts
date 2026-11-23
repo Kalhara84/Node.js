@@ -4,10 +4,10 @@ import { esc, qs, errMsg, alertBox, loading, confirmModal } from '../utils/ui.ts
 import type { PageContext } from '../types.ts';
 
 type Row = Record<string, string | number | null>;
-type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[] };
+type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[]; programOptions: Row[] };
 
 const flags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
-const flagLabels = ['Access', 'Add', 'Amend', 'Delete'];
+const flagLabels = ['View', 'Add', 'Amend', 'Delete'];
 
 // API helper for administration endpoints
 const call = <T>(path: string, method = 'GET', body?: unknown) =>
@@ -110,7 +110,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
           <div>
             <div class="admin-eyebrow">Administration</div>
             <h4 class="page-title">${title}</h4>
-            <div class="page-sub">${rights ? 'Manage access by user, module and program' : users ? 'Manage user profiles and sign-in details' : 'Manage application programs and their modules'}</div>
+            <div class="page-sub">${rights ? 'Manage access by user, module and program' : users ? 'Manage user profiles and sign-in details' : 'Register app pages here, then assign each user View, Add, Amend and Delete rights in User Rights'}</div>
           </div>
         </div>
         ${rights ? '<span class="admin-banner-note">Choose a user to manage permissions</span>' : can(users ? 'users' : 'programs', 'add') ? `<button id="add" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add ${users ? 'user' : 'program'}</button>` : ''}
@@ -173,7 +173,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 : rights
                 ? ['Program', 'Module / submodule', ...flagLabels]
                 : ['Code', 'Name / description', 'Module', 'Submodule', 'Order', 'Level', 'Actions']
-        ).map((t, i) => `<th>${rights && i > 1 ? `<label class="d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" data-column="${flags[i - 2]}" aria-label="Select all shown ${t} permissions" ${list.length && list.filter((r) => (i === 2 ? r.prglvl === 'S' : r.prglvl === 'M')).length && list.filter((r) => (i === 2 ? r.prglvl === 'S' : r.prglvl === 'M')).every((r) => r[flags[i - 2]] === 'y') ? 'checked' : ''}>${t}</label>` : t}</th>`).join('')}</tr>`;
+        ).map((t, i) => `<th>${rights && i > 1 ? `<label class="d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" data-column="${flags[i - 2]}" aria-label="Select all shown ${t} permissions" ${list.length && list.filter((r) => (i === 2 ? r.prglvl === 'S' || r.prglvl === 'M' : r.prglvl === 'M')).length && list.filter((r) => (i === 2 ? r.prglvl === 'S' || r.prglvl === 'M' : r.prglvl === 'M')).every((r) => r[flags[i - 2]] === 'y') ? 'checked' : ''}>${t}</label>` : t}</th>`).join('')}</tr>`;
 
         $('#rows').innerHTML = list.length
             ? list.map((r) => {
@@ -195,7 +195,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                       <tr>
                         <td>${esc(r.prgdes)}<div class="small text-muted">${esc(r.prgnam)} · ${r.prglvl === 'M' ? 'Multi' : 'Single'}</div></td>
                         <td>${esc(r.module)} / ${esc(r.submodule)}</td>
-                        ${flags.map((f, i) => `<td><input type="checkbox" class="form-check-input" data-id="${r.prgsno}" data-flag="${f}" aria-label="${flagLabels[i]} ${esc(r.prgdes)}" ${r[f] === 'y' ? 'checked' : ''} ${(r.prglvl === 'S' && i > 0) || (r.prglvl === 'M' && i === 0) ? 'disabled' : ''}></td>`).join('')}
+                        ${flags.map((f, i) => `<td><input type="checkbox" class="form-check-input" data-id="${r.prgsno}" data-flag="${f}" aria-label="${flagLabels[i]} ${esc(r.prgdes)}" ${r[f] === 'y' ? 'checked' : ''} ${r.prglvl === 'S' && i > 0 ? 'disabled' : ''}></td>`).join('')}
                       </tr>`;
                   }
                   return `
@@ -246,8 +246,8 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                     : select('prgmodsno', 'Module', options(lookups.modules, 'syssno', 'sysdes', r.prgmodsno), true) +
                       select('prgsmdsno', 'Submodule', options(lookups.submodules, 'syssno', 'sysdes', r.prgsmdsno), true) +
                       input('prgorder', 'Order', r.prgorder, 5, true) +
-                      select('prglvl', 'Level', `<option value="S">Single</option><option value="M" ${r.prglvl === 'M' ? 'selected' : ''}>Multi</option>`) +
-                      input('prgnam', 'Program name', r.prgnam, 35, true) +
+                      select('prglvl', 'Permissions', `<option value="S" ${r.prglvl === 'S' ? 'selected' : ''}>View only</option><option value="M" ${r.prglvl !== 'S' ? 'selected' : ''}>View, Add, Amend and Delete</option>`) +
+                      select('prgnam', 'Application page', options(lookups.programOptions, 'key', 'label', r.prgnam), true) +
                       input('prgdes', 'Description', r.prgdes, 60, true)}
               </div>
               <div id="form-error" class="mt-3" role="alert"></div>
@@ -364,7 +364,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         const t = e.target as HTMLInputElement;
         if (t.dataset.column) {
             for (const r of visible()) {
-                if (t.dataset.column === 'usryn' ? r.prglvl === 'S' : r.prglvl === 'M') {
+                if (t.dataset.column === 'usryn' ? r.prglvl === 'S' || r.prglvl === 'M' : r.prglvl === 'M') {
                     r[t.dataset.column] = t.checked ? 'y' : 'n';
                 }
             }
@@ -407,7 +407,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             if (t.dataset.bulk) {
                 for (const r of visible()) {
                     flags.forEach((f, i) => {
-                        if ((i === 0 && r.prglvl === 'S') || (i > 0 && r.prglvl === 'M')) {
+                        if (r.prglvl === 'M' || (i === 0 && r.prglvl === 'S')) {
                             r[f] = t.dataset.bulk!;
                         }
                     });

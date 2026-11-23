@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { hashPassword } from '../lib/auth';
 import { pool } from '../lib/db';
 import { fail } from '../lib/errors';
+import { SCREENS } from '../lib/permissions';
 
 // Return profile fields only; never include password hashes in user responses.
 const publicUserColumns = 'usdsno, usdcomsno, usdusd, usduno, usdnam, usdad1, usdad2, usdad3, usdtel, usdfax, usdmail, usdnic, usddes, usdactive';
@@ -121,6 +122,11 @@ function programValues(body: Record<string, unknown>): { module: number; submodu
     if (!['S', 'M'].includes(String(body.prglvl))) {
         fail('Choose Single or Multi level');
     }
+    // A registered key must belong to a page implemented in this application.
+    const name = string(body.prgnam, 'Name', 35, true);
+    if (!Object.values(SCREENS).some(screen => screen.programs.includes(name))) {
+        fail('Choose an implemented application page');
+    }
     return {
         module,
         submodule,
@@ -129,7 +135,7 @@ function programValues(body: Record<string, unknown>): { module: number; submodu
             submodule,
             string(body.prgorder, 'Order', 5, true),
             body.prglvl,
-            string(body.prgnam, 'Name', 35, true),
+            name,
             string(body.prgdes, 'Description', 60, true)
         ]
     };
@@ -171,7 +177,16 @@ export const AdministrationController = {
             pool.query('SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=33 ORDER BY sysdes'),
             pool.query('SELECT locsno, locnam FROM s_locmast ORDER BY locnam')
         ]);
-        res.json({ modules: modules.rows, submodules: submodules.rows, locations: locations.rows });
+        res.json({
+            modules: modules.rows, submodules: submodules.rows, locations: locations.rows,
+            programOptions: [
+                { key: 'employees', label: 'Employee Master' },
+                { key: 'users', label: 'User Master' },
+                { key: 'dashboard', label: 'Dashboard' },
+                { key: 'programs', label: 'Program Master' },
+                { key: 'rights', label: 'User Rights' }
+            ]
+        });
     },
 
     // Add new lookup record (module or submodule)
@@ -202,6 +217,7 @@ export const AdministrationController = {
             FROM prgmast p
             LEFT JOIN a_sysmast m ON m.syssno = p.prgmodsno
             LEFT JOIN a_sysmast s ON s.syssno = p.prgsmdsno
+            WHERE p.prgapp='payroll-web'
             ORDER BY p.prgmodsno, p.prgsmdsno, p.prgorder, p.prgsno
         `);
         res.json(result.rows);
@@ -214,8 +230,8 @@ export const AdministrationController = {
 
         // Save the program and record the signed-in user and creation time.
         const result = await pool.query(`
-            INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgucdnew, prgentddt, prgenttime)
-            VALUES($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, LOCALTIME)
+            INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgucdnew, prgentddt, prgenttime, prgapp)
+            VALUES($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, LOCALTIME, 'payroll-web')
             RETURNING *
         `, [...values, req.user!.usr]);
         res.status(201).json(result.rows[0]);
@@ -232,7 +248,7 @@ export const AdministrationController = {
             UPDATE prgmast
             SET prgmodsno=$1, prgsmdsno=$2, prgorder=$3, prglvl=$4, prgnam=$5, prgdes=$6,
                 prgucdame=$7, prgameddt=CURRENT_DATE, prgametime=LOCALTIME
-            WHERE prgsno=$8
+            WHERE prgsno=$8 AND prgapp='payroll-web'
             RETURNING *
         `, [...values, req.user!.usr, id]);
         const program = result.rows[0] ?? null;
@@ -248,10 +264,14 @@ export const AdministrationController = {
             // Delete assigned rights and the program together, under the same lock.
             await client.query('BEGIN');
             await client.query('LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE');
-            await client.query('DELETE FROM usrmast WHERE usrprgsno=$1', [id]);
-            const result = await client.query('DELETE FROM prgmast WHERE prgsno=$1', [id]);
+            // A URL ID from another application's catalog must not delete its rights.
+            const program = await client.query("SELECT prgsno FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'", [id]);
+            if (program.rowCount) {
+                await client.query('DELETE FROM usrmast WHERE usrprgsno=$1', [id]);
+                await client.query("DELETE FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'", [id]);
+            }
             await client.query('COMMIT');
-            deleted = !!result.rowCount;
+            deleted = !!program.rowCount;
         } catch (error) {
             // Undo both deletions if either operation fails.
             await client.query('ROLLBACK');
@@ -333,6 +353,7 @@ export const AdministrationController = {
             LEFT JOIN a_sysmast m ON m.syssno = p.prgmodsno
             LEFT JOIN a_sysmast s ON s.syssno = p.prgsmdsno
             LEFT JOIN usrmast r ON r.usrprgsno = p.prgsno AND r.usrusdsno = $1
+            WHERE p.prgapp='payroll-web'
             ORDER BY p.prgmodsno, p.prgsmdsno, p.prgorder
         `, [id]);
         res.json(result.rows);
@@ -351,7 +372,7 @@ export const AdministrationController = {
             if (!(await client.query('SELECT 1 FROM usdmast WHERE usdsno=$1 FOR UPDATE', [id])).rowCount) {
                 fail('User not found');
             }
-            const programs = await client.query('SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[])', [ids]);
+            const programs = await client.query("SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[]) AND prgapp='payroll-web'", [ids]);
             if (programs.rowCount !== ids.length) {
                 fail('Program no longer exists; reload');
             }
@@ -364,9 +385,9 @@ export const AdministrationController = {
                     continue;
                 }
 
-                // Single programs use View; Multi programs use Add, Amend and Delete.
+                // Single programs use View only; Multi programs allow all four independent ticks.
                 const level = levels.get(Number(row.prgsno));
-                const values = rightFlags.map((flag, i) => (level === 'S' && i > 0) || (level === 'M' && i === 0) ? 'n' : row[flag]);
+                const values = rightFlags.map((flag, i) => level === 'M' || (level === 'S' && i === 0) ? row[flag] : 'n');
                 await client.query(`
                     INSERT INTO usrmast(usrusdsno, usrprgsno, usryn, usraddyn, usrameyn, usrdelyn, usrucdnew, usrentddt, usrenttime)
                     VALUES($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, LOCALTIME)

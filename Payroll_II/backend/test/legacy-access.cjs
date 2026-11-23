@@ -12,10 +12,10 @@ test('imported Unix crypt passwords use published crypt(3) vectors',()=>{
  assert.equal(verifyPassword('foo','ba4TuD1iozTxw'),true);
  assert.equal(verifyPassword('foo','not-a-hash'),false);
 });
-test('employee actions match the PHP program and operation flag',async t=>{
+test('employee actions use the registered web page and operation flags',async t=>{
  t.mock.method(pool,'query',async sql=>({rows:sql.includes('usdactive')?[{usdactive:'Y',usdadmin:false}]:[
-  {prgnam:'p_empenter',usryn:'n',usraddyn:'y',usrameyn:'n',usrdelyn:'n'},
-  {prgnam:'p_empm.php',usryn:'y',usraddyn:'n',usrameyn:'y',usrdelyn:'n'}
+  {prgnam:'employees',prglvl:'M',usryn:'y',usraddyn:'y',usrameyn:'n',usrdelyn:'n'},
+  {prgnam:'unregistered-page',prglvl:'M',usryn:'y',usraddyn:'n',usrameyn:'y',usrdelyn:'n'}
  ]}));
  const none={view:false,add:false,amend:false,delete:false};
  assert.deepEqual(await accountAccess(5),{admin:false,dashboard:none,employees:{view:true,add:true,amend:false,delete:false},programs:none,users:none,rights:none});
@@ -57,7 +57,7 @@ test('password change checks the old password and saves only for the signed-in u
 test('screens other than employees follow their own program rights, administrators get everything',async t=>{
  t.mock.method(pool,'query',async sql=>({rows:sql.includes('usdactive')?[{usdactive:'Y',usdadmin:false}]:[
   {prgnam:'dashboard',usryn:'y',usraddyn:'n',usrameyn:'n',usrdelyn:'n'},
-  {prgnam:'a_users.php',usryn:'n',usraddyn:'y',usrameyn:'y',usrdelyn:'n'}
+  {prgnam:'users',prglvl:'M',usryn:'n',usraddyn:'y',usrameyn:'y',usrdelyn:'n'}
  ]}));
  const access=await accountAccess(5);
  assert.equal(access.dashboard.view,true);

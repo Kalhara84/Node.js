@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { wrap } from '../middleware';
 import { UsrEnterController } from '../controllers/usrenter.controller';
+import { requireScreen } from '../lib/permissions';
 
 const router = Router();
 
@@ -8,6 +9,9 @@ const router = Router();
 router.get('/', wrap(UsrEnterController.check));
 
 // Save or delete the rights of the selected programs (SAVE / DELETE)
-router.post('/', wrap(UsrEnterController.apply));
+router.post('/', (req, res, next) => {
+    // Viewing the matrix does not permit changing or deleting another user's rights.
+    requireScreen('rights', req.body?.delete === true ? 'delete' : 'amend')(req, res, next);
+}, wrap(UsrEnterController.apply));
 
 export default router;

@@ -1,6 +1,6 @@
 import { api, getLookups } from '../services/api.ts';
 import { esc, errMsg, qs, loading, alertBox } from '../utils/ui.ts';
-import type { Employee, EmployeeBody, Lookups, PageContext } from '../types.ts';
+import type { EmployeeBody, Lookups, PageContext } from '../types.ts';
 
 interface Option {
     value: string;

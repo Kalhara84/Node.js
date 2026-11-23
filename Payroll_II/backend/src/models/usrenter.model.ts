@@ -6,7 +6,7 @@ import type { UsrScope } from '../validators/usrenter.validator';
 const programQuery = `SELECT p.*,m.sysdes AS module,s.sysdes AS submodule,r.usryn,r.usraddyn,r.usrameyn,r.usrdelyn
     FROM prgmast p LEFT JOIN a_sysmast m ON m.syssno=p.prgmodsno LEFT JOIN a_sysmast s ON s.syssno=p.prgsmdsno
     LEFT JOIN usrmast r ON r.usrprgsno=p.prgsno AND r.usrusdsno=$1
-    WHERE ($2::int IS NULL OR p.prgmodsno=$2) AND ($3::int IS NULL OR p.prgsmdsno=$3)
+    WHERE p.prgapp='payroll-web' AND ($2::int IS NULL OR p.prgmodsno=$2) AND ($3::int IS NULL OR p.prgsmdsno=$3)
     ORDER BY m.sysdes,s.sysdes,p.prgorder,p.prgsno`;
 
 export const UsrEnterModel = {
@@ -41,13 +41,13 @@ export const UsrEnterModel = {
             if (action === 'delete') {
                 await client.query(`DELETE FROM usrmast r WHERE r.usrusdsno=$1 AND EXISTS
                     (SELECT 1 FROM prgmast p WHERE p.prgsno=r.usrprgsno
-                    AND ($2::int IS NULL OR p.prgmodsno=$2) AND ($3::int IS NULL OR p.prgsmdsno=$3))`,
+                    AND p.prgapp='payroll-web' AND ($2::int IS NULL OR p.prgmodsno=$2) AND ($3::int IS NULL OR p.prgsmdsno=$3))`,
                     [scope.usrusdsno, scope.modsno, scope.submodsno]);
             } else {
                 for (const row of rows) {
-                    // Single level program: only "view" flag, Multi level program: only add/amend/delete flags
+                    // Single programs use View only; Multi programs support all four ticks.
                     const level = catalog.get(row.prgsno);
-                    const values = row.values.map((value, index) => level === 'S' ? (index === 0 ? value : 'n') : level === 'M' && index > 0 ? value : 'n');
+                    const values = row.values.map((value, index) => level === 'M' || (level === 'S' && index === 0) ? value : 'n');
                     await client.query(`INSERT INTO usrmast(usrusdsno,usrprgsno,usryn,usraddyn,usrameyn,usrdelyn,usrucdnew,usrentddt,usrenttime)
                         VALUES($1,$2,$3,$4,$5,$6,$7,CURRENT_DATE,LOCALTIME)
                         ON CONFLICT(usrusdsno,usrprgsno) DO UPDATE SET usryn=$3,usraddyn=$4,usrameyn=$5,usrdelyn=$6,

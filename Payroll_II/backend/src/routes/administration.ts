@@ -7,14 +7,14 @@ import { AdministrationController } from '../controllers/administration.controll
 const router = Router();
 
 // Every endpoint below is controlled by the user's rights on the matching program
-// (Program Master = a_programs, User Master = a_users, User Rights = usrenter).
+// Keys match registered web pages: programs, users and rights.
 // Administrators have all rights.
 
 // --- 1. User rights screen ---
 router.use('/usrenter', requireScreen('rights'), usrenter);
 
 // --- 2. Lookup masters (modules, submodules, locations) ---
-router.get('/lookups', requireScreen(['programs', 'users']), wrap(AdministrationController.lookups));
+router.get('/lookups', requireScreen(['programs', 'users', 'rights']), wrap(AdministrationController.lookups));
 
 // Add new lookup record (module or submodule)
 router.post('/lookups', requireScreen('programs', 'add'), wrap(AdministrationController.addLookup));
@@ -32,7 +32,7 @@ router.put('/programs/:id', requireScreen('programs', 'amend'), wrap(Administrat
 router.delete('/programs/:id', requireScreen('programs', 'delete'), wrap(AdministrationController.deleteProgram));
 
 // --- 4. User Routes ---
-router.get('/users', requireScreen('users'), wrap(AdministrationController.users));
+router.get('/users', requireScreen(['users', 'rights']), wrap(AdministrationController.users));
 
 // Create new user account
 router.post('/users', requireScreen('users', 'add'), wrap(AdministrationController.createUser));
@@ -45,7 +45,9 @@ router.put('/users/:id', requireScreen('users', 'amend'), wrap(AdministrationCon
 router.get('/rights/:id', requireScreen('rights'), wrap(AdministrationController.rights));
 
 // Update program rights for a user
-router.put('/rights/:id', requireScreen('rights'), wrap(AdministrationController.saveRights));
+router.put('/rights/:id', (req, res, next) => {
+    requireScreen('rights', req.body?.clear === true ? 'delete' : 'amend')(req, res, next);
+}, wrap(AdministrationController.saveRights));
 
 // --- 6. Error handler (validation errors and unique constraint violations) ---
 router.use(AdministrationController.handleError);
