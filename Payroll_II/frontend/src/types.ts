@@ -102,10 +102,12 @@ export interface ChartItem {
     value: number;
 }
 export interface DashboardData {
+    asOf: string;
     totals: {
         total: number;
         active: number;
         inactive: number;
+        unknownStatus: number;
         payroll: number;
         avgSalary: number;
         joinedThisYear: number;
