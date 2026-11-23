@@ -13,18 +13,21 @@ const router = Router();
 router.post('/auth/login', wrap(AuthController.login));
 
 // --- 2. Authentication Middleware ---
-// Protect all endpoints below with JWT token check
+// All routes below require a valid signed login token.
 router.use(requireAuth);
+// Confirm that the account still exists and load its current permissions.
 router.use(requireActiveAccount);
 
 // --- 3. User & Account Routes ---
 router.post('/auth/password', wrap(AuthController.changePassword));
+// Return the confirmed profile when the frontend refreshes its session.
 router.get('/auth/me', AuthController.me);
 
 // --- 4. Administration Sub-Router ---
 router.use('/administration', administration);
 
 // --- 5. Dashboard & Master Lookups ---
+// Require employee-view permission before loading the dashboard summary.
 router.get('/dashboard', requireEmployee('view'), wrap(DashboardController.summary));
 router.get('/lookups', wrap(LookupController.all));
 

@@ -4,18 +4,22 @@ import type { AuthUser } from '../types.ts';
 // Get current logged-in user from localStorage
 export function currentUser(): AuthUser | null {
     try {
+        // Only use a saved user when a saved token also exists.
         if (!localStorage.getItem(TOKEN_KEY)) {
             return null;
         }
+        // Convert the saved user text back into a user object.
         return JSON.parse(localStorage.getItem(USER_KEY) || 'null') as AuthUser | null;
     } catch {
         return null;
     }
 }
 
-// Authenticate user and persist credentials
+// Sign in and save the token and user profile in browser storage.
 export async function login(username: string, password: string): Promise<AuthUser> {
+    // Ask services/api.ts to send the login details to the backend.
     const res = await api.login(username, password);
+    // Save the token and user in browser storage; do not save the password.
     localStorage.setItem(TOKEN_KEY, res.token);
     localStorage.setItem(USER_KEY, JSON.stringify(res.user));
     return res.user;
@@ -29,7 +33,9 @@ export function logout(): void {
 
 // Refresh current user permissions from backend /auth/me
 export async function refreshUser(): Promise<AuthUser> {
+    // Ask /auth/me for the current profile and permissions using the saved token.
     const result = await request<AuthUser>('/auth/me');
+    // Keep saved fields and replace them with fresh values from the server.
     const user = { ...currentUser(), ...result };
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     return user;

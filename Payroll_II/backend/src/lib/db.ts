@@ -6,6 +6,7 @@ types.setTypeParser(1082, (v: string) => {
     return v;
 });
 
+// Create shared PostgreSQL connections using settings from backend/.env.
 export const pool = new Pool({
     
     host: process.env.DB_HOST,

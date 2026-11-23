@@ -1,7 +1,9 @@
 import type { AuthUser, DashboardData, Employee, EmployeeBody, Lookups, Paged } from '../types.ts';
 
 // Base API endpoint URL
+// Read the backend API address from frontend/.env, including /api.
 const BASE: string = import.meta.env.VITE_API_URL ;
+// Names used to save the token and user in browser storage.
 export const TOKEN_KEY = 'payroll_token';
 export const USER_KEY = 'payroll_user';
 
@@ -9,6 +11,7 @@ export const USER_KEY = 'payroll_user';
 export async function request<T>(path: string, init: RequestInit = {}, auth = true): Promise<T> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
+    // Attach proof of login to protected requests; the login request skips this.
     if (auth) {
         const token = localStorage.getItem(TOKEN_KEY);
         if (token) {
@@ -18,6 +21,7 @@ export async function request<T>(path: string, init: RequestInit = {}, auth = tr
 
     let res: Response;
     try {
+        // Send the request to the backend and wait for its response.
         res = await fetch(BASE + path, { ...init, headers, cache: 'no-store' });
     } catch {
         throw new Error('Cannot reach the server. Is the backend running?');
@@ -31,8 +35,10 @@ export async function request<T>(path: string, init: RequestInit = {}, auth = tr
         throw new Error('Session expired. Please sign in again.');
     }
 
+    // Read the JSON response; use null if the response is not valid JSON.
     const data = (await res.json().catch(() => null)) as { message?: string | string[] } | null;
 
+    // Turn a failed response into an error that the screen can display.
     if (!res.ok) {
         const m = data?.message;
         if (Array.isArray(m)) {
@@ -48,9 +54,11 @@ export async function request<T>(path: string, init: RequestInit = {}, auth = tr
 export const api = {
     // Authenticate user
     login: (username: string, password: string) => {
+        // Send the username and password as JSON to /auth/login.
         return request<{ token: string; user: AuthUser }>('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ username, password })
+        // false means this login request does not need an existing token.
         }, false);
     },
 

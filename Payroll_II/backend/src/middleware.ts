@@ -9,20 +9,23 @@ declare module 'express-serve-static-core' {
     }
 }
 
-// Authentication middleware: validates Bearer JWT token in Authorization header
+// Check the signed login token sent in the Authorization header.
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
     const header = req.headers.authorization;
     let user: TokenPayload | null = null;
 
+    // Remove the Bearer prefix and check the token signature and expiry.
     if (header && header.startsWith('Bearer ')) {
         user = verifyToken(header.slice(7));
     }
 
+    // Stop with 401 when no valid login token was provided.
     if (!user) {
         res.status(401).json({ message: 'Unauthorized' });
         return;
     }
 
+    // Attach the verified user to the request and continue to the next check.
     req.user = user;
     next();
 }

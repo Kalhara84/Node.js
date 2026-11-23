@@ -42,6 +42,7 @@ interface Route {
 // Application routes
 const ROUTES: Route[] = [
     // Public routes (no login required)
+    // Use pages/login.ts for /login; this page is open before signing in.
     { path: '/login', page: login, public: true },
 
     // Main pages
@@ -91,6 +92,7 @@ let renderId = 0;
 let shellShown = false;
 
 // SPA navigation function
+// Change the address and show the selected page without a full reload.
 export function navigate(path: string, replace = false): void {
     if (replace) {
         history.replaceState({}, '', path);
@@ -159,6 +161,7 @@ async function show(): Promise<void> {
     // Verify session when logged in
     if (user && !shellShown) {
         try {
+            // Confirm the saved session and refresh permissions through /auth/me.
             user = await refreshUser();
         } catch {
             root.innerHTML = '<div class="alert alert-danger m-4">Unable to load your account. Check the server connection and reload.</div>';
@@ -170,6 +173,7 @@ async function show(): Promise<void> {
     // Determine default home page
     let homePath = '/login';
     if (user) {
+        // Choose Dashboard or My Account based on employee-view permission.
         homePath = user.access?.employees.view ? '/dashboard' : '/account';
     }
 
@@ -215,6 +219,7 @@ async function show(): Promise<void> {
     if (route.public || !user) {
         shellShown = false;
         root.innerHTML = '';
+        // Display the login page without the sidebar and account header.
         await route.page.render(root, ctx);
         return;
     }
@@ -223,6 +228,7 @@ async function show(): Promise<void> {
     if (!shellShown) {
         root.innerHTML = shellHtml(user);
         qs(root, '#logout').onclick = () => {
+            // Clear the saved token and user, then return to the login screen.
             logout();
             navigate('/login', true);
         };

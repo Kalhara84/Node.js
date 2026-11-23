@@ -57,8 +57,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         icon.classList.add('spin');
         body.innerHTML = loading('Loading dashboard...');
         try {
+            // Request dashboard data; services/api.ts attaches the saved token.
             const data = await api.dashboard();
             if (!ctx.alive()) return;
+            // Turn the returned data into dashboard cards and charts.
             body.innerHTML = view(data);
         } catch (e) {
             if (ctx.alive()) body.innerHTML = alertBox(errMsg(e));

@@ -2,6 +2,7 @@ import { pool } from '../lib/db';
 import type { DashboardData } from '../types';
 export const DashboardModel = {
     async summary(): Promise<DashboardData> {
+        // Run the dashboard SQL queries together and collect their results.
         const [totals, category, gender, department, location, payrollDept, joins, recent] = await Promise.all([
             pool.query(`
         SELECT COUNT(*)::int AS total,
@@ -37,6 +38,7 @@ export const DashboardModel = {
                   FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
                   ORDER BY e.empsno DESC LIMIT 6`),
         ]);
+        // Use the query results to build the dashboard response.
         const t = totals.rows[0];
         return {
             totals: {

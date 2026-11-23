@@ -6,26 +6,31 @@ import { UserModel } from '../models/user.model';
 import type { AuthUser } from '../types';
 
 export const AuthController = {
-    // Authenticate user credentials and return JWT token
+    // Check login details and return a signed token with the user profile.
     async login(req: Request, res: Response): Promise<void> {
+        // Read the request body safely and accept text values for the two fields.
         const body = (req.body && typeof req.body === 'object') ? (req.body as Record<string, unknown>) : {};
         const username = typeof body.username === 'string' ? body.username.trim() : '';
         const password = typeof body.password === 'string' ? body.password : '';
 
+        // Repeat the empty-field check on the server; return 400 for missing details.
         if (!username || !password) {
             res.status(400).json({ message: 'Username and password are required' });
             return;
         }
 
+        // Ask models/user.model.ts to find this username in the database.
         const user = await UserModel.findByUsername(username);
+        // Reject missing users, inactive accounts or wrong passwords with one message.
         if (!user || user.usdactive !== 'Y' || !verifyPassword(password, user.usdpwd)) {
             res.status(401).json({ message: 'Invalid username or password' });
             return;
         }
 
+        // Use the display name, or the username when no display name is set.
         const name = user.usdnam || user.usdusd;
 
-        // Upgrade legacy crypt/plain password hashes to scrypt upon successful login
+        // After a successful legacy password check, replace the old hash with scrypt.
         if (!user.usdpwd.startsWith('scrypt$')) {
             await pool.query(
                 'UPDATE usdmast SET usdpwd=$1 WHERE usdsno=$2 AND usdpwd=$3',
@@ -33,9 +38,12 @@ export const AuthController = {
             );
         }
 
+        // Create an 8-hour signed token to identify this user on later requests.
         const token = signToken({ sub: user.usdsno, usr: user.usdusd, name });
+        // Build public user details without including the password hash.
         const out: AuthUser = { id: user.usdsno, username: user.usdusd, name, role: user.usddes || '' };
 
+        // Return the token, user details and database permissions to the frontend.
         res.json({
             token,
             user: { ...out, access: await accountAccess(user.usdsno) }
@@ -44,6 +52,7 @@ export const AuthController = {
 
     // Return authenticated user profile and permissions
     me(req: Request, res: Response): void {
+        // The token and account checks already ran; return the confirmed profile.
         const u = req.user!;
         res.json({
             id: u.sub,
