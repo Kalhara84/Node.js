@@ -1,3 +1,4 @@
+// Read, create, update and delete employee records in PostgreSQL.
 import { pool } from '../lib/db';
 import type { Employee, EmployeeInput, Paged } from '../types';
 // employee + department name + location name
@@ -10,6 +11,7 @@ const SELECT_JOINED = `
 
 
   export const EmployeeModel = {
+    // Preview one more than the largest employee number, or 1 for an empty table.
     async nextNumber(): Promise<number> {
         const r = await pool.query<{ empeno: number }>(
             'SELECT GREATEST(COALESCE(MAX(empeno), 0), 0) + 1 AS empeno FROM p_empmast',
@@ -20,21 +22,26 @@ const SELECT_JOINED = `
     async list(search: string, page: number, limit: number): Promise<Paged<Employee>> {
         const params: unknown[] = [];
         let where = '';
+        // Search name, number, NIC or designation using a parameterized pattern.
         if (search) {
             params.push(`%${search}%`);
             where = `WHERE (e.empnam ILIKE $1 OR CAST(e.empeno AS TEXT) LIKE $1 OR e.empidno ILIKE $1 OR e.empdesig ILIKE $1)`;
         }
+        // Count matches so the frontend can calculate page controls.
         const count = await pool.query<{
             count: string;
         }>(`SELECT COUNT(*) FROM p_empmast e ${where}`, params);
         const total = Number(count.rows[0].count);
+        // Read the requested page with department and location names.
         const rows = await pool.query<Employee>(`${SELECT_JOINED} ${where} ORDER BY e.empeno ASC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, limit, (page - 1) * limit]);
         return { data: rows.rows, total, page, limit, totalPages: Math.max(1, Math.ceil(total / limit)) };
     },
+    // Read one employee by its internal database ID.
     async findById(id: number): Promise<Employee | null> {
         const r = await pool.query<Employee>(`${SELECT_JOINED} WHERE e.empsno = $1`, [id]);
         return r.rows[0] ?? null;
     },
+    // Find an employee ID by employee number for duplicate checks.
     async findByEmpNo(empeno: number): Promise<{
         empsno: number;
     } | null> {
@@ -43,6 +50,7 @@ const SELECT_JOINED = `
         }>('SELECT empsno FROM p_empmast WHERE empeno = $1', [empeno]);
         return r.rows[0] ?? null;
     },
+    // Find an employee ID by attendance map code for duplicate checks.
     async findByMapCode(code: number): Promise<{
         empsno: number;
     } | null> {
@@ -55,35 +63,43 @@ const SELECT_JOINED = `
     async create(data: EmployeeInput): Promise<number> {
         const client = await pool.connect();
         try {
+            // Start a transaction so number allocation and insertion succeed together.
             await client.query('BEGIN');
             // Allocate and insert under the same lock so simultaneous saves get different numbers.
             await client.query('LOCK TABLE p_empmast IN SHARE ROW EXCLUSIVE MODE');
             const next = await client.query<{ empeno: number }>(
                 'SELECT GREATEST(COALESCE(MAX(empeno), 0), 0) + 1 AS empeno FROM p_empmast',
             );
+            // Use the number calculated under the table lock, not a client number.
             const generated = { ...data, empeno: next.rows[0].empeno };
+            // Build column names and parameter placeholders from validated fields.
             const cols = Object.keys(generated);
             const marks = cols.map((_, i) => `$${i + 1}`);
             const r = await client.query<{ empsno: number }>(
                 `INSERT INTO p_empmast (${cols.join(', ')}) VALUES (${marks.join(', ')}) RETURNING empsno`,
                 Object.values(generated),
             );
+            // Keep the inserted employee and finish the transaction.
             await client.query('COMMIT');
             return r.rows[0].empsno;
         } catch (error) {
+            // Undo transaction changes when any step fails.
             await client.query('ROLLBACK');
             throw error;
         } finally {
+            // Always return the connection to the pool.
             client.release();
         }
     },
     async update(id: number, data: EmployeeInput): Promise<void> {
         data = { ...data };
+        // Preserve Employee No even if a caller passes a replacement.
         delete data.empeno;
         const cols = Object.keys(data);
         if (cols.length === 0) {
             return;
         }
+        // Build UPDATE assignments and pass values as SQL parameters.
         const sets = cols.map((c, i) => {
             return `${c} = $${i + 1}`;
         });
@@ -92,6 +108,7 @@ const SELECT_JOINED = `
             id,
         ]);
     },
+    // Delete only the employee matching the supplied internal ID.
     async remove(id: number): Promise<void> {
         await pool.query('DELETE FROM p_empmast WHERE empsno = $1', [id]);
     },

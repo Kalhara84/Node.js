@@ -1,3 +1,4 @@
+// Show searchable employee records with page controls and allowed actions.
 import { canEmployee } from '../services/auth.ts';
 import { api } from '../services/api.ts';
 import { esc, money, errMsg, qs, CATEGORY, emptyState, confirmModal } from '../utils/ui.ts';
@@ -5,11 +6,13 @@ import type { Employee, Paged, PageContext } from '../types.ts';
 
 // Render employee list page with search and pagination
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+    // Keep the search, page number, latest response and search delay timer.
     let search = '';
     let page = 1;
     let result: Paged<Employee> | null = null;
     let timer: number | undefined;
 
+    // Build the search box, employee table and area for page controls.
     el.innerHTML = `
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
@@ -53,11 +56,14 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         $('#rows').innerHTML = '<tr><td colspan="8" class="text-center text-muted py-5">Loading...</td></tr>';
         $('#err').innerHTML = '';
         try {
+            // Ask the backend for one page of employees matching the search.
             const r = await api.list(search, page);
+            // Ignore a late response if the user has left this page.
             if (!ctx.alive()) return;
             result = r;
             draw();
         } catch (e) {
+            // Ignore a late response if the user has left this page.
             if (!ctx.alive()) return;
             $('#err').innerHTML = `<div class="alert alert-danger py-2">${esc(errMsg(e))}</div>`;
             $('#rows').innerHTML = '';
@@ -70,12 +76,14 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
         $('#count').textContent = `${result.total} employees in total`;
 
+        // Show employee rows, or an empty message if the search has no matches.
         if (result.data.length) {
             $('#rows').innerHTML = result.data.map(row).join('');
         } else {
             $('#rows').innerHTML = `<tr><td colspan="8">${emptyState('No employees found', 'Try a different search term.')}</td></tr>`;
         }
 
+        // Show Previous and Next only when there is more than one page.
         if (result.totalPages > 1) {
             const prevDisabled = page <= 1 ? 'disabled' : '';
             const nextDisabled = page >= result.totalPages ? 'disabled' : '';
@@ -95,6 +103,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Generate single employee table row
     const row = (e: Employee): string => {
+        // Choose the employee status text and badge colour.
         const isActive = e.empactflg === 'Y';
         const statusClass = isActive ? 'badge-soft-green' : 'badge-soft-red';
         const statusText = isActive ? 'Active' : 'Inactive';
@@ -129,6 +138,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Debounced search input handler
     $<HTMLInputElement>('#search').oninput = (e) => {
+        // Wait 350 ms after typing before searching to avoid a request on every key.
         clearTimeout(timer);
         const value = (e.target as HTMLInputElement).value.trim();
         timer = window.setTimeout(() => {
@@ -142,6 +152,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     el.addEventListener('click', async (e) => {
         const target = e.target as HTMLElement;
         const pg = target.closest<HTMLButtonElement>('[data-page]');
+        // Load the chosen page when a page control is clicked.
         if (pg && !pg.disabled) {
             page = Number(pg.dataset.page);
             return load();
@@ -153,6 +164,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         const emp = result.data.find((x) => x.empsno === Number(del.dataset.del));
         if (!emp) return;
 
+        // Ask before deleting the employee selected from the current results.
         const confirmed = await confirmModal({
             title: 'Delete employee',
             message: `Delete ${emp.empnam} (Emp No ${emp.empeno})? This cannot be undone.`
@@ -160,7 +172,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         if (!confirmed) return;
 
         try {
+            // Delete the employee on the backend, then reload the table.
             await api.remove(emp.empsno);
+            // Move back if deleting the last row would leave this page empty.
             if (result.data.length === 1 && page > 1) {
                 page -= 1;
             }
@@ -170,5 +184,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         }
     });
 
+    // Load the first page as soon as the screen is ready.
     await load();
 }

@@ -1,3 +1,4 @@
+// Find a login account in PostgreSQL by username.
 import { pool } from '../lib/db';
 import type { UserRow } from '../types';
 

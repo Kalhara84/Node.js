@@ -1,19 +1,24 @@
+// Describe database rows, API results and token fields for TypeScript.
+// Describe a department choice: ID, code and optional description.
 export interface Department {
     depsno: number;
     depdep: string;
     depdes: string | null;
 }
+// Describe a location choice: ID, code and optional name.
 export interface Location {
     locsno: number;
     locloc: string;
     locnam: string | null;
 }
+// Describe a coded lookup item, such as a section or cost centre.
 export interface SysItem {
     syssno: number;
     sysrtp: number;
     sysrno: string;
     sysdes: string;
 }
+// Group the dropdown lists returned by the lookup API.
 export interface Lookups {
     locations: Location[];
     departments: Department[];
@@ -22,6 +27,7 @@ export interface Lookups {
     basis: SysItem[];
     areas: SysItem[];
 }
+// Describe a complete employee record using its database field names.
 export interface Employee {
     empsno: number;
     empeno: number;
@@ -77,6 +83,7 @@ export interface Employee {
     emplateflg: string;
     empnsatlflg: string;
 }
+// Describe one results page, its record count and page totals.
 export interface Paged<T> {
     data: T[];
     total: number;
@@ -84,6 +91,7 @@ export interface Paged<T> {
     limit: number;
     totalPages: number;
 }
+// Describe public signed-in user details returned to the browser.
 export interface AuthUser {
     id: number;
     username: string;
@@ -91,16 +99,19 @@ export interface AuthUser {
     role: string;
 }
 /** what we store inside the login token */
+// Describe user identity and expiry fields inside a signed token.
 export interface TokenPayload {
     sub: number;
     usr: string;
     name: string;
     exp: number;
 }
+// Describe one chart label and its numeric value.
 export interface ChartItem {
     label: string | number;
     value: number;
 }
+// Describe totals, chart groups and recent employee rows.
 export interface DashboardData {
     totals: {
         total: number;
@@ -126,7 +137,9 @@ export interface DashboardData {
     }[];
 }
 /** employee fields that can be sent when creating / updating */
+// Allow writable employee fields after backend validation.
 export type EmployeeInput = Partial<Omit<Employee, 'empsno' | 'department_name' | 'location_name'>>;
+// Describe a database account row, including its stored password hash.
 export interface UserRow {
     usdsno: number;
     usdusd: string;

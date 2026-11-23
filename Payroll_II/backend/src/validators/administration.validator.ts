@@ -1,5 +1,7 @@
+// Check program, user, lookup and rights input before SQL runs.
 import { fail } from '../lib/errors';
 
+// Define the four database permission flags accepted in rights requests.
 export const rightFlags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'] as const;
 
 // Field max lengths for user table validation
@@ -22,6 +24,7 @@ export function integer(v: unknown, label: string, min = 1): number {
         fail(`${label} is required`);
     }
     const n = Number(v);
+    // Require a whole number within the minimum and PostgreSQL integer range.
     if (!Number.isSafeInteger(n) || n < min || n > 2147483647) {
         fail(`${label} is invalid`);
     }
@@ -33,6 +36,7 @@ export function string(v: unknown, label: string, max: number, required = false)
     if (v != null && typeof v !== 'string') {
         fail(`${label} must be text`);
     }
+    // Trim text before checking required values and maximum length.
     const s = String(v ?? '').trim();
     if ((required && !s) || s.length > max) {
         fail(`${label} is required and must be at most ${max} characters`);
@@ -43,6 +47,7 @@ export function string(v: unknown, label: string, max: number, required = false)
 // Validate lookup (module / submodule) input
 export function validateLookup(body: Record<string, unknown>) {
     const type = integer(body.sysrtp, 'Type');
+    // Only module (32) and submodule (33) types can be added here.
     if (![32, 33].includes(type)) {
         fail('Only modules and submodules can be added here');
     }
@@ -58,6 +63,7 @@ export function validateProgram(body: Record<string, unknown>) {
     const module = integer(body.prgmodsno, 'Module');
     const submodule = integer(body.prgsmdsno, 'Submodule');
 
+    // Accept Single and Multi program levels only.
     if (!['S', 'M'].includes(String(body.prglvl))) {
         fail('Choose Single or Multi level');
     }
@@ -80,11 +86,13 @@ export function validateProgram(body: Record<string, unknown>) {
 export function validateUser(body: Record<string, unknown>, create: boolean) {
     const data: Record<string, unknown> = {};
 
+    // Validate known fields; leave usernames unchanged during updates.
     for (const [key, max] of Object.entries(userFields)) {
         if (key === 'usdusd' && !create) continue;
         data[key] = string(body[key], key, max, key === 'usdusd');
     }
 
+    // Convert optional user number and location choices to stored values.
     data.usduno = body.usduno === '' || body.usduno == null ? null : integer(body.usduno, 'User number', 0);
     data.usdcomsno = body.usdcomsno === '' || body.usdcomsno == null ? 0 : integer(body.usdcomsno, 'Location');
 
@@ -94,6 +102,7 @@ export function validateUser(body: Record<string, unknown>, create: boolean) {
     data.usdactive = body.usdactive ?? 'Y';
 
     let password: string | null = null;
+    // Require a password on creation; check optional replacements during edits.
     if (create || body.usdpwd) {
         if (typeof body.usdpwd !== 'string' || !body.usdpwd.length || body.usdpwd.length > 256) {
             fail('Password is required (maximum 256 characters)');
@@ -108,15 +117,18 @@ export function validateUser(body: Record<string, unknown>, create: boolean) {
 export function validateRights(body: Record<string, unknown>) {
     const rows = body.rows;
 
+    // Require a rights array with no more than 10,000 programs.
     if (!Array.isArray(rows) || rows.length > 10000) {
         fail('Invalid rights list');
     }
 
     const ids = rows.map((r) => integer(r?.prgsno, 'Program'));
+    // Reject duplicate program IDs.
     if (new Set(ids).size !== ids.length) {
         fail('Duplicate programs');
     }
 
+    // Check that every permission contains lowercase y or n.
     for (const row of rows) {
         for (const flag of rightFlags) {
             if (!['y', 'n'].includes(row[flag])) {

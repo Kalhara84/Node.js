@@ -1,3 +1,4 @@
+// Validate administrator requests before changing programs, users or rights.
 import type { NextFunction, Request, Response } from 'express';
 import { hashPassword } from '../lib/auth';
 import { fail } from '../lib/errors';
@@ -23,6 +24,7 @@ async function checkProgramScope(module: number, submodule: number): Promise<voi
 export const AdministrationController = {
     // Verify that the current user is active and has administrator rights
     async requireAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
+        // Read the current active and administrator flags for the signed-in user.
         const u = await AdministrationModel.accountStatus(req.user!.sub);
         if (!u || u.usdactive !== 'Y') {
             res.status(401).json({ message: 'Account is inactive' });
@@ -42,6 +44,7 @@ export const AdministrationController = {
             res.status(400).json({ message: e.message });
             return;
         }
+        // Turn PostgreSQL duplicate-key errors into a readable HTTP 409 response.
         if (e.code === '23505') {
             res.status(409).json({ message: 'This code or module/submodule/order already exists' });
             return;
@@ -71,6 +74,7 @@ export const AdministrationController = {
 
     // Create a new program
     async createProgram(req: Request, res: Response): Promise<void> {
+        // Validate program fields before checking that the module IDs exist.
         const { module, submodule, values } = validateProgram(bodyOf(req));
         await checkProgramScope(module, submodule);
         res.status(201).json(await AdministrationModel.createProgram(values, req.user!.usr));
@@ -79,6 +83,7 @@ export const AdministrationController = {
     // Update existing program
     async updateProgram(req: Request, res: Response): Promise<void> {
         const id = integer(req.params.id, 'Program');
+        // Validate program fields before checking that the module IDs exist.
         const { module, submodule, values } = validateProgram(bodyOf(req));
         await checkProgramScope(module, submodule);
 
@@ -102,10 +107,13 @@ export const AdministrationController = {
 
     // Create new user account
     async createUser(req: Request, res: Response): Promise<void> {
+        // Validate the profile and keep password text separate until it is hashed.
         const { data, password } = validateUser(bodyOf(req), true);
+        // Reject a selected location that does not exist.
         if (data.usdcomsno && !(await AdministrationModel.locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
+        // Hash a supplied password before storing it.
         if (password) data.usdpwd = hashPassword(password);
 
         res.status(201).json(await AdministrationModel.createUser(data, req.user!.usr));
@@ -114,12 +122,16 @@ export const AdministrationController = {
     // Update user account details
     async updateUser(req: Request, res: Response): Promise<void> {
         const id = integer(req.params.id, 'User');
+        // Validate the profile and keep password text separate until it is hashed.
         const { data, password } = validateUser(bodyOf(req), false);
+        // Reject a selected location that does not exist.
         if (data.usdcomsno && !(await AdministrationModel.locationExists(data.usdcomsno))) {
             fail('Invalid location');
         }
+        // Hash a supplied password before storing it.
         if (password) data.usdpwd = hashPassword(password);
 
+        // Prevent this screen from disabling administrator accounts.
         if (data.usdactive === 'N' && (await AdministrationModel.isAdministrator(id))) {
             fail('Administrator accounts cannot be disabled here');
         }
@@ -139,6 +151,7 @@ export const AdministrationController = {
     // Update program rights for a user
     async saveRights(req: Request, res: Response): Promise<void> {
         const id = integer(req.params.id, 'User');
+        // Validate the rights list, duplicate IDs and clear/delete option.
         const { rows, ids, clear } = validateRights(bodyOf(req));
 
         await AdministrationModel.saveRights(id, rows, ids, clear, req.user!.usr);

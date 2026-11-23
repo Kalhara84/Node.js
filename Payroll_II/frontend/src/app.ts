@@ -1,3 +1,4 @@
+// Choose the page for the URL, check the saved login and display the app layout.
 import { logo } from './assets/index.ts';
 import { currentUser, logout, refreshUser } from './services/auth.ts';
 import { esc, qs } from './utils/ui.ts';
@@ -11,6 +12,7 @@ import * as administration from './pages/administration.ts';
 import * as usrenter from './pages/usrenter.ts';
 import * as account from './pages/account.ts';
 
+// Find the empty #root element provided by index.html.
 const root = qs(document, '#root');
 
 // Sidebar menu item structure
@@ -23,6 +25,7 @@ interface MenuItem {
 }
 
 // Navigation menu items
+// Define sidebar links, their icons and the headings shown for each page.
 const MENU: MenuItem[] = [
     { href: '/dashboard', label: 'Dashboard', icon: 'bi-grid-1x2-fill', title: 'Dashboard', sub: 'Overview of your workforce' },
     { href: '/employees', label: 'Employees', icon: 'bi-people-fill', title: 'Employee Master', sub: 'Manage employee records' },
@@ -40,6 +43,7 @@ interface Route {
 }
 
 // Application routes
+// Match browser addresses to page modules; only Login is public.
 const ROUTES: Route[] = [
     // Public routes (no login required)
     // Use pages/login.ts for /login; this page is open before signing in.
@@ -64,9 +68,11 @@ const ROUTES: Route[] = [
 
 // Check if current URL matches a route and extract parameters like :id
 function matchRoute(routePath: string, currentPath: string): { matched: boolean; params: string[] } {
+    // Split both URLs into sections so each section can be compared.
     const routeParts = routePath.split('/').filter(Boolean);
     const currentParts = currentPath.split('/').filter(Boolean);
 
+    // Reject URLs with a different number of sections.
     if (routeParts.length !== currentParts.length) {
         return { matched: false, params: [] };
     }
@@ -78,6 +84,7 @@ function matchRoute(routePath: string, currentPath: string): { matched: boolean;
         const cPart = currentParts[i];
 
         // Dynamic parameter like :id
+        // Save variable sections such as :id for the selected page to use.
         if (rPart.startsWith(':')) {
             params.push(cPart);
         } else if (rPart !== cPart) {
@@ -88,12 +95,14 @@ function matchRoute(routePath: string, currentPath: string): { matched: boolean;
     return { matched: true, params };
 }
 
+// Track page changes so slow replies from an old page can be ignored.
 let renderId = 0;
 let shellShown = false;
 
 // SPA navigation function
 // Change the address and show the selected page without a full reload.
 export function navigate(path: string, replace = false): void {
+    // Replace the current history entry for redirects; otherwise add a new entry.
     if (replace) {
         history.replaceState({}, '', path);
     } else {
@@ -104,7 +113,9 @@ export function navigate(path: string, replace = false): void {
 
 // Check menu item access permission for user
 function canShowMenuItem(item: MenuItem, user: AuthUser): boolean {
+    // My Account is available to every signed-in user.
     if (item.href === '/account') return true;
+    // Show administration links only to administrators.
     if (item.href.startsWith('/administration') || item.href === '/usrenter') {
         return !!user.access?.admin;
     }
@@ -113,10 +124,12 @@ function canShowMenuItem(item: MenuItem, user: AuthUser): boolean {
 
 // Main shell layout (Sidebar + Header + Page content)
 function shellHtml(user: AuthUser): string {
+    // Build only the menu links this user has permission to see.
     const visibleMenuItems = MENU.filter((m) => canShowMenuItem(m, user))
         .map((m) => `<a href="${m.href}" data-link data-menu="${m.href}" class="side-link"><i class="bi ${m.icon}"></i> ${m.label}</a>`)
         .join('');
 
+    // Show the quick Add Employee button only when adding is allowed.
     const addEmployeeBtn = user.access?.employees.add ? `
       <div class="sidebar-card">
         <div class="t">Need to add someone?</div>
@@ -154,6 +167,7 @@ function shellHtml(user: AuthUser): string {
 
 // Main page rendering function
 async function show(): Promise<void> {
+    // Mark this page load and read the current address and saved user.
     const id = ++renderId;
     const path = location.pathname.replace(/\/+$/, '') || '/';
     let user = currentUser();
@@ -177,6 +191,7 @@ async function show(): Promise<void> {
         homePath = user.access?.employees.view ? '/dashboard' : '/account';
     }
 
+    // When the main address opens, redirect to Login or the user's home page.
     if (path === '/') {
         return navigate(homePath, true);
     }
@@ -186,6 +201,7 @@ async function show(): Promise<void> {
     let params: string[] = [];
 
     for (const r of ROUTES) {
+        // Find the matching page and extract URL values such as employee ID.
         const match = matchRoute(r.path, path);
         if (match.matched) {
             route = r;
@@ -209,6 +225,7 @@ async function show(): Promise<void> {
         return navigate(homePath, true);
     }
 
+    // Give pages navigation, URL values and a way to check if they are still open.
     const ctx: PageContext = {
         params,
         navigate,
@@ -249,12 +266,14 @@ async function show(): Promise<void> {
     // Render target page into page container
     const page = qs(document, '#page');
     page.innerHTML = '';
+    // Start the new page at the top, then ask its module to draw the content.
     window.scrollTo(0, 0);
     await route.page.render(page, ctx);
 }
 
 // Handle client-side link navigation
 document.addEventListener('click', (e) => {
+    // Handle app links inside the router; preserve normal Ctrl-click browser actions.
     const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-link]');
     if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
         return;

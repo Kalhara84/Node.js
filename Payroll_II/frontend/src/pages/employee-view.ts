@@ -1,3 +1,4 @@
+// Load one employee and show their personal, job, salary and contact details.
 import { canEmployee } from '../services/auth.ts';
 import { api, getLookups } from '../services/api.ts';
 import { esc, errMsg, qs, CATEGORY, yn, loading, alertBox, confirmModal } from '../utils/ui.ts';
@@ -5,6 +6,7 @@ import type { Employee, Lookups, PageContext, SysItem } from '../types.ts';
 
 // Detail field display helper
 const item = (label: string, value: string | number | null | undefined): string => {
+    // Show a dash for empty values and safely escape values that exist.
     let displayValue = '-';
     if (value !== null && value !== undefined && value !== '') {
         displayValue = esc(value);
@@ -25,6 +27,7 @@ const section = (icon: string, title: string, items: string[]): string => `
 
 // Render single employee details view page
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+    // Read the employee ID captured from the browser URL.
     const id = Number(ctx.params[0]);
     el.innerHTML = loading();
 
@@ -32,6 +35,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     let lookups: Lookups | null;
 
     try {
+        // Fetch the employee and dropdown descriptions together.
         [emp, lookups] = await Promise.all([
             api.get(id),
             getLookups().catch(() => null)
@@ -43,6 +47,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         return;
     }
 
+    // Ignore results if the user has already moved to another page.
     if (!ctx.alive()) return;
 
     // Lookup description helper
@@ -50,10 +55,12 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         return list?.find((x) => x.syssno === key)?.[field];
     };
 
+    // Translate stored codes into readable status, department and gender labels.
     const statusText = emp.empactflg === 'Y' ? 'Active' : 'Inactive';
     const departmentBadge = emp.department_name ? `<span class="badge">${esc(emp.department_name)}</span>` : '';
     const gender = emp.empmof === 'M' ? 'Male' : emp.empmof === 'F' ? 'Female' : emp.empmof;
 
+    // Build the employee profile and its grouped detail cards.
     el.innerHTML = `
       <div class="profile-hero d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 fade-in">
         <div class="d-flex align-items-center gap-3">
@@ -150,6 +157,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     const deleteButton = el.querySelector<HTMLButtonElement>('#del');
     if (deleteButton) {
         deleteButton.onclick = async () => {
+            // Ask for confirmation before removing this employee.
             const confirmed = await confirmModal({
                 title: 'Delete employee',
                 message: `Delete ${emp.empnam} (Emp No ${emp.empeno})? This cannot be undone.`
@@ -157,6 +165,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             if (!confirmed) return;
 
             try {
+                // Delete the record and return to the employee list.
                 await api.remove(emp.empsno);
                 ctx.navigate('/employees');
             } catch (e) {

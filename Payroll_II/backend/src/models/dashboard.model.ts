@@ -1,3 +1,4 @@
+// Read employee totals, group summaries and recent records using SQL.
 import { pool } from '../lib/db';
 import type { DashboardData } from '../types';
 export const DashboardModel = {
@@ -13,33 +14,41 @@ export const DashboardModel = {
                COUNT(*) FILTER (WHERE EXTRACT(YEAR FROM empjoin) = EXTRACT(YEAR FROM CURRENT_DATE))::int AS joined_this_year
         FROM p_empmast`),
 
+            // Count active employees by category.
             pool.query(`SELECT empcat AS label, COUNT(*)::int AS value FROM p_empmast
                   WHERE empactflg = 'Y' GROUP BY empcat ORDER BY empcat`),
 
+            // Count active employees by gender.
             pool.query(`SELECT empmof AS label, COUNT(*)::int AS value FROM p_empmast
                   WHERE empactflg = 'Y' GROUP BY empmof ORDER BY empmof`),
 
+            // Count active employees by department.
             pool.query(`SELECT COALESCE(d.depdes, 'Unassigned') AS label, COUNT(*)::int AS value
                   FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
                   WHERE e.empactflg = 'Y' GROUP BY 1 ORDER BY 2 DESC, 1`),
 
+            // Count active employees by location.
             pool.query(`SELECT COALESCE(l.locnam, 'Unassigned') AS label, COUNT(*)::int AS value
                   FROM p_empmast e LEFT JOIN s_locmast l ON l.locsno = e.emplocsno
                   WHERE e.empactflg = 'Y' GROUP BY 1 ORDER BY 2 DESC, 1`),
 
+            // Sum active employees' basic salaries for each department.
             pool.query(`SELECT COALESCE(d.depdes, 'Unassigned') AS label, COALESCE(SUM(e.empsal), 0) AS value
                   FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
                   WHERE e.empactflg = 'Y' GROUP BY 1 ORDER BY 2 DESC, 1`),
 
+            // Count employees by joining year.
             pool.query(`SELECT EXTRACT(YEAR FROM empjoin)::int AS label, COUNT(*)::int AS value
                   FROM p_empmast WHERE empjoin IS NOT NULL GROUP BY 1 ORDER BY 1`),
                   
+            // Read the six newest employee IDs with department names.
             pool.query(`SELECT e.empsno, e.empeno, e.empnam, e.empdesig, d.depdes AS department_name, e.empjoin
                   FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
                   ORDER BY e.empsno DESC LIMIT 6`),
         ]);
         // Use the query results to build the dashboard response.
         const t = totals.rows[0];
+        // Convert numeric text where needed and build the dashboard response.
         return {
             totals: {
                 total: t.total,

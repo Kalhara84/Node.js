@@ -1,3 +1,4 @@
+// Check login details, return user sessions and handle password changes.
 import type { Request, Response } from 'express';
 import { signToken, verifyPassword, hashPassword } from '../lib/auth';
 import { pool } from '../lib/db';
@@ -64,6 +65,7 @@ export const AuthController = {
 
     // Change authenticated user password
     async changePassword(req: Request, res: Response): Promise<void> {
+        // Read the old password and both new-password values.
         const { currentPassword, newPassword, confirmPassword } = req.body ?? {};
 
         if (
@@ -77,18 +79,22 @@ export const AuthController = {
             return;
         }
 
+        // Read the signed-in user's stored hash, not an ID supplied by the form.
         const row = (await pool.query('SELECT usdpwd FROM usdmast WHERE usdsno=$1', [req.user!.sub])).rows[0];
+        // Stop if the current password does not match the stored hash.
         if (!row || !verifyPassword(currentPassword, row.usdpwd)) {
             res.status(400).json({ message: 'Current password is incorrect' });
             return;
         }
 
+        // Save the new hash only if the old hash has not changed during this request.
         const r = await pool.query(
             `UPDATE usdmast SET usdpwd=$1, usducdame=$2, usdameddt=CURRENT_DATE, usdametime=LOCALTIME
              WHERE usdsno=$3 AND usdpwd=$4`,
             [hashPassword(newPassword), req.user!.usr, req.user!.sub, row.usdpwd]
         );
 
+        // Return a conflict if another request changed the password first.
         if (!r.rowCount) {
             res.status(409).json({ message: 'Password was changed elsewhere. Sign in again.' });
             return;

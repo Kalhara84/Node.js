@@ -1,3 +1,4 @@
+// Set up shared PostgreSQL connections for the backend models.
 import { Pool, types } from 'pg';
 
 

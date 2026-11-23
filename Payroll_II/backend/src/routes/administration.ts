@@ -1,8 +1,10 @@
+// Connect administrator-only URLs to program, user and rights controllers.
 import { Router } from 'express';
 import { wrap } from '../middleware';
 import usrenter from './usrenter';
 import { AdministrationController } from '../controllers/administration.controller';
 
+// Create the router mounted under /api/administration.
 const router = Router();
 
 // --- 1. Administrator check ---
@@ -10,6 +12,7 @@ const router = Router();
 router.use(wrap(AdministrationController.requireAdmin));
 
 // --- 2. User rights screen ---
+// Forward User Rights requests to the nested usrenter router.
 router.use('/usrenter', usrenter);
 
 // --- 3. Lookup masters (modules, submodules, locations) ---

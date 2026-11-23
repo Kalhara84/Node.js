@@ -1,3 +1,4 @@
+// Save, read, refresh and clear the current user session in browser storage.
 import { api, TOKEN_KEY, USER_KEY, request } from './api.ts';
 import type { AuthUser } from '../types.ts';
 
@@ -27,6 +28,7 @@ export async function login(username: string, password: string): Promise<AuthUse
 
 // Log out user and clear stored token and profile
 export function logout(): void {
+    // Remove both saved session values when the user logs out.
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
 }
@@ -43,5 +45,6 @@ export async function refreshUser(): Promise<AuthUser> {
 
 // Check employee permission flags (view, add, amend, delete)
 export function canEmployee(action: 'view' | 'add' | 'amend' | 'delete'): boolean {
+    // Return true only when saved permissions explicitly allow this action.
     return currentUser()?.access?.employees[action] === true;
 }

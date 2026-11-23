@@ -1,15 +1,27 @@
 {
+  /* Set how TypeScript checks and builds backend source files. */
   "compilerOptions": {
+    /* Generate JavaScript using ES2022 features. */
     "target": "ES2022",
+    /* Use CommonJS modules for the Node.js backend. */
     "module": "commonjs",
+    /* Find imported modules using Node.js resolution rules. */
     "moduleResolution": "node",
+    /* Include standard ES2022 JavaScript type definitions. */
     "lib": ["ES2022"],
+    /* Write compiled JavaScript into dist. */
     "outDir": "dist",
+    /* Read backend source code from src. */
     "rootDir": "src",
+    /* Enable strict checks for values, parameters and null handling. */
     "strict": true,
+    /* Allow default imports from CommonJS packages. */
     "esModuleInterop": true,
+    /* Skip checking dependency declaration files. */
     "skipLibCheck": true,
+    /* Require import paths to use consistent letter casing. */
     "forceConsistentCasingInFileNames": true
   },
+  /* Build and check files inside the src folder. */
   "include": ["src"]
 }

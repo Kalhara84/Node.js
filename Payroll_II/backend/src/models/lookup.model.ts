@@ -1,8 +1,10 @@
+// Read the lists used by employee form dropdowns.
 import { pool } from '../lib/db';
 import type { Department, Location, Lookups, SysItem } from '../types';
 
 
 export const LookupModel = {
+    // Load employee dropdown choices in parallel from their master tables.
     async all(): Promise<Lookups> {
         const [locations, departments, sections, costCenters, basis, areas] = await Promise.all([
             pool.query<Location>('SELECT locsno, locloc, locnam FROM s_locmast ORDER BY locnam'),
@@ -22,6 +24,7 @@ export const LookupModel = {
                 'SELECT syssno, sysrtp, sysrno, sysdes FROM a_sysmast WHERE sysrtp = 202 ORDER BY sysrno'
             ),
         ]);
+        // Group the returned database rows by dropdown name.
         return {
             locations: locations.rows,
             departments: departments.rows,

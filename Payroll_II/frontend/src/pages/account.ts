@@ -1,3 +1,4 @@
+// Let the signed-in user change their own password.
 import { request } from '../services/api.ts';
 import { currentUser } from '../services/auth.ts';
 import { esc, qs, alertBox, errMsg } from '../utils/ui.ts';
@@ -5,8 +6,10 @@ import type { PageContext } from '../types.ts';
 
 // Render user account password change page
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+    // Read the saved profile to show which account is being changed.
     const user = currentUser();
 
+    // Build inputs for the current password, new password and confirmation.
     el.innerHTML = `
       <div class="admin-banner mb-4">
         <div class="admin-eyebrow">My account</div>
@@ -38,25 +41,30 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Handle password change form submission
     qs<HTMLFormElement>(el, '#password-form').onsubmit = async (e) => {
+        // Keep the page open while reading and submitting the form values.
         e.preventDefault();
         const form = e.currentTarget as HTMLFormElement;
         const button = form.querySelector('button')!;
         const data = Object.fromEntries(new FormData(form));
 
+        // Stop before sending if the two new passwords do not match.
         if (data.newPassword !== data.confirmPassword) {
             qs(el, '#message').innerHTML = alertBox('New passwords do not match');
             return;
         }
 
+        // Prevent another submission while the password change is running.
         button.disabled = true;
 
         try {
+            // Send the password values to the protected password-change API.
             await request('/auth/password', {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
 
             if (ctx.alive()) {
+                // Clear the inputs and show success only if this page is still open.
                 form.reset();
                 qs(el, '#message').innerHTML = '<div class="alert alert-success">Password updated successfully.</div>';
             }
@@ -65,6 +73,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 qs(el, '#message').innerHTML = alertBox(errMsg(err));
             }
         } finally {
+            // Allow another attempt after success or failure.
             button.disabled = false;
         }
     };

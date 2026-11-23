@@ -1,3 +1,4 @@
+// Hash passwords and create or check signed login tokens.
 import crypto from 'crypto';
 import unixCrypt from 'unix-crypt-td-js';
 import type { TokenPayload } from '../types';
@@ -32,6 +33,7 @@ export function verifyToken(token: string): TokenPayload | null {
     
     const [body, sig] = String(token).split('.');
     
+    // Reject tokens missing either the user-data part or signature.
     if (!body || !sig) {
         return null;
     }
@@ -46,6 +48,7 @@ export function verifyToken(token: string): TokenPayload | null {
     }
 
     try {
+        // Decode the token data only after its signature has passed the check.
         const payload = JSON.parse(Buffer.from(body, 'base64url').toString()) as TokenPayload;
         
         // Accept the token only if its expiry time is still in the future.
@@ -67,6 +70,7 @@ export function verifyToken(token: string): TokenPayload | null {
 // Create a random salt and a one-way password hash for database storage.
 export function hashPassword(password: string): string {
    
+    // Use a fresh salt so the same password can have different stored hashes.
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.scryptSync(password, salt, 64).toString('hex');
     return `scrypt$${salt}$${hash}`;

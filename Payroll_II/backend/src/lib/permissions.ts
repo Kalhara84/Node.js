@@ -1,3 +1,4 @@
+// Read current account permissions and block requests without the required access.
 import type { RequestHandler } from 'express';
 import { pool } from './db';
 import { wrap } from '../middleware';
@@ -6,6 +7,7 @@ import { wrap } from '../middleware';
 // so the rights keep working before and after the names in the database are cleaned.
 const programName = (name: string) => name.replace(/\.php$/, '');
 
+// Recognize legacy program names used to assign employee access.
 const EMPLOYEE_PROGRAMS = [
     'p_empenter', 
     'p_empm', 
@@ -14,6 +16,7 @@ const EMPLOYEE_PROGRAMS = [
     'p_empm1'
 ];
 
+// Read add, amend and delete flags only from employee entry programs.
 const EMPLOYEE_ENTRY_PROGRAMS = ['p_empenter', 'p_empenter1'];
 
 export type EmployeePermissions = { view: boolean; add: boolean; amend: boolean; delete: boolean };

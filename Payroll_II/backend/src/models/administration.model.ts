@@ -1,7 +1,9 @@
+// Run SQL for programs, user accounts, lookup lists and user rights.
 import { pool } from '../lib/db';
 import { fail } from '../lib/errors';
 import { rightFlags } from '../validators/administration.validator';
 
+// List public user fields; exclude the password hash.
 const publicUserColumns = 'usdsno, usdcomsno, usdusd, usduno, usdnam, usdad1, usdad2, usdad3, usdtel, usdfax, usdmail, usdnic, usddes, usdactive';
 
 export const AdministrationModel = {
@@ -16,6 +18,7 @@ export const AdministrationModel = {
         return r.rows[0] ?? null;
     },
 
+    // Check whether this account is marked as an administrator.
     async isAdministrator(id: number): Promise<boolean> {
         const r = await pool.query(
             'SELECT 1 FROM usdmast WHERE usdsno=$1 AND usdadmin=true', 
@@ -26,6 +29,7 @@ export const AdministrationModel = {
 
     // ---------- Lookups (modules, submodules, locations) ----------
 
+    // Read modules (32), submodules (33) and locations together.
     async lookups() {
         const [modules, submodules, locations] = await Promise.all([
             pool.query(
@@ -45,6 +49,7 @@ export const AdministrationModel = {
         };
     },
 
+    // Insert a module or submodule and return its generated ID.
     async createLookup(type: number, code: string, description: string) {
         const r = await pool.query(
             'INSERT INTO a_sysmast(sysrtp, sysrno, sysdes) VALUES($1, $2, $3) RETURNING syssno',
@@ -53,6 +58,7 @@ export const AdministrationModel = {
         return r.rows[0];
     },
 
+    // Check that a selected location exists before assigning it.
     async locationExists(id: unknown): Promise<boolean> {
         const r = await pool.query(
             'SELECT 1 FROM s_locmast WHERE locsno=$1',
@@ -63,6 +69,7 @@ export const AdministrationModel = {
 
     // ---------- Programs ----------
 
+    // List programs with module/submodule names in display order.
     async programs() {
         const r = await pool.query(`
             SELECT p.*, m.sysdes AS module, s.sysdes AS submodule 
@@ -83,6 +90,7 @@ export const AdministrationModel = {
         return r.rowCount === 2;
     },
 
+    // Insert program fields and record who created the program and when.
     async createProgram(values: unknown[], by: string) {
         const r = await pool.query(`
             INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgucdnew, prgentddt, prgenttime)
@@ -92,6 +100,7 @@ export const AdministrationModel = {
         return r.rows[0];
     },
 
+    // Update program fields and record who changed the program and when.
     async updateProgram(id: number, values: unknown[], by: string) {
         const r = await pool.query(`
             UPDATE prgmast 
@@ -107,6 +116,7 @@ export const AdministrationModel = {
     async deleteProgram(id: number): Promise<boolean> {
         const c = await pool.connect();
         try {
+            // Start a transaction so related changes succeed or are undone together.
             await c.query('BEGIN');
             await c.query(
                 'LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE'
@@ -119,18 +129,22 @@ export const AdministrationModel = {
                 'DELETE FROM prgmast WHERE prgsno=$1', 
                 [id]
             );
+            // Save every change made in this transaction.
             await c.query('COMMIT');
             return !!r.rowCount;
         } catch (e) {
+            // Undo this transaction when a SQL or validation step fails.
             await c.query('ROLLBACK');
             throw e;
         } finally {
+            // Always return the connection to the pool, even after a failure.
             c.release();
         }
     },
 
     // ---------- Users ----------
 
+    // List public account fields in username order.
     async users() {
         const r = await pool.query(
             `SELECT ${publicUserColumns} FROM usdmast ORDER BY usdusd`
@@ -139,6 +153,7 @@ export const AdministrationModel = {
     },
 
     // column names come from the validator whitelist, values are always parameters
+    // Insert validated user fields and audit details using SQL parameters.
     async createUser(data: Record<string, unknown>, by: string) {
         const keys = Object.keys(data);
         const r = await pool.query(`
@@ -149,6 +164,7 @@ export const AdministrationModel = {
         return r.rows[0];
     },
 
+    // Update validated account fields and return the public profile if found.
     async updateUser(id: number, data: Record<string, unknown>, by: string) {
         const keys = Object.keys(data);
         const r = await pool.query(`
@@ -179,6 +195,7 @@ export const AdministrationModel = {
     async saveRights(userId: number, rows: Record<string, any>[], ids: number[], clear: boolean, by: string) {
         const c = await pool.connect();
         try {
+            // Start a transaction so related changes succeed or are undone together.
             await c.query('BEGIN');
             await c.query('LOCK TABLE prgmast IN SHARE MODE');
 
@@ -186,6 +203,7 @@ export const AdministrationModel = {
                 fail('User not found');
             }
 
+            // Verify submitted programs still exist before writing rights.
             const programs = await c.query(
                 'SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[])', 
                 [ids]
@@ -194,9 +212,11 @@ export const AdministrationModel = {
             if (programs.rowCount !== ids.length) {
                 fail('Program no longer exists; reload');
             }
+            // Map program IDs to Single or Multi levels for permission rules.
             const levels = new Map<number, string>(programs.rows.map((p) => [p.prgsno, p.prglvl]));
 
             for (const row of rows) {
+                // Delete this user/program permission row when Clear was requested.
                 if (clear) {
                     
                     await c.query(
@@ -219,11 +239,14 @@ export const AdministrationModel = {
                 `, [userId, row.prgsno, ...values, by]);
             }
 
+            // Save every change made in this transaction.
             await c.query('COMMIT');
         } catch (e) {
+            // Undo this transaction when a SQL or validation step fails.
             await c.query('ROLLBACK');
             throw e;
         } finally {
+            // Always return the connection to the pool, even after a failure.
             c.release();
         }
     },

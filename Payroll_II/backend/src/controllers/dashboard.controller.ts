@@ -1,3 +1,4 @@
+// Return dashboard model results as a JSON response.
 import type { Request, Response } from 'express';
 import { DashboardModel } from '../models/dashboard.model';
 

@@ -1,3 +1,4 @@
+// Connect /api URLs to controllers and apply login and permission checks.
 import { Router } from 'express';
 import administration from './administration';
 import { requireActiveAccount, requireEmployee } from '../lib/permissions';
@@ -19,6 +20,7 @@ router.use(requireAuth);
 router.use(requireActiveAccount);
 
 // --- 3. User & Account Routes ---
+// Use the confirmed signed-in user when changing a password.
 router.post('/auth/password', wrap(AuthController.changePassword));
 // Return the confirmed profile when the frontend refreshes its session.
 router.get('/auth/me', AuthController.me);

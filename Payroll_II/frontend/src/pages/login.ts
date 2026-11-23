@@ -1,3 +1,4 @@
+// Build the login form, check empty fields and open the allowed page after login.
 import { loginHero, logo, shield } from '../assets/index.ts';
 import { login } from '../services/auth.ts';
 import { esc, errMsg, qs } from '../utils/ui.ts';
@@ -60,6 +61,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     // Toggle password visibility (show/hide)
     $('#toggle-pw').onclick = () => {
         const pw = $<HTMLInputElement>('#password');
+        // Choose whether the eye button should reveal or hide the password.
         const show = pw.type === 'password';
         pw.type = show ? 'text' : 'password';
         $('#toggle-pw i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
