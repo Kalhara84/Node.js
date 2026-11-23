@@ -1,8 +1,10 @@
 import type { Request, Response } from 'express';
 import { DashboardModel } from '../models/dashboard.model';
+
 export const DashboardController = {
-    /** GET /api/dashboard */
+    // Return aggregated dashboard summary statistics
     async summary(_req: Request, res: Response): Promise<void> {
-        res.json(await DashboardModel.summary());
+        const data = await DashboardModel.summary();
+        res.json(data);
     },
 };
