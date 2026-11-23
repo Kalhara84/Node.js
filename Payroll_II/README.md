@@ -145,7 +145,7 @@ use the supplied `prmkfn_Project.zip` sources. The missing `login.php`, `menu.ph
 - Existing PHP DES-crypt passwords work at login and upgrade to scrypt after a
   successful sign-in. New and changed passwords use scrypt.
 - **My Account** provides current-password verification and confirmed password changes.
-- Employee add/amend/delete access follows the operation flags on `p_empenter.php`
+- Employee add/amend/delete access follows the operation flags on the `p_empenter` program (a `.php` ending in the database name is ignored)
   (and its supplied alternate). Listing requires employee view or operation rights.
   Backend checks enforce permissions even when a URL/API is accessed directly.
 - Inactive accounts cannot keep using an existing token. Navigation and employee
@@ -161,9 +161,9 @@ ported by this integration; their database table definitions are retained; the S
 `p_login.php` is referenced by the employee source but absent from the archive;
 the app's shared login handles that dependency. No additional PHP login file is needed.
 
-## User access assignment (`usrenter.php`)
+## User access assignment (`usrenter`)
 
-Open **User Rights** in the sidebar, or `/usrenter.php`. The previous
+Open **User Rights** in the sidebar, or `/usrenter`. The previous
 `/administration/rights` address opens the same screen. Select a user, choose
 Module and Submodule **All / Select**, then press **CHECK**. Single (`S`) programs
 use **Y/N**; Multiple (`M`) programs use **Add / Amend / Delete**. Use the column
@@ -173,9 +173,9 @@ Changing the selection requires another CHECK before saving.
 
 The converted source files retain the `usrenter` basename:
 `frontend/src/pages/usrenter.ts` and `backend/src/routes/usrenter.ts`.
-They use TypeScript because this application runs Node.js. `/usrenter.php` is a
-compatible screen address, not an executable PHP file. The authenticated API is
-`/api/administration/usrenter.php` (GET for CHECK, POST for SAVE/DELETE).
+They use TypeScript because this application runs Node.js. The screen address is
+`/usrenter` and the authenticated API is `/api/administration/usrenter`
+(GET for CHECK, POST for SAVE/DELETE).
 Original names are retained: `usrusdsno`, `usrusdsnoauto`, `modopt`, `smodopt`,
 `modsno`, `modsnoauto`, `submodsno`, `submodsnoauto`, `prgsno`, `hcount`,
 `hcountmod`, `usryn`, `usraddyn`, `usrameyn`, and `usrdelyn`.

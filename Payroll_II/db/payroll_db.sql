@@ -1,7 +1,3 @@
--- PostgreSQL schema with up to 50 ORIGINAL source rows per table.
--- Tables with fewer than 50 source rows retain all their available rows.
--- Re-import preserves existing rows; missing tables/rows are added without drops.
--- Existing schema changes require separate, targeted migrations.
 BEGIN;
 SET standard_conforming_strings = on;
 SELECT pg_advisory_xact_lock(740219852);

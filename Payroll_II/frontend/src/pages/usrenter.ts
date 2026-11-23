@@ -35,7 +35,7 @@ type Checked = {
 
 const flags: UsrFlag[] = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
 const labels = ['Y/N', 'Add', 'Amend', 'Delete'];
-const api = '/administration/usrenter.php';
+const api = '/administration/usrenter';
 
 // Helper to render <option> elements from lookup list
 function options(rows: Lookup[]): string {
@@ -81,7 +81,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
       <nav class="admin-tabs mb-3" aria-label="Administration">
         <a href="/administration/programs" data-link><i class="bi bi-grid"></i>Programs</a>
         <a href="/administration/users" data-link><i class="bi bi-people"></i>Users</a>
-        <a href="/usrenter.php" data-link class="active" aria-current="page"><i class="bi bi-shield-lock"></i>User rights</a>
+        <a href="/usrenter" data-link class="active" aria-current="page"><i class="bi bi-shield-lock"></i>User rights</a>
       </nav>
 
       <div class="admin-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">

@@ -14,7 +14,7 @@ test('imported Unix crypt passwords use published crypt(3) vectors',()=>{
 });
 test('employee actions match the PHP program and operation flag',async t=>{
  t.mock.method(pool,'query',async sql=>({rows:sql.includes('usdactive')?[{usdactive:'Y',usdadmin:false}]:[
-  {prgnam:'p_empenter.php',usryn:'n',usraddyn:'y',usrameyn:'n',usrdelyn:'n'},
+  {prgnam:'p_empenter',usryn:'n',usraddyn:'y',usrameyn:'n',usrdelyn:'n'},
   {prgnam:'p_empm.php',usryn:'y',usraddyn:'n',usrameyn:'y',usrdelyn:'n'}
  ]}));
  assert.deepEqual(await accountAccess(5),{admin:false,employees:{view:true,add:true,amend:false,delete:false}});

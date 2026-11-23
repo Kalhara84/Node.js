@@ -39,7 +39,7 @@ async function fixture(context, options = {}) {
     return {
         calls, released: () => released,
         async send(payload, query = '') {
-            const response = await fetch(`http://127.0.0.1:${server.address().port}/administration/usrenter.php${query}`, payload ?
+            const response = await fetch(`http://127.0.0.1:${server.address().port}/administration/usrenter${query}`, payload ?
                 { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) } : {});
             return { status: response.status, data: await response.json() };
         },

@@ -28,7 +28,7 @@ const MENU: MenuItem[] = [
     { href: '/employees', label: 'Employees', icon: 'bi-people-fill', title: 'Employee Master', sub: 'Manage employee records' },
     { href: '/administration/programs', label: 'Programs', icon: 'bi-grid', title: 'Program Master', sub: 'Modules and program definitions' },
     { href: '/administration/users', label: 'Users', icon: 'bi-person-gear', title: 'User Master', sub: 'User profiles and accounts' },
-    { href: '/usrenter.php', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions' },
+    { href: '/usrenter', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions' },
     { href: '/account', label: 'My Account', icon: 'bi-person-lock', title: 'My Account', sub: 'Password and sign-in settings' },
 ];
 
@@ -58,7 +58,7 @@ const ROUTES: Route[] = [
     { path: '/administration/programs', page: administration },
     { path: '/administration/users', page: administration },
     { path: '/administration/rights', page: usrenter },
-    { path: '/usrenter.php', page: usrenter }, // legacy url support
+    { path: '/usrenter', page: usrenter },
 ];
 
 // Check if current URL matches a route and extract parameters like :id
@@ -103,7 +103,7 @@ export function navigate(path: string, replace = false): void {
 // Check menu item access permission for user
 function canShowMenuItem(item: MenuItem, user: AuthUser): boolean {
     if (item.href === '/account') return true;
-    if (item.href.startsWith('/administration') || item.href === '/usrenter.php') {
+    if (item.href.startsWith('/administration') || item.href === '/usrenter') {
         return !!user.access?.admin;
     }
     return !!user.access?.employees.view;
@@ -230,7 +230,7 @@ async function show(): Promise<void> {
     }
 
     // Update topbar breadcrumbs and active menu state
-    const menuPath = path === '/administration/rights' ? '/usrenter.php' : path;
+    const menuPath = path === '/administration/rights' ? '/usrenter' : path;
     const current = MENU.find((m) => menuPath.startsWith(m.href));
 
     qs(document, '#crumb-title').textContent = current ? current.title : 'Payroll System';
