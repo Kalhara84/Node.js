@@ -40,42 +40,6 @@ export function string(v: unknown, label: string, max: number, required = false)
     return s;
 }
 
-// Validate lookup (module / submodule) input
-export function validateLookup(body: Record<string, unknown>) {
-    const type = integer(body.sysrtp, 'Type');
-    if (![32, 33].includes(type)) {
-        fail('Only modules and submodules can be added here');
-    }
-    return {
-        type,
-        code: string(body.sysrno, 'Code', 10, true),
-        description: string(body.sysdes, 'Description', 40, true)
-    };
-}
-
-// Validate program creation/update input (module/submodule existence is checked in the controller)
-export function validateProgram(body: Record<string, unknown>) {
-    const module = integer(body.prgmodsno, 'Module');
-    const submodule = integer(body.prgsmdsno, 'Submodule');
-
-    if (!['S', 'M'].includes(String(body.prglvl))) {
-        fail('Choose Single or Multi level');
-    }
-
-    return {
-        module,
-        submodule,
-        values: [
-            module,
-            submodule,
-            string(body.prgorder, 'Order', 5, true),
-            body.prglvl,
-            string(body.prgnam, 'Name', 35, true),
-            string(body.prgdes, 'Description', 60, true)
-        ]
-    };
-}
-
 // Validate user profile input (password is returned as plain text; the controller hashes it)
 export function validateUser(body: Record<string, unknown>, create: boolean) {
     const data: Record<string, unknown> = {};

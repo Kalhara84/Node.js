@@ -12,92 +12,9 @@ export const AdministrationModel = {
         return !!r.rowCount;
     },
 
-    // ---------- Lookups (modules, submodules, locations) ----------
-
-    async lookups() {
-        const [modules, submodules, locations] = await Promise.all([
-            pool.query('SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=32 ORDER BY sysdes'),
-            pool.query('SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=33 ORDER BY sysdes'),
-            pool.query('SELECT locsno, locnam FROM s_locmast ORDER BY locnam')
-        ]);
-        return {
-            modules: modules.rows,
-            submodules: submodules.rows,
-            locations: locations.rows
-        };
-    },
-
-    async createLookup(type: number, code: string, description: string) {
-        const r = await pool.query(
-            'INSERT INTO a_sysmast(sysrtp, sysrno, sysdes) VALUES($1, $2, $3) RETURNING syssno',
-            [type, code, description]
-        );
-        return r.rows[0];
-    },
-
     async locationExists(id: unknown): Promise<boolean> {
         const r = await pool.query('SELECT 1 FROM s_locmast WHERE locsno=$1', [id]);
         return !!r.rowCount;
-    },
-
-    // ---------- Programs ----------
-
-    async programs() {
-        const r = await pool.query(`
-            SELECT p.*, m.sysdes AS module, s.sysdes AS submodule 
-            FROM prgmast p
-            LEFT JOIN a_sysmast m ON m.syssno = p.prgmodsno 
-            LEFT JOIN a_sysmast s ON s.syssno = p.prgsmdsno
-            ORDER BY p.prgmodsno, p.prgsmdsno, p.prgorder, p.prgsno
-        `);
-        return r.rows;
-    },
-
-    // True when both the module and the submodule exist
-    async moduleAndSubmoduleExist(module: number, submodule: number): Promise<boolean> {
-        const r = await pool.query(
-            'SELECT syssno FROM a_sysmast WHERE (syssno=$1 AND sysrtp=32) OR (syssno=$2 AND sysrtp=33)',
-            [module, submodule]
-        );
-        return r.rowCount === 2;
-    },
-
-    async createProgram(values: unknown[], by: string) {
-        const r = await pool.query(`
-            INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgucdnew, prgentddt, prgenttime)
-            VALUES($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, LOCALTIME) 
-            RETURNING *
-        `, [...values, by]);
-        return r.rows[0];
-    },
-
-    async updateProgram(id: number, values: unknown[], by: string) {
-        const r = await pool.query(`
-            UPDATE prgmast 
-            SET prgmodsno=$1, prgsmdsno=$2, prgorder=$3, prglvl=$4, prgnam=$5, prgdes=$6,
-                prgucdame=$7, prgameddt=CURRENT_DATE, prgametime=LOCALTIME 
-            WHERE prgsno=$8 
-            RETURNING *
-        `, [...values, by, id]);
-        return r.rows[0] ?? null;
-    },
-
-    // Delete program and all rights assigned to it. Returns false when the program does not exist.
-    async deleteProgram(id: number): Promise<boolean> {
-        const c = await pool.connect();
-        try {
-            await c.query('BEGIN');
-            await c.query('LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE');
-            await c.query('DELETE FROM usrmast WHERE usrprgsno=$1', [id]);
-            const r = await c.query('DELETE FROM prgmast WHERE prgsno=$1', [id]);
-            await c.query('COMMIT');
-            return !!r.rowCount;
-        } catch (e) {
-            await c.query('ROLLBACK');
-            throw e;
-        } finally {
-            c.release();
-        }
     },
 
     // ---------- Users ----------
