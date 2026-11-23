@@ -1,0 +1,346 @@
+﻿LOGIN PROCESS - BEGINNER GUIDE
+==============================
+All file paths start from the project folder.
+The code below contains selected lines from the project, not complete files.
+
+WORDS TO KNOW
+Frontend = the screen and code running in the browser.
+Backend  = the server code that checks login details and reads the database.
+API      = an address the frontend calls to ask the backend for something.
+SQL      = instructions used to read or update the database.
+Token    = a signed value used to prove a successful login on later requests.
+.ts      = a TypeScript code file.
+await    = wait for an operation to finish before continuing.
+
+FULL JOURNEY
+User enters details -> frontend checks empty fields -> sends details to backend
+-> backend finds user in SQL -> checks active status and password
+-> returns token + user -> frontend saves them -> opens Dashboard / My Account.
+
+PART A - FRONTEND
+=================
+Read A1-A5 first. At A4, the backend performs Part B before returning a result.
+
+A1. HOW THE LOGIN PAGE OPENS
+Files: frontend/index.html -> frontend/src/main.ts -> frontend/src/app.ts
+
+index.html:
+  <div id="root"></div>
+  <script type="module" src="/src/main.ts"></script>
+
+Meaning: #root is the empty area where the app places its screens.
+main.ts loads Bootstrap styles, icons, style.css and app.ts.
+
+app.ts:
+  import * as login from './pages/login.ts';
+  { path: '/login', page: login, public: true },
+
+Meaning: when the URL is /login, use pages/login.ts.
+public: true means the user can open this page before signing in.
+app.ts calls the page's render() function to put the screen inside #root.
+
+A2. WHERE THE FORM IS BUILT
+File: frontend/src/pages/login.ts -> render()
+
+  <form class="login-card" id="login-form" novalidate>
+  <input id="username" class="form-control" ... />
+  <input id="password" class="form-control" type="password" ... />
+  <button class="btn btn-primary w-100 login-btn" id="login-btn">Sign in ...</button>
+
+Meaning:
+- username and password IDs let the code find the two inputs.
+- type="password" hides the password characters.
+- novalidate lets the JavaScript code handle the form checks.
+- The eye button changes the password input type to show/hide the text.
+The HTML is written inside login.ts; there is no separate login.html.
+
+Screen support files:
+  frontend/src/style.css             - Layout, colours and mobile styles.
+  frontend/src/assets/index.ts       - Imports and exports the images.
+  frontend/src/assets/logo.jpg       - Company logo.
+  frontend/src/assets/login-hero.svg - Login illustration.
+  frontend/src/assets/shield.svg     - Footer image.
+
+A3. WHAT HAPPENS WHEN SIGN IN IS CLICKED
+File: frontend/src/pages/login.ts -> form onsubmit handler
+
+  e.preventDefault();
+  const username = $<HTMLInputElement>('#username').value.trim();
+  const password = $<HTMLInputElement>('#password').value;
+  if (!username || !password) {
+      return showError('Please enter your user name and password');
+  }
+
+Meaning:
+- preventDefault() stops the browser from reloading the page.
+- .value reads the text. trim() removes spaces at the ends of the username.
+- !username || !password means either field is empty.
+- return stops the login attempt and shows the message.
+Example: empty password -> show error -> no API request is sent.
+
+  btn.disabled = true;
+  const user = await login(username, password);
+
+Meaning: disable the button to prevent repeat clicks, then call the login service.
+The screen also shows 'Signing in...' while waiting.
+If login fails, catch shows the error and enables the button again.
+
+Helper file: frontend/src/utils/ui.ts
+qs() finds a screen element; esc() makes text safe to show in HTML;
+errMsg() gets readable text from an error.
+
+A4. HOW FRONTEND AND BACKEND CONNECT
+File: frontend/src/services/auth.ts -> login()
+
+  const res = await api.login(username, password);
+
+This calls frontend/src/services/api.ts -> api.login():
+
+  return request<{ token: string; user: AuthUser }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password })
+  }, false);
+
+Meaning:
+- POST sends the username and password to the server.
+- JSON.stringify() converts the data into JSON text.
+- false means this request does not need an existing login token.
+
+In the same api.ts file, request() sends the actual HTTP request:
+
+  const BASE: string = import.meta.env.VITE_API_URL;
+  res = await fetch(BASE + path, { ...init, headers, cache: 'no-store' });
+
+frontend/.env supplies VITE_API_URL, the backend base address including /api.
+So /auth/login becomes POST /api/auth/login on that backend.
+The backend now performs B1-B6 below and returns a result.
+
+A5. SAVE THE RESULT AND JUMP TO THE NEXT SCREEN
+File: frontend/src/services/auth.ts -> login()
+
+  localStorage.setItem(TOKEN_KEY, res.token);
+  localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+  return res.user;
+
+Meaning: save the token as payroll_token and the user as payroll_user in browser
+storage. The password is not saved here. Return the user to pages/login.ts.
+
+File: frontend/src/pages/login.ts
+
+  ctx.navigate(user.access?.employees.view ? '/dashboard' : '/account', true);
+
+Meaning: if employee-view permission is true, open Dashboard.
+Otherwise, open My Account. The ? and : choose between the two addresses.
+Example: valid login + no employee-view permission -> My Account.
+
+File: frontend/src/app.ts -> navigate()
+
+  history.replaceState({}, '', path);
+  void show();
+
+Meaning: update the URL and display the selected page without a full reload.
+Before first showing the app layout, app.ts calls refreshUser() from services/auth.ts.
+That calls GET /api/auth/me to confirm the session and refresh permissions.
+app.ts also sends a user without a saved login back to /login on private pages.
+
+A6. DISPLAY DASHBOARD DATA
+File: frontend/src/pages/dashboard.ts -> load()
+
+  const data = await api.dashboard();
+  body.innerHTML = view(data);
+
+File: frontend/src/services/api.ts
+
+  dashboard: () => {
+      return request<DashboardData>('/dashboard');
+  },
+
+Meaning: request GET /api/dashboard, then turn the returned data into screen HTML.
+request() adds the saved token:
+
+  headers.Authorization = `Bearer ${token}`;
+
+The backend checks this token before returning data (B7).
+frontend/src/utils/charts.ts builds the dashboard charts.
+frontend/src/pages/account.ts is the alternative page after login.
+frontend/src/types.ts defines AuthUser, PageContext and DashboardData:
+these describe the expected data fields for TypeScript.
+
+PART B - BACKEND
+================
+
+B1. RECEIVE THE FRONTEND REQUEST
+Files: backend/src/server.ts -> backend/src/app.ts
+server.ts starts the server. app.ts prepares incoming requests:
+
+  app.use(cors({ origin: process.env.FRONTEND_URL }));
+  app.use(express.json({ limit: '1mb' }));
+  app.use('/api', routes);
+
+Meaning: allow the configured frontend origin, read incoming JSON, and send /api
+requests to backend/src/routes/index.ts.
+
+File: backend/src/routes/index.ts
+
+  router.post('/auth/login', wrap(AuthController.login));
+
+Meaning: POST /api/auth/login runs AuthController.login().
+This route comes before the token check because the user has not logged in yet.
+wrap(), in backend/src/middleware.ts, passes unexpected errors to errorHandler().
+
+B2. CHECK THE INPUT AGAIN ON THE SERVER
+File: backend/src/controllers/auth.controller.ts -> login()
+
+  const username = typeof body.username === 'string' ? body.username.trim() : '';
+  const password = typeof body.password === 'string' ? body.password : '';
+  if (!username || !password) {
+      res.status(400).json({ message: 'Username and password are required' });
+      return;
+  }
+
+Meaning: accept text values only; reject missing or empty input.
+The server repeats this check because requests can arrive without using the form.
+HTTP 400 means the supplied input is not acceptable.
+
+B3. CONNECT TO POSTGRESQL AND FIND THE USER
+File: backend/src/lib/db.ts
+
+  export const pool = new Pool({
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+  });
+
+Meaning: pool manages database connections using settings from backend/.env.
+The frontend does not connect directly to PostgreSQL.
+
+File: backend/src/controllers/auth.controller.ts
+
+  const user = await UserModel.findByUsername(username);
+
+This calls backend/src/models/user.model.ts:
+
+  const r = await pool.query<UserRow>(
+      `SELECT usdsno, usdusd, usdpwd, usdnam, usddes, usdactive
+       FROM usdmast WHERE usdusd = $1`,
+      [username]
+  );
+  return r.rows[0] ?? null;
+
+Meaning: search usdmast for the entered username; return its first row or null.
+$1 receives username as a separate value, keeping user input out of SQL code.
+Example: username 'sam' -> find the row where usdusd equals 'sam'.
+
+Database columns:
+  usdsno = user ID              usdusd = username
+  usdpwd = password hash       usdactive = active flag ('Y' means active)
+  usdnam = display name        usddes = role/description
+
+B4. CHECK THE ACCOUNT AND PASSWORD
+File: backend/src/controllers/auth.controller.ts
+
+  if (!user || user.usdactive !== 'Y' || !verifyPassword(password, user.usdpwd)) {
+      res.status(401).json({ message: 'Invalid username or password' });
+      return;
+  }
+
+Meaning: reject login if the user is missing, inactive, OR the password is wrong.
+HTTP 401 means login failed. All three cases show the same message.
+SQL finds the user row; verifyPassword() checks the password in TypeScript.
+
+File: backend/src/lib/auth.ts -> verifyPassword(), scrypt check
+
+  const [scheme, salt, hash] = String(stored).split('$');
+  const test = crypto.scryptSync(password, salt, 64);
+  const real = Buffer.from(hash, 'hex');
+  return test.length === real.length && crypto.timingSafeEqual(test, real);
+
+Meaning: a hash is a one-way result of a password calculation.
+The stored format is scrypt$salt$hash. The function calculates the entered
+password's hash using the same salt, then compares the results.
+It first checks that the stored format is valid before these calculation lines.
+It also supports imported legacy DES crypt hashes. Plain-text passwords fail.
+After a successful legacy login, the controller updates usdpwd to a scrypt hash
+using hashPassword() from the same helper file.
+
+B5. CREATE THE LOGIN TOKEN AND LOAD PERMISSIONS
+File: backend/src/controllers/auth.controller.ts
+
+  const token = signToken({ sub: user.usdsno, usr: user.usdusd, name });
+
+Meaning: call signToken() in backend/src/lib/auth.ts to create proof of login.
+The token contains user ID, username, display name and an 8-hour expiry.
+AUTH_SECRET from backend/.env signs it so changes can be detected.
+Its actual format is body.signature, a custom HMAC token, not a standard JWT.
+
+File: backend/src/lib/permissions.ts -> accountAccess()
+
+  if (user.usdadmin) return {admin:true,employees:{view:true,add:true,amend:true,delete:true}};
+
+Meaning: admins receive all employee permissions.
+Other users get permissions from usrmast joined with prgmast.
+These determine which employee actions and menus are available.
+
+B6. RETURN THE SUCCESS RESPONSE
+File: backend/src/controllers/auth.controller.ts
+
+  res.json({
+      token,
+      user: { ...out, access: await accountAccess(user.usdsno) }
+  });
+
+Meaning: return the token plus user ID, username, name, role and permissions.
+The password hash is not included. Frontend step A5 receives this result.
+backend/src/types.ts defines the user-row, response-user and token data shapes.
+
+B7. CHECK LATER REQUESTS AND RETURN DASHBOARD DATA
+File: backend/src/routes/index.ts
+
+  router.use(requireAuth);
+  router.use(requireActiveAccount);
+  router.get('/dashboard', requireEmployee('view'), wrap(DashboardController.summary));
+
+Meaning: each protected request passes through these checks in order:
+1. requireAuth, backend/src/middleware.ts: read the Bearer token and call
+   verifyToken() in lib/auth.ts to check its signature and expiry. Invalid -> 401.
+2. requireActiveAccount, backend/src/lib/permissions.ts: confirm the account is
+   still active and load current permissions. Missing/inactive account -> 401.
+3. requireEmployee('view'), same file: check employee-view permission.
+   Missing permission -> 403 ('not allowed').
+
+GET /api/auth/me also uses the first two checks, then AuthController.me()
+returns the current user profile and permissions for frontend refreshUser().
+
+File: backend/src/controllers/dashboard.controller.ts
+
+  const data = await DashboardModel.summary();
+  res.json(data);
+
+Meaning: ask the model for dashboard data, then return it to frontend step A6.
+
+File: backend/src/models/dashboard.model.ts
+
+  SELECT COUNT(*)::int AS total,
+         COUNT(*) FILTER (WHERE empactflg = 'Y')::int AS active,
+
+These lines are part of its totals query on p_empmast.
+Other queries read p_empmast, f_depmast and s_locmast for salary summaries,
+charts, departments, locations and recent employees.
+
+PART C - ERRORS AND LOGOUT
+==========================
+File: frontend/src/services/api.ts
+- Wrong login: show the backend message on the login form.
+- Backend unreachable: show 'Cannot reach the server. Is the backend running?'.
+- Protected request returns 401: remove saved token/user and open /login.
+File: backend/src/middleware.ts -> errorHandler()
+- Unexpected server/database error: return HTTP 500 with 'Server error'.
+
+Logout connection: frontend/src/app.ts logout button -> services/auth.ts:
+
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+
+Then app.ts navigates to /login. The browser's saved session is cleared.
