@@ -3,9 +3,16 @@ import { fail } from '../lib/errors';
 import { integer } from './administration.validator';
 
 // Use these names for each program's y/n permission arrays.
-export const usrFlags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'] as const;
+export const usrFlags = [
+    'usryn', 
+    'usraddyn', 
+    'usrameyn', 
+    'usrdelyn'
+] as const;
+
 // Keep incoming values unknown until they pass validation.
 type UsrInput = Record<string, unknown>;
+
 // Describe a checked user with optional module/submodule IDs.
 export type UsrScope = {
     usrusdsno: number;

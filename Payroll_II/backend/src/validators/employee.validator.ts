@@ -1,5 +1,6 @@
 // Allow known employee fields only and check their types and values.
 import type { EmployeeInput } from '../types';
+
 // Name checks for whole numbers, optional numbers, dates, flags and text.
 type Kind = 'int' | 'intn' | 'float' | 'date' | 'yn' | 'cat' | 'mf' | 'str';
 // Describe one allowed field: name, check type and optional text limit.
