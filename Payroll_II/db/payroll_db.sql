@@ -71,6 +71,12 @@ INSERT INTO "a_absmast" ("abssno","absdepsno","absdepdes","absddt","abslocsno","
 (50,2,E'NURSERY STAFF',E'2013-02-02',1,41,0)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_absmast', 'abssno'),
+  GREATEST(COALESCE(MAX("abssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_absmast_abssno_seq'), 1)),
+  MAX("abssno") IS NOT NULL) FROM "a_absmast";
+
 CREATE TABLE IF NOT EXISTS "a_atttran" (
   "attsno" SERIAL,
   "attmacsno" varchar(20) NOT NULL default '0',
@@ -90,6 +96,8 @@ CREATE TABLE IF NOT EXISTS "a_atttran" (
   "attcheckingstatus" varchar(10) NOT NULL DEFAULT '',
   UNIQUE ("attsno")
 );
+
+CREATE INDEX IF NOT EXISTS "a_atttran_idx_a_atttran_attcrdno" ON "a_atttran" ("attcrdno");
 
 -- a_atttran: 50 original source rows.
 INSERT INTO "a_atttran" ("attsno","attmacsno","attcrdno","attddt","atttime","attucdnew","attentddt","attenttime","attucdame","attameddt","attametime","attdelflg","atttrfflg","attnootflg","attapiyn","attcheckingstatus") VALUES
@@ -144,6 +152,12 @@ INSERT INTO "a_atttran" ("attsno","attmacsno","attcrdno","attddt","atttime","att
 (49,E'4',1007,E'2012-08-01',E'18:16:29',E'',NULL,E'00:00:00',E'',NULL,E'00:00:00',E'',E'',E'',E'',E''),
 (50,E'4',1027,E'2012-08-01',E'18:45:08',E'',NULL,E'00:00:00',E'',NULL,E'00:00:00',E'',E'',E'',E'',E'')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_atttran', 'attsno'),
+  GREATEST(COALESCE(MAX("attsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_atttran_attsno_seq'), 1)),
+  MAX("attsno") IS NOT NULL) FROM "a_atttran";
 
 CREATE TABLE IF NOT EXISTS "a_atttran_test" (
   "attsno" SERIAL,
@@ -230,6 +244,12 @@ INSERT INTO "a_atttran_test" ("attsno","attmacsno","attcrdno","attddt","atttime"
 (52,E'UEED244500067',E'30569',E'2025-01-21',E'12:10:27',E'',E'',E'',E'',E'',E'',E'',E'',E'',E'y',E'255',E'2000',E'2025-03-12',E'15:36:03',E'',NULL,E'00:00:00',E'',E'',E'',0,0)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_atttran_test', 'attsno'),
+  GREATEST(COALESCE(MAX("attsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_atttran_test_attsno_seq'), 1)),
+  MAX("attsno") IS NOT NULL) FROM "a_atttran_test";
+
 CREATE TABLE IF NOT EXISTS "a_denmast" (
   "densno" SERIAL,
   "denddt" date  default NULL,
@@ -262,6 +282,8 @@ CREATE TABLE IF NOT EXISTS "a_denmast" (
   "denattinctrf" char(1) NOT NULL default '',
   UNIQUE ("densno")
 );
+
+CREATE INDEX IF NOT EXISTS "a_denmast_idx_a_denmast_denddt_denempsno" ON "a_denmast" ("denddt","denempsno");
 
 -- a_denmast: 50 original source rows.
 INSERT INTO "a_denmast" ("densno","denddt","denlocsno","denaresno","dendepsno","denmacsno","denempmapcode","dlyactinhh","dlyactinmm","dlyactouthh","dlyactoutmm","otbftime","otaftime","denot1","denot2","dennoot","dentrf","denempsno","denattsno","denotdepsno","denucdnew","denentddt","denenttime","denlatemin","nolatflg","denpayottrf","denpaylttrf","dlyadddecot","denattinctrf") VALUES
@@ -317,6 +339,12 @@ INSERT INTO "a_denmast" ("densno","denddt","denlocsno","denaresno","dendepsno","
 (50,E'2012-04-04',3,42,36,4,E'1010',7,17,18,19,28.00,64.00,92.00,0.00,E'n',E'y',684,3415,0,E'hrd',E'2012-05-02',E'12:14:25',0,E'n',E'',E'',E'',E'')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_denmast', 'densno'),
+  GREATEST(COALESCE(MAX("densno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_denmast_densno_seq'), 1)),
+  MAX("densno") IS NOT NULL) FROM "a_denmast";
+
 CREATE TABLE IF NOT EXISTS "a_denmast_tmp" (
   "densno" SERIAL,
   "denddt" date  default NULL,
@@ -348,6 +376,8 @@ CREATE TABLE IF NOT EXISTS "a_denmast_tmp" (
   "denattinctrf" char(1) NOT NULL default '',
   UNIQUE ("densno")
 );
+
+CREATE INDEX IF NOT EXISTS "a_denmast_tmp_idx_a_denmast_denddt_denempsno" ON "a_denmast_tmp" ("denddt","denempsno");
 
 -- a_denmast_tmp: 50 original source rows.
 INSERT INTO "a_denmast_tmp" ("densno","denddt","denlocsno","denaresno","dendepsno","denmacsno","denempmapcode","dlyactinhh","dlyactinmm","dlyactouthh","dlyactoutmm","otbftime","otaftime","denot1","denot2","dennoot","dentrf","denempsno","denattsno","denucdnew","denentddt","denenttime","denlatemin","nolatflg","denpayottrf","denpaylttrf","dlyadddecot","denattinctrf") VALUES
@@ -402,6 +432,12 @@ INSERT INTO "a_denmast_tmp" ("densno","denddt","denlocsno","denaresno","dendepsn
 (696339,E'2020-09-11',1,41,33,4,E'202330',5,0,7,0,120.00,0.00,120.00,0.00,E'n',E'y',302,1561909,E'inokahr',E'2020-10-05',E'09:50:39',555,E'y',E'',E'',E'',E''),
 (696340,E'2020-09-11',1,41,33,4,E'202330',7,10,16,23,5.00,8.00,13.00,0.00,E'y',E'y',302,1561911,E'inokahr',E'2020-10-05',E'09:50:39',0,E'y',E'',E'',E'',E'')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_denmast_tmp', 'densno'),
+  GREATEST(COALESCE(MAX("densno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_denmast_tmp_densno_seq'), 1)),
+  MAX("densno") IS NOT NULL) FROM "a_denmast_tmp";
 
 CREATE TABLE IF NOT EXISTS "a_deprate" (
   "dprsno" INTEGER NOT NULL default '0',
@@ -507,6 +543,12 @@ INSERT INTO "a_dlymast" ("dlysno","dlyddt","dlyaresno","dlycomsno","dlydepsno","
 (50,E'2012-04-01',42,2,25,8,30,16,30,0,0,0,0,E'hrd',E'2012-04-26',E'13:31:23',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_dlymast', 'dlysno'),
+  GREATEST(COALESCE(MAX("dlysno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_dlymast_dlysno_seq'), 1)),
+  MAX("dlysno") IS NOT NULL) FROM "a_dlymast";
+
 CREATE TABLE IF NOT EXISTS "a_holmast" (
   "holsno" SERIAL,
   "holddt" date  default NULL,
@@ -574,6 +616,12 @@ INSERT INTO "a_holmast" ("holsno","holddt","holtypsno","holucdnew","holentddt","
 (50,E'2012-10-07',44,E'hrd',E'2012-10-24',E'13:03:43',E'',NULL,E'00:00:00',1.50),
 (51,E'2012-10-13',43,E'hrd',E'2012-10-24',E'13:04:15',E'',NULL,E'00:00:00',1.50)
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_holmast', 'holsno'),
+  GREATEST(COALESCE(MAX("holsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_holmast_holsno_seq'), 1)),
+  MAX("holsno") IS NOT NULL) FROM "a_holmast";
 
 CREATE TABLE IF NOT EXISTS "a_incwormast" (
   "incworsno" SERIAL,
@@ -646,6 +694,12 @@ INSERT INTO "a_incwormast" ("incworsno","incworyear","incwormon","incworlocsno",
 (50,2012,E'09',4,37,E'hrd',E'2012-10-09',10,E'',NULL,E'00:00:00',24.00)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_incwormast', 'incworsno'),
+  GREATEST(COALESCE(MAX("incworsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_incwormast_incworsno_seq'), 1)),
+  MAX("incworsno") IS NOT NULL) FROM "a_incwormast";
+
 CREATE TABLE IF NOT EXISTS "a_levtran" (
   "levsno" SERIAL,
   "levddt" date  default NULL,
@@ -673,6 +727,8 @@ CREATE TABLE IF NOT EXISTS "a_levtran" (
   "levtrfpay" char(1) NOT NULL default '',
   UNIQUE ("levsno")
 );
+
+CREATE INDEX IF NOT EXISTS "a_levtran_idx_a_levtran_levddt_levempsno" ON "a_levtran" ("levddt","levempsno");
 
 -- a_levtran: 50 original source rows.
 INSERT INTO "a_levtran" ("levsno","levddt","levempsno","leaveab","leavean","leaveca","leavell","leavemed","leaveadt","leavespe","leavevst","leavehfd","leavenp","leaveshl","levucdnew","leventddt","leventtime","levtrf","levyear","levdelflg","levdelucd","delddt","deltime","levtrfpay") VALUES
@@ -728,6 +784,12 @@ INSERT INTO "a_levtran" ("levsno","levddt","levempsno","leaveab","leavean","leav
 (50,E'2012-09-03',1150,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.00,E'THEJANI',E'2012-10-03',E'12:00:02',E'y',E'2012',E'D',E'THEJANI',E'2012-10-04',E'18:40:13',E'')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_levtran', 'levsno'),
+  GREATEST(COALESCE(MAX("levsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_levtran_levsno_seq'), 1)),
+  MAX("levsno") IS NOT NULL) FROM "a_levtran";
+
 CREATE TABLE IF NOT EXISTS "a_logmast" (
   "logsno" SERIAL,
   "logucd" varchar(30) default NULL,
@@ -740,6 +802,12 @@ CREATE TABLE IF NOT EXISTS "a_logmast" (
 );
 
 -- No historical log rows are seeded for this application.
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_logmast', 'logsno'),
+  GREATEST(COALESCE(MAX("logsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_logmast_logsno_seq'), 1)),
+  MAX("logsno") IS NOT NULL) FROM "a_logmast";
 
 CREATE TABLE IF NOT EXISTS "a_nigtran" (
   "nigsno" SERIAL,
@@ -803,6 +871,12 @@ INSERT INTO "a_nigtran" ("nigsno","nigempsno","nigddt","nigcoun","nigtrfpay") VA
 (49,305,E'2012-09-05',1,E'Y'),
 (50,307,E'2012-09-05',1,E'Y')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_nigtran', 'nigsno'),
+  GREATEST(COALESCE(MAX("nigsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_nigtran_nigsno_seq'), 1)),
+  MAX("nigsno") IS NOT NULL) FROM "a_nigtran";
 
 CREATE TABLE IF NOT EXISTS "a_sysmast" (
   "syssno" SERIAL,
@@ -876,6 +950,12 @@ INSERT INTO "a_sysmast" ("syssno","sysrtp","sysrno","sysdes","sysdes1","sysdes2"
 (50,33,E'1',E'MASTER FILE',E'',NULL,0,E'2000',E'2012-10-05',E'10:08:56',NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_sysmast', 'syssno'),
+  GREATEST(COALESCE(MAX("syssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_sysmast_syssno_seq'), 1)),
+  MAX("syssno") IS NOT NULL) FROM "a_sysmast";
+
 CREATE TABLE IF NOT EXISTS "a_wormast" (
   "worsno" SERIAL,
   "woryear" INTEGER NOT NULL default '0',
@@ -947,6 +1027,12 @@ INSERT INTO "a_wormast" ("worsno","woryear","wormon","worlocsno","wordepsno","wo
 (51,2012,E'05',4,6,E'hrd',E'2012-05-31',16,E'',NULL,E'00:00:00',9.99)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_wormast', 'worsno'),
+  GREATEST(COALESCE(MAX("worsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_wormast_worsno_seq'), 1)),
+  MAX("worsno") IS NOT NULL) FROM "a_wormast";
+
 CREATE TABLE IF NOT EXISTS "a_wosmast" (
   "wossno" SERIAL,
   "wosyear" INTEGER NOT NULL default '0',
@@ -968,6 +1054,12 @@ INSERT INTO "a_wosmast" ("wossno","wosyear","wosmon","wossecsno","wosucdnew","wo
 (1,2024,8,593,E'2000',E'2024-10-29',E'07:37:15',E'',NULL,E'00:00:00',29.00)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('a_wosmast', 'wossno'),
+  GREATEST(COALESCE(MAX("wossno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'a_wosmast_wossno_seq'), 1)),
+  MAX("wossno") IS NOT NULL) FROM "a_wosmast";
+
 CREATE TABLE IF NOT EXISTS "bookings" (
   "id" SERIAL,
   "id_item" INTEGER NOT NULL default '0',
@@ -977,11 +1069,20 @@ CREATE TABLE IF NOT EXISTS "bookings" (
   PRIMARY KEY  ("id")
 );
 
+CREATE INDEX IF NOT EXISTS "bookings_id_item" ON "bookings" ("id_item");
+CREATE INDEX IF NOT EXISTS "bookings_id_state" ON "bookings" ("id_state");
+
 -- bookings: 2 original source rows.
 INSERT INTO "bookings" ("id","id_item","the_date","id_state","id_booking") VALUES
 (1,1,E'2013-10-18',1,0),
 (2,1,E'2013-10-19',2,0)
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('bookings', 'id'),
+  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'bookings_id_seq'), 1)),
+  MAX("id") IS NOT NULL) FROM "bookings";
 
 CREATE TABLE IF NOT EXISTS "bookings_admin_users" (
   "id" SERIAL,
@@ -998,6 +1099,12 @@ CREATE TABLE IF NOT EXISTS "bookings_admin_users" (
 INSERT INTO "bookings_admin_users" ("id","level","username","password","state","date_visit","visits") VALUES
 (1,1,E'admin',E'fe01ce2a7fbac8fafaed7c982a04e229',1,E'2013-10-17 15:08:40',4)
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('bookings_admin_users', 'id'),
+  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'bookings_admin_users_id_seq'), 1)),
+  MAX("id") IS NOT NULL) FROM "bookings_admin_users";
 
 CREATE TABLE IF NOT EXISTS "bookings_config" (
   "id" SERIAL,
@@ -1019,6 +1126,12 @@ INSERT INTO "bookings_config" ("id","title","num_months","default_lang","theme",
 (1,E'Availability Calendar',1,E'en',E'default',E'mon',E'eu',E'off',E'/calender',E'/calendar',E'v3.03.07')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('bookings_config', 'id'),
+  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'bookings_config_id_seq'), 1)),
+  MAX("id") IS NOT NULL) FROM "bookings_config";
+
 CREATE TABLE IF NOT EXISTS "bookings_items" (
   "id" SERIAL,
   "id_user" INTEGER NOT NULL default '1',
@@ -1030,10 +1143,19 @@ CREATE TABLE IF NOT EXISTS "bookings_items" (
   PRIMARY KEY  ("id")
 );
 
+CREATE INDEX IF NOT EXISTS "bookings_items_id_user" ON "bookings_items" ("id_user");
+CREATE INDEX IF NOT EXISTS "bookings_items_id_ref_external" ON "bookings_items" ("id_ref_external");
+
 -- bookings_items: 1 original source rows.
 INSERT INTO "bookings_items" ("id","id_user","id_ref_external","desc_en","desc_es","list_order","state") VALUES
 (1,1,0,E'Demo Item',E'Demo',1,1)
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('bookings_items', 'id'),
+  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'bookings_items_id_seq'), 1)),
+  MAX("id") IS NOT NULL) FROM "bookings_items";
 
 CREATE TABLE IF NOT EXISTS "bookings_last_update" (
   "id" SERIAL,
@@ -1042,10 +1164,18 @@ CREATE TABLE IF NOT EXISTS "bookings_last_update" (
   PRIMARY KEY  ("id")
 );
 
+CREATE INDEX IF NOT EXISTS "bookings_last_update_id_item" ON "bookings_last_update" ("id_item");
+
 -- bookings_last_update: 1 original source rows.
 INSERT INTO "bookings_last_update" ("id","id_item","date_mod") VALUES
 (1,1,E'2013-10-17 13:52:15')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('bookings_last_update', 'id'),
+  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'bookings_last_update_id_seq'), 1)),
+  MAX("id") IS NOT NULL) FROM "bookings_last_update";
 
 CREATE TABLE IF NOT EXISTS "bookings_states" (
   "id" SERIAL,
@@ -1068,6 +1198,12 @@ INSERT INTO "bookings_states" ("id","desc_en","desc_es","code","state","list_ord
 (5,E'Provisional am',E'Provisional am',E'pr_am',1,4,E'booked_pr_am',1),
 (6,E'Provisional pm',E'Provisional pm',E'pr_pm',1,5,E'booked_pr_pm',1)
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('bookings_states', 'id'),
+  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'bookings_states_id_seq'), 1)),
+  MAX("id") IS NOT NULL) FROM "bookings_states";
 
 CREATE TABLE IF NOT EXISTS "f_depmast" (
   "depsno" SERIAL,
@@ -1138,6 +1274,12 @@ INSERT INTO "f_depmast" ("depsno","depdep","depdes","depscgpcn","depvatpcn","dep
 (336,E'OFFASS',E'OFFICE ASSISTANT',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('f_depmast', 'depsno'),
+  GREATEST(COALESCE(MAX("depsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'f_depmast_depsno_seq'), 1)),
+  MAX("depsno") IS NOT NULL) FROM "f_depmast";
+
 CREATE TABLE IF NOT EXISTS "p_btxmast" (
   "btxsno" SERIAL,
   "btxtable" DOUBLE PRECISION NOT NULL default '0.00',
@@ -1206,6 +1348,12 @@ INSERT INTO "p_btxmast" ("btxsno","btxtable","btxframt","btxtoamt","btxpcn","btx
 (1192,0.50,171417.00,172127.00,24.00,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00'),
 (1193,0.50,172128.00,172844.00,24.50,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_btxmast', 'btxsno'),
+  GREATEST(COALESCE(MAX("btxsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_btxmast_btxsno_seq'), 1)),
+  MAX("btxsno") IS NOT NULL) FROM "p_btxmast";
 
 CREATE TABLE IF NOT EXISTS "p_empmast" (
   "empsno" SERIAL,
@@ -1335,6 +1483,12 @@ INSERT INTO "p_empmast" ("empsno","empeno","empinital","empnam","empscgpcn","emp
 (50,50,E'',E'Miss N.W. EDIRISINGHE',0.00,E'W',1,42,E'',10500.00,0.00,0.00,228,E'Y',E'',E'',E'F',E'835372928V',E'2007-12-04',E'LAB ASSISTANT',E'1983-02-06',NULL,0.00,0,0.00,E'N',0,E'4111004785',E'\t\t\t     7214',E'4',62,0.00,0.00,E'',E'',0,576,E'',0,0,0,NULL,0.00,NULL,NULL,0.00,E'2000',E'2012-03-19',E'10:14:38',E'hrd',E'2012-03-26',E'12:27:10',62,3,E'NO. 67/5,',E'ST. BRIDGETS ROAD',E'NAGODA',E'WELISARA',E'',E'S',E'NDB NUGEGO',E'',E'',E'',E'',E'',E'',E'Y',E'',E'')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_empmast', 'empsno'),
+  GREATEST(COALESCE(MAX("empsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_empmast_empsno_seq'), 1)),
+  MAX("empsno") IS NOT NULL) FROM "p_empmast";
+
 CREATE TABLE IF NOT EXISTS "p_hstmast" (
   "hstsno" SERIAL,
   "hstempsno" INTEGER NOT NULL default '0',
@@ -1352,6 +1506,12 @@ CREATE TABLE IF NOT EXISTS "p_hstmast" (
   PRIMARY KEY  ("hstempsno","hstyer","hstmon","hsttyp"),
   UNIQUE ("hstsno")
 );
+
+CREATE INDEX IF NOT EXISTS "p_hstmast_hstempsno" ON "p_hstmast" ("hstempsno");
+CREATE INDEX IF NOT EXISTS "p_hstmast_hstyer" ON "p_hstmast" ("hstyer");
+CREATE INDEX IF NOT EXISTS "p_hstmast_hstmon" ON "p_hstmast" ("hstmon");
+CREATE INDEX IF NOT EXISTS "p_hstmast_hsttyp" ON "p_hstmast" ("hsttyp");
+CREATE INDEX IF NOT EXISTS "p_hstmast_hstempeno" ON "p_hstmast" ("hstempeno");
 
 -- p_hstmast: 50 original source rows.
 INSERT INTO "p_hstmast" ("hstsno","hstempsno","hstyer","hstmon","hsttyp","hstamt","hstempeno","hstucdnew","hstentddt","hstenttime","hstucdame","hstameddt","hstametime") VALUES
@@ -1407,6 +1567,12 @@ INSERT INTO "p_hstmast" ("hstsno","hstempsno","hstyer","hstmon","hsttyp","hstamt
 (50,36,2012,4,E'092',11782.25,E'36',E'hrd',E'2012-05-23',E'13:08:51',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_hstmast', 'hstsno'),
+  GREATEST(COALESCE(MAX("hstsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_hstmast_hstsno_seq'), 1)),
+  MAX("hstsno") IS NOT NULL) FROM "p_hstmast";
+
 CREATE TABLE IF NOT EXISTS "p_logmast" (
   "logsno" SERIAL,
   "logucd" varchar(30) default NULL,
@@ -1419,6 +1585,12 @@ CREATE TABLE IF NOT EXISTS "p_logmast" (
 );
 
 -- No historical log rows are seeded for this application.
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_logmast', 'logsno'),
+  GREATEST(COALESCE(MAX("logsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_logmast_logsno_seq'), 1)),
+  MAX("logsno") IS NOT NULL) FROM "p_logmast";
 
 CREATE TABLE IF NOT EXISTS "p_lonmast" (
   "lonsno" SERIAL,
@@ -1495,6 +1667,12 @@ INSERT INTO "p_lonmast" ("lonsno","lonempsno","lontyp","lonamt","lonins","lonout
 (964,1512,E'080',7002.00,2334.00,7002.00,0.00,E'2015-05-07',3,0,E'nathasha',E'2015-05-07',E'09:56:38',E'nathasha',E'2015-05-07',E'10:02:33')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_lonmast', 'lonsno'),
+  GREATEST(COALESCE(MAX("lonsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_lonmast_lonsno_seq'), 1)),
+  MAX("lonsno") IS NOT NULL) FROM "p_lonmast";
+
 CREATE TABLE IF NOT EXISTS "p_mblmast" (
   "mblsno" SERIAL,
   "mblyear" varchar(4) NOT NULL default '',
@@ -1562,6 +1740,12 @@ INSERT INTO "p_mblmast" ("mblsno","mblyear","mblmon","mblempsno","mbltelno","mbl
 (163,E'2012',E'04',401,E'718547171',122.45,E'',E'2000',E'2012-05-10',E'13:26:37'),
 (164,E'2012',E'04',401,E'718547172',405.56,E'',E'2000',E'2012-05-10',E'13:26:37')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_mblmast', 'mblsno'),
+  GREATEST(COALESCE(MAX("mblsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_mblmast_mblsno_seq'), 1)),
+  MAX("mblsno") IS NOT NULL) FROM "p_mblmast";
 
 CREATE TABLE IF NOT EXISTS "p_ptrmast" (
   "ptrsno" SERIAL,
@@ -1631,6 +1815,12 @@ INSERT INTO "p_ptrmast" ("ptrsno","ptrempsno","ptrtyp","ptramt","ptrucdnew","ptr
 (12163,1791,E'002',0.00,E'nathasha',E'2025-06-09',E'14:49:16',E'',NULL,E'00:00:00'),
 (6369,1792,E'002',3500.00,E'nathasha',E'2016-08-03',E'15:02:48',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_ptrmast', 'ptrsno'),
+  GREATEST(COALESCE(MAX("ptrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_ptrmast_ptrsno_seq'), 1)),
+  MAX("ptrsno") IS NOT NULL) FROM "p_ptrmast";
 
 CREATE TABLE IF NOT EXISTS "p_sysmast" (
   "syssno" SERIAL,
@@ -1705,6 +1895,12 @@ INSERT INTO "p_sysmast" ("syssno","sysrtp","sysrno","sysdes","sysdes1","sysdes2"
 (488,9,E'056',E'W/SHOP',E'',E'',E'',1,E'2000',E'2010-03-12',E'17:13:51',E'2000',E'2025-04-09',E'18:27:45')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_sysmast', 'syssno'),
+  GREATEST(COALESCE(MAX("syssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_sysmast_syssno_seq'), 1)),
+  MAX("syssno") IS NOT NULL) FROM "p_sysmast";
+
 CREATE TABLE IF NOT EXISTS "p_taxmast" (
   "taxsno" SERIAL,
   "taxtable" INTEGER NOT NULL default '0',
@@ -1774,6 +1970,12 @@ INSERT INTO "p_taxmast" ("taxsno","taxtable","taxframt","taxtoamt","taxamt","tax
 (886,5,351131.00,351652.00,1176.00,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_taxmast', 'taxsno'),
+  GREATEST(COALESCE(MAX("taxsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_taxmast_taxsno_seq'), 1)),
+  MAX("taxsno") IS NOT NULL) FROM "p_taxmast";
+
 CREATE TABLE IF NOT EXISTS "p_telmast" (
   "telsno" SERIAL,
   "telempsno" INTEGER NOT NULL default '0',
@@ -1834,6 +2036,12 @@ INSERT INTO "p_telmast" ("telsno","telempsno","telno") VALUES
 (125,113,E'718547256'),
 (126,538,E'718547213')
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_telmast', 'telsno'),
+  GREATEST(COALESCE(MAX("telsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_telmast_telsno_seq'), 1)),
+  MAX("telsno") IS NOT NULL) FROM "p_telmast";
 
 CREATE TABLE IF NOT EXISTS "p_trnmast" (
   "trnsno" SERIAL,
@@ -1905,6 +2113,12 @@ INSERT INTO "p_trnmast" ("trnsno","trnempsno","trntyp","trnamt","trndes","trnucd
 (50,2964,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_trnmast', 'trnsno'),
+  GREATEST(COALESCE(MAX("trnsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_trnmast_trnsno_seq'), 1)),
+  MAX("trnsno") IS NOT NULL) FROM "p_trnmast";
+
 CREATE TABLE IF NOT EXISTS "prgmast" (
   "prgsno" SERIAL,
   "prgmodsno" INTEGER NOT NULL default '0',
@@ -1926,6 +2140,12 @@ CREATE TABLE IF NOT EXISTS "prgmast" (
 
 ALTER TABLE prgmast ADD COLUMN IF NOT EXISTS prgapp varchar(30) NOT NULL DEFAULT '';
 -- Current application pages are registered below after all tables exist.
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('prgmast', 'prgsno'),
+  GREATEST(COALESCE(MAX("prgsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'prgmast_prgsno_seq'), 1)),
+  MAX("prgsno") IS NOT NULL) FROM "prgmast";
 
 CREATE TABLE IF NOT EXISTS "s_locmast" (
   "locsno" SERIAL,
@@ -1970,6 +2190,12 @@ INSERT INTO "s_locmast" ("locsno","locloc","locnam","loctyp","locad1","locad2","
 (8,E'MIAG',E'MIKE AGRO GREEN (PVT) LTD',NULL,E'',E'',E'',E'',E'',E'',E'',E'RZ',E'2025-10-24',NULL,NULL,NULL,NULL,0.00,E'',E'',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
 (9,E'MILP',E'MIKE LEISURE (PVT) LTD',NULL,E'',E'',E'',E'',E'',E'',E'',E'RZ',E'2025-10-24',NULL,NULL,NULL,NULL,0.00,E'',E'',NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('s_locmast', 'locsno'),
+  GREATEST(COALESCE(MAX("locsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 's_locmast_locsno_seq'), 1)),
+  MAX("locsno") IS NOT NULL) FROM "s_locmast";
 
 CREATE TABLE IF NOT EXISTS "temp" (
   "densno" INTEGER NOT NULL default '0',
@@ -2099,6 +2325,12 @@ INSERT INTO "usdmast" ("usdsno","usdcomsno","usdusd","usdpwd","usduno","usdnam",
 (20,0,E'ravi',E'pwrgiP1WACGfA',0,E'',E'',E'',E'',E'',E'',E'',E'',E'',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00',false)
 ON CONFLICT DO NOTHING;
 
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('usdmast', 'usdsno'),
+  GREATEST(COALESCE(MAX("usdsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'usdmast_usdsno_seq'), 1)),
+  MAX("usdsno") IS NOT NULL) FROM "usdmast";
+
 CREATE TABLE IF NOT EXISTS "usrmast" (
   "usrsno" SERIAL,
   "usrusdsno" INTEGER NOT NULL default '0',
@@ -2122,166 +2354,12 @@ CREATE TABLE IF NOT EXISTS "usrmast" (
 
 -- Ordinary accounts receive page rights through the User Rights screen.
 
-CREATE INDEX IF NOT EXISTS "a_atttran_idx_a_atttran_attcrdno" ON "a_atttran" ("attcrdno");
-CREATE INDEX IF NOT EXISTS "a_denmast_idx_a_denmast_denddt_denempsno" ON "a_denmast" ("denddt","denempsno");
-CREATE INDEX IF NOT EXISTS "a_denmast_tmp_idx_a_denmast_denddt_denempsno" ON "a_denmast_tmp" ("denddt","denempsno");
-CREATE INDEX IF NOT EXISTS "a_levtran_idx_a_levtran_levddt_levempsno" ON "a_levtran" ("levddt","levempsno");
-CREATE INDEX IF NOT EXISTS "bookings_id_item" ON "bookings" ("id_item");
-CREATE INDEX IF NOT EXISTS "bookings_id_state" ON "bookings" ("id_state");
-CREATE INDEX IF NOT EXISTS "bookings_items_id_user" ON "bookings_items" ("id_user");
-CREATE INDEX IF NOT EXISTS "bookings_items_id_ref_external" ON "bookings_items" ("id_ref_external");
-CREATE INDEX IF NOT EXISTS "bookings_last_update_id_item" ON "bookings_last_update" ("id_item");
-CREATE INDEX IF NOT EXISTS "p_hstmast_hstempsno" ON "p_hstmast" ("hstempsno");
-CREATE INDEX IF NOT EXISTS "p_hstmast_hstyer" ON "p_hstmast" ("hstyer");
-CREATE INDEX IF NOT EXISTS "p_hstmast_hstmon" ON "p_hstmast" ("hstmon");
-CREATE INDEX IF NOT EXISTS "p_hstmast_hsttyp" ON "p_hstmast" ("hsttyp");
-CREATE INDEX IF NOT EXISTS "p_hstmast_hstempeno" ON "p_hstmast" ("hstempeno");
-
 -- Keep generated IDs above imported IDs without rewinding existing sequences.
-SELECT setval(pg_get_serial_sequence('a_absmast', 'abssno'),
-  GREATEST(COALESCE(MAX("abssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_absmast_abssno_seq'), 1)),
-  MAX("abssno") IS NOT NULL) FROM "a_absmast";
-SELECT setval(pg_get_serial_sequence('a_atttran', 'attsno'),
-  GREATEST(COALESCE(MAX("attsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_atttran_attsno_seq'), 1)),
-  MAX("attsno") IS NOT NULL) FROM "a_atttran";
-SELECT setval(pg_get_serial_sequence('a_atttran_test', 'attsno'),
-  GREATEST(COALESCE(MAX("attsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_atttran_test_attsno_seq'), 1)),
-  MAX("attsno") IS NOT NULL) FROM "a_atttran_test";
-SELECT setval(pg_get_serial_sequence('a_denmast', 'densno'),
-  GREATEST(COALESCE(MAX("densno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_denmast_densno_seq'), 1)),
-  MAX("densno") IS NOT NULL) FROM "a_denmast";
-SELECT setval(pg_get_serial_sequence('a_denmast_tmp', 'densno'),
-  GREATEST(COALESCE(MAX("densno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_denmast_tmp_densno_seq'), 1)),
-  MAX("densno") IS NOT NULL) FROM "a_denmast_tmp";
-SELECT setval(pg_get_serial_sequence('a_dlymast', 'dlysno'),
-  GREATEST(COALESCE(MAX("dlysno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_dlymast_dlysno_seq'), 1)),
-  MAX("dlysno") IS NOT NULL) FROM "a_dlymast";
-SELECT setval(pg_get_serial_sequence('a_holmast', 'holsno'),
-  GREATEST(COALESCE(MAX("holsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_holmast_holsno_seq'), 1)),
-  MAX("holsno") IS NOT NULL) FROM "a_holmast";
-SELECT setval(pg_get_serial_sequence('a_incwormast', 'incworsno'),
-  GREATEST(COALESCE(MAX("incworsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_incwormast_incworsno_seq'), 1)),
-  MAX("incworsno") IS NOT NULL) FROM "a_incwormast";
-SELECT setval(pg_get_serial_sequence('a_levtran', 'levsno'),
-  GREATEST(COALESCE(MAX("levsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_levtran_levsno_seq'), 1)),
-  MAX("levsno") IS NOT NULL) FROM "a_levtran";
-SELECT setval(pg_get_serial_sequence('a_logmast', 'logsno'),
-  GREATEST(COALESCE(MAX("logsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_logmast_logsno_seq'), 1)),
-  MAX("logsno") IS NOT NULL) FROM "a_logmast";
-SELECT setval(pg_get_serial_sequence('a_nigtran', 'nigsno'),
-  GREATEST(COALESCE(MAX("nigsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_nigtran_nigsno_seq'), 1)),
-  MAX("nigsno") IS NOT NULL) FROM "a_nigtran";
-SELECT setval(pg_get_serial_sequence('a_sysmast', 'syssno'),
-  GREATEST(COALESCE(MAX("syssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_sysmast_syssno_seq'), 1)),
-  MAX("syssno") IS NOT NULL) FROM "a_sysmast";
-SELECT setval(pg_get_serial_sequence('a_wormast', 'worsno'),
-  GREATEST(COALESCE(MAX("worsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_wormast_worsno_seq'), 1)),
-  MAX("worsno") IS NOT NULL) FROM "a_wormast";
-SELECT setval(pg_get_serial_sequence('a_wosmast', 'wossno'),
-  GREATEST(COALESCE(MAX("wossno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'a_wosmast_wossno_seq'), 1)),
-  MAX("wossno") IS NOT NULL) FROM "a_wosmast";
-SELECT setval(pg_get_serial_sequence('bookings', 'id'),
-  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'bookings_id_seq'), 1)),
-  MAX("id") IS NOT NULL) FROM "bookings";
-SELECT setval(pg_get_serial_sequence('bookings_admin_users', 'id'),
-  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'bookings_admin_users_id_seq'), 1)),
-  MAX("id") IS NOT NULL) FROM "bookings_admin_users";
-SELECT setval(pg_get_serial_sequence('bookings_config', 'id'),
-  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'bookings_config_id_seq'), 1)),
-  MAX("id") IS NOT NULL) FROM "bookings_config";
-SELECT setval(pg_get_serial_sequence('bookings_items', 'id'),
-  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'bookings_items_id_seq'), 1)),
-  MAX("id") IS NOT NULL) FROM "bookings_items";
-SELECT setval(pg_get_serial_sequence('bookings_last_update', 'id'),
-  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'bookings_last_update_id_seq'), 1)),
-  MAX("id") IS NOT NULL) FROM "bookings_last_update";
-SELECT setval(pg_get_serial_sequence('bookings_states', 'id'),
-  GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'bookings_states_id_seq'), 1)),
-  MAX("id") IS NOT NULL) FROM "bookings_states";
-SELECT setval(pg_get_serial_sequence('f_depmast', 'depsno'),
-  GREATEST(COALESCE(MAX("depsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'f_depmast_depsno_seq'), 1)),
-  MAX("depsno") IS NOT NULL) FROM "f_depmast";
-SELECT setval(pg_get_serial_sequence('p_btxmast', 'btxsno'),
-  GREATEST(COALESCE(MAX("btxsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_btxmast_btxsno_seq'), 1)),
-  MAX("btxsno") IS NOT NULL) FROM "p_btxmast";
-SELECT setval(pg_get_serial_sequence('p_empmast', 'empsno'),
-  GREATEST(COALESCE(MAX("empsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_empmast_empsno_seq'), 1)),
-  MAX("empsno") IS NOT NULL) FROM "p_empmast";
-SELECT setval(pg_get_serial_sequence('p_hstmast', 'hstsno'),
-  GREATEST(COALESCE(MAX("hstsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_hstmast_hstsno_seq'), 1)),
-  MAX("hstsno") IS NOT NULL) FROM "p_hstmast";
-SELECT setval(pg_get_serial_sequence('p_logmast', 'logsno'),
-  GREATEST(COALESCE(MAX("logsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_logmast_logsno_seq'), 1)),
-  MAX("logsno") IS NOT NULL) FROM "p_logmast";
-SELECT setval(pg_get_serial_sequence('p_lonmast', 'lonsno'),
-  GREATEST(COALESCE(MAX("lonsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_lonmast_lonsno_seq'), 1)),
-  MAX("lonsno") IS NOT NULL) FROM "p_lonmast";
-SELECT setval(pg_get_serial_sequence('p_mblmast', 'mblsno'),
-  GREATEST(COALESCE(MAX("mblsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_mblmast_mblsno_seq'), 1)),
-  MAX("mblsno") IS NOT NULL) FROM "p_mblmast";
-SELECT setval(pg_get_serial_sequence('p_ptrmast', 'ptrsno'),
-  GREATEST(COALESCE(MAX("ptrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_ptrmast_ptrsno_seq'), 1)),
-  MAX("ptrsno") IS NOT NULL) FROM "p_ptrmast";
-SELECT setval(pg_get_serial_sequence('p_sysmast', 'syssno'),
-  GREATEST(COALESCE(MAX("syssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_sysmast_syssno_seq'), 1)),
-  MAX("syssno") IS NOT NULL) FROM "p_sysmast";
-SELECT setval(pg_get_serial_sequence('p_taxmast', 'taxsno'),
-  GREATEST(COALESCE(MAX("taxsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_taxmast_taxsno_seq'), 1)),
-  MAX("taxsno") IS NOT NULL) FROM "p_taxmast";
-SELECT setval(pg_get_serial_sequence('p_telmast', 'telsno'),
-  GREATEST(COALESCE(MAX("telsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_telmast_telsno_seq'), 1)),
-  MAX("telsno") IS NOT NULL) FROM "p_telmast";
-SELECT setval(pg_get_serial_sequence('p_trnmast', 'trnsno'),
-  GREATEST(COALESCE(MAX("trnsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'p_trnmast_trnsno_seq'), 1)),
-  MAX("trnsno") IS NOT NULL) FROM "p_trnmast";
-SELECT setval(pg_get_serial_sequence('prgmast', 'prgsno'),
-  GREATEST(COALESCE(MAX("prgsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'prgmast_prgsno_seq'), 1)),
-  MAX("prgsno") IS NOT NULL) FROM "prgmast";
-SELECT setval(pg_get_serial_sequence('s_locmast', 'locsno'),
-  GREATEST(COALESCE(MAX("locsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 's_locmast_locsno_seq'), 1)),
-  MAX("locsno") IS NOT NULL) FROM "s_locmast";
-SELECT setval(pg_get_serial_sequence('usdmast', 'usdsno'),
-  GREATEST(COALESCE(MAX("usdsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'usdmast_usdsno_seq'), 1)),
-  MAX("usdsno") IS NOT NULL) FROM "usdmast";
 SELECT setval(pg_get_serial_sequence('usrmast', 'usrsno'),
   GREATEST(COALESCE(MAX("usrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'usrmast_usrsno_seq'), 1)),
   MAX("usrsno") IS NOT NULL) FROM "usrmast";
+
 -- BEGIN WEB APP PROGRAM REGISTRATION
 -- This import contains the complete setup; no second SQL file is needed.
 LOCK TABLE a_sysmast, prgmast, usrmast IN SHARE ROW EXCLUSIVE MODE;
