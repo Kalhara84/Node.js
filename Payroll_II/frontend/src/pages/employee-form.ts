@@ -1,4 +1,3 @@
-// Build the Add/Edit Employee form and send its values to the backend.
 import { api, getLookups } from '../services/api.ts';
 import { esc, errMsg, qs, loading, alertBox } from '../utils/ui.ts';
 import type { Employee, EmployeeBody, Lookups, PageContext } from '../types.ts';
@@ -17,7 +16,6 @@ const CAT: Option[] = [
     { value: 'S', label: 'Staff' }
 ];
 
-// Limit field names to employee fields and dropdown names to lookup lists.
 type FieldKey = keyof EmployeeBody & string;
 type LookupKey = keyof Lookups;
 
@@ -58,7 +56,6 @@ const desText = (x: Lookups['sections'][number]): string => x.sysdes;
 const rnoText = (x: Lookups['sections'][number]): string => x.sysrno;
 
 // Form section groupings
-// Group field definitions into Personal, Job, Salary, Bank, Contact and Leave cards.
 const SECTIONS: { icon: string; title: string; fields: Item[] }[] = [
     {
         icon: 'bi-person',
@@ -151,7 +148,6 @@ const SECTIONS: { icon: string; title: string; fields: Item[] }[] = [
 
 // Flat list of all fields
 const FIELDS: Field[] = [];
-// Collect all real fields into one list, skipping visual line breaks.
 for (const section of SECTIONS) {
     for (const field of section.fields) {
         if (field !== 'break') {
@@ -193,7 +189,6 @@ function fieldHtml(fd: Field, values: Values, lookups: Lookups | null): string {
     const v = values[key] ?? '';
     let input = '';
 
-    // Build radio choices and mark the option matching the saved value.
     if (type === 'radio') {
         const radioOptions = (opt.options ?? []).map((o) => {
             const isChecked = v === o.value ? 'checked' : '';
@@ -204,7 +199,6 @@ function fieldHtml(fd: Field, values: Values, lookups: Lookups | null): string {
               </div>`;
         }).join('');
         input = `<div class="d-flex gap-3 pt-1">${radioOptions}</div>`;
-    // Build dropdown options from the lookup list and select the saved value.
     } else if (type === 'select') {
         const list = ((opt.lookup && lookups?.[opt.lookup]) || []) as unknown as Record<string, unknown>[];
         const valueCol = opt.value ?? '';
@@ -214,12 +208,10 @@ function fieldHtml(fd: Field, values: Values, lookups: Lookups | null): string {
         }).join('');
         input = `<select class="form-select" name="${key}"><option value="">-- Select --</option>${selectOptions}</select>`;
     } else {
-        // Choose date, whole-number, decimal or text input settings.
         const inputType = type === 'date' ? 'date' : (type === 'int' || type === 'float') ? 'number' : (opt.inputType || 'text');
         const step = type === 'float' ? ' step="0.01"' : type === 'int' ? ' step="1"' : '';
         const max = opt.max ? ` maxlength="${opt.max}"` : '';
         const style = opt.upper ? ' style="text-transform:uppercase"' : '';
-        // Keep Employee No read-only because the backend assigns it.
         const readOnly = key === 'empeno' ? ' readonly aria-readonly="true"' : '';
 
         input = `<input class="form-control" type="${inputType}" name="${key}" value="${esc(v)}"${step}${max}${style}${readOnly}>`;
@@ -232,7 +224,6 @@ function fieldHtml(fd: Field, values: Values, lookups: Lookups | null): string {
 function sectionsHtml(values: Values, lookups: Lookups | null): string {
     return SECTIONS.map((section) => {
         const fieldsHtml = section.fields.map((field) => {
-            // Insert a visual line break instead of an input for this layout marker.
             if (field === 'break') {
                 return '<div class="w-100"></div>';
             }
@@ -255,9 +246,7 @@ function sectionsHtml(values: Values, lookups: Lookups | null): string {
 function toPayload(form: HTMLFormElement): EmployeeBody {
     const body: Record<string, string | number | null> = {};
 
-    // Read each field and convert it to the value type expected by the API.
     for (const { key, type } of FIELDS) {
-        // Leave Employee No out of the request; the server controls this value.
         if (key === 'empeno') continue;
 
         let v = '';
@@ -267,7 +256,6 @@ function toPayload(form: HTMLFormElement): EmployeeBody {
             v = (form.elements.namedItem(key) as HTMLInputElement | HTMLSelectElement).value;
         }
 
-        // Convert number fields to numbers and empty optional fields to null.
         if (type === 'int' || type === 'select') {
             body[key] = v === '' ? null : parseInt(v, 10);
         } else if (type === 'float') {
@@ -284,7 +272,6 @@ function toPayload(form: HTMLFormElement): EmployeeBody {
 
 // Render Add/Edit employee form page
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
-    // An ID means Edit mode; no ID means Add mode.
     const id = ctx.params[0] ? Number(ctx.params[0]) : null;
     el.innerHTML = loading();
 
@@ -292,7 +279,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     let lookups: Lookups | null = null;
 
     try {
-        // Load dropdowns and either the existing employee or the next number preview.
         const lookupRequest = getLookups().catch(() => null);
         const employeeRequest = id !== null ? api.get(id) : Promise.resolve(null);
         const nextNumberRequest = id === null ? api.nextEmployeeNumber() : Promise.resolve(null);
@@ -306,7 +292,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         lookups = lk;
         if (next) values.empeno = String(next.empeno);
 
-        // Fill Edit mode fields with saved employee values instead of defaults.
         if (emp) {
             values = {};
             for (const { key } of FIELDS) {
@@ -321,11 +306,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     if (!ctx.alive()) return;
 
-    // Choose Add/Save or Edit/Update labels for the current mode.
     const pageTitle = id !== null ? 'Edit Employee' : 'Add Employee';
     const saveLabel = id !== null ? 'Update' : 'Save';
 
-    // Build the employee form using the field definitions and loaded values.
     el.innerHTML = `
       <form id="emp-form" novalidate>
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
@@ -357,7 +340,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     form.onsubmit = async (e) => {
         e.preventDefault();
         errBox.innerHTML = '';
-        // Convert inputs into the employee JSON body before checking and saving.
         const body = toPayload(form);
 
         const fail = (m: string): void => {
@@ -365,22 +347,18 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // Require an employee name before sending the form.
         if (!body.empnam) {
             return fail('Employee Name is required');
         }
 
-        // Disable both Save buttons until the backend finishes.
         buttons.forEach((btn) => { btn.disabled = true; });
 
         try {
-            // Update in Edit mode; otherwise create a new employee.
             if (id !== null) {
                 await api.update(id, body);
             } else {
                 await api.create(body);
             }
-            // Return to the employee list after a successful save.
             ctx.navigate('/employees');
         } catch (err) {
             fail(errMsg(err));

@@ -1,7 +1,6 @@
-// Connect /api URLs to controllers and apply login and permission checks.
 import { Router } from 'express';
 import administration from './administration';
-import { requireActiveAccount, requireEmployee } from '../lib/permissions';
+import { requireActiveAccount, requireEmployee, requireScreen } from '../lib/permissions';
 import { requireAuth, wrap } from '../middleware';
 import { AuthController } from '../controllers/auth.controller';
 import { DashboardController } from '../controllers/dashboard.controller';
@@ -14,23 +13,19 @@ const router = Router();
 router.post('/auth/login', wrap(AuthController.login));
 
 // --- 2. Authentication Middleware ---
-// All routes below require a valid signed login token.
+// Protect all endpoints below with JWT token check
 router.use(requireAuth);
-// Confirm that the account still exists and load its current permissions.
 router.use(requireActiveAccount);
 
 // --- 3. User & Account Routes ---
-// Use the confirmed signed-in user when changing a password.
 router.post('/auth/password', wrap(AuthController.changePassword));
-// Return the confirmed profile when the frontend refreshes its session.
 router.get('/auth/me', AuthController.me);
 
 // --- 4. Administration Sub-Router ---
 router.use('/administration', administration);
 
 // --- 5. Dashboard & Master Lookups ---
-// Require employee-view permission before loading the dashboard summary.
-router.get('/dashboard', requireEmployee('view'), wrap(DashboardController.summary));
+router.get('/dashboard', requireScreen('dashboard'), wrap(DashboardController.summary));
 router.get('/lookups', wrap(LookupController.all));
 
 // --- 6. Employee CRUD Routes ---

@@ -1,36 +1,24 @@
 {
-  /* Set how TypeScript checks browser code; Vite handles the final JavaScript build. */
   "compilerOptions": {
-    /* Allow modern JavaScript features and browser APIs. */
     "target": "es2023",
     "module": "esnext",
     "lib": ["ES2023", "DOM"],
-    /* Provide Vite types for values such as import.meta.env. */
     "types": ["vite/client"],
-    /* Allow imports of assets such as style files with type support. */
     "allowArbitraryExtensions": true,
-    /* Skip checking dependency declaration files. */
     "skipLibCheck": true,
 
     /* Bundler mode */
-    /* Resolve imports the way the Vite bundler expects. */
     "moduleResolution": "bundler",
-    /* Allow source imports to include the .ts extension. */
     "allowImportingTsExtensions": true,
-    /* Keep value imports and remove explicitly marked type-only imports. */
     "verbatimModuleSyntax": true,
-    /* Treat every source file as a module. */
     "moduleDetection": "force",
-    /* Check types without generating files; Vite builds browser output. */
     "noEmit": true,
 
     /* Linting */
-    /* Report unused variables and parameters and avoid unsupported syntax or switch fallthrough. */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  /* Check files inside the src folder. */
   "include": ["src"]
 }

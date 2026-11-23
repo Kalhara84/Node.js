@@ -1,4 +1,3 @@
-// Prepare Express to read browser requests and send them to API routes.
 import express from 'express';
 import cors from 'cors';
 import routes from './routes';
@@ -18,7 +17,6 @@ app.get('/', (_req, res) => {
 });
 
 // Mount application API routes under /api
-// Send /api requests to routes/index.ts to choose the controller.
 app.use('/api', routes);
 
 // 404 handler for unknown endpoints

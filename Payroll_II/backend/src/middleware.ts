@@ -1,4 +1,3 @@
-// Share request checks and error handlers used before or after controllers.
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { verifyToken } from './lib/auth';
 import type { TokenPayload } from './types';
@@ -10,23 +9,20 @@ declare module 'express-serve-static-core' {
     }
 }
 
-// Check the signed login token sent in the Authorization header.
+// Authentication middleware: validates Bearer JWT token in Authorization header
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
     const header = req.headers.authorization;
     let user: TokenPayload | null = null;
 
-    // Remove the Bearer prefix and check the token signature and expiry.
     if (header && header.startsWith('Bearer ')) {
         user = verifyToken(header.slice(7));
     }
 
-    // Stop with 401 when no valid login token was provided.
     if (!user) {
         res.status(401).json({ message: 'Unauthorized' });
         return;
     }
 
-    // Attach the verified user to the request and continue to the next check.
     req.user = user;
     next();
 }
@@ -35,7 +31,6 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 export function wrap(fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown> | unknown): RequestHandler {
     return async (req, res, next) => {
         try {
-            // Run the controller and forward thrown errors to Express.
             await fn(req, res, next);
         } catch (error) {
             next(error);
@@ -50,13 +45,11 @@ export function notFound(_req: Request, res: Response): void {
 
 // Global server error handler middleware
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
-    // Return 400 when the incoming body is not valid JSON.
     if ((err as { type?: string })?.type === 'entity.parse.failed') {
         res.status(400).json({ message: 'Invalid JSON body' });
         return;
     }
 
-    // Log unexpected errors and send a generic 500 response.
     console.error(err);
     res.status(500).json({ message: 'Server error' });
 }

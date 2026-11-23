@@ -1,24 +1,19 @@
-// Describe frontend data shapes for TypeScript; these definitions do not run queries.
-// Describe a department choice: ID, code and optional description.
 export interface Department {
     depsno: number;
     depdep: string;
     depdes: string | null;
 }
-// Describe a location choice: ID, code and optional name.
 export interface Location {
     locsno: number;
     locloc: string;
     locnam: string | null;
 }
-// Describe a coded lookup item, such as a section or cost centre.
 export interface SysItem {
     syssno: number;
     sysrtp: number;
     sysrno: string;
     sysdes: string;
 }
-// Group the dropdown lists returned by the lookup API.
 export interface Lookups {
     locations: Location[];
     departments: Department[];
@@ -27,7 +22,6 @@ export interface Lookups {
     basis: SysItem[];
     areas: SysItem[];
 }
-// Describe a complete employee record using its database field names.
 export interface Employee {
     empsno: number;
     empeno: number;
@@ -83,7 +77,6 @@ export interface Employee {
     emplateflg: string;
     empnsatlflg: string;
 }
-// Describe one results page, its record count and page totals.
 export interface Paged<T> {
     data: T[];
     total: number;
@@ -91,20 +84,22 @@ export interface Paged<T> {
     limit: number;
     totalPages: number;
 }
-// Describe public signed-in user details returned to the browser.
+// Rights of the signed-in user on each screen (from the program rights in the database)
+export type Rights = { view: boolean; add: boolean; amend: boolean; delete: boolean };
+export type Screen = 'dashboard' | 'employees' | 'programs' | 'users' | 'rights';
+export type Access = { admin: boolean } & Record<Screen, Rights>;
+
 export interface AuthUser {
-    access?: {admin:boolean; employees:{view:boolean;add:boolean;amend:boolean;delete:boolean}};
+    access?: Access;
     id: number;
     username: string;
     name: string;
     role: string;
 }
-// Describe one chart label and its numeric value.
 export interface ChartItem {
     label: string | number;
     value: number;
 }
-// Describe totals, chart groups and recent employee rows.
 export interface DashboardData {
     totals: {
         total: number;
@@ -130,17 +125,14 @@ export interface DashboardData {
     }[];
 }
 /** what the router gives every page */
-// Describe navigation helpers and URL values supplied to pages.
 export interface PageContext {
     params: string[];
     navigate: (path: string, replace?: boolean) => void;
     /** false when the user already moved to another page (ignore late API answers) */
     alive: () => boolean;
 }
-// Require every page to provide an asynchronous render function.
 export interface PageModule {
     render: (el: HTMLElement, ctx: PageContext) => Promise<void>;
 }
 /** form values / API body for an employee (all fields optional) */
-// Allow writable employee fields in create/update request bodies.
 export type EmployeeBody = Partial<Omit<Employee, 'empsno' | 'department_name' | 'location_name'>>;

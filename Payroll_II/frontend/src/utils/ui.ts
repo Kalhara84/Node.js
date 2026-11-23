@@ -1,9 +1,7 @@
-// Share screen helpers for safe text, formatting, messages and confirmation dialogs.
 import { empty } from '../assets/index.ts';
 
 // Escape HTML special characters to prevent XSS
 export const esc = (s: unknown): string => {
-    // Replace HTML-sensitive characters so user text cannot become page markup.
     return String(s ?? '').replace(/[&<>"']/g, (c) => {
         return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string);
     });
@@ -11,7 +9,6 @@ export const esc = (s: unknown): string => {
 
 // Format currency and numbers (LKR format)
 export const money = (n: number | string | null | undefined, d = 0): string => {
-    // Format numbers with Sri Lankan separators and the requested decimals.
     return Number(n ?? 0).toLocaleString('en-LK', {
         minimumFractionDigits: d,
         maximumFractionDigits: d
@@ -67,9 +64,7 @@ export const emptyState = (title: string, sub = ''): string => {
 
 // Type-safe querySelector that throws if element is missing
 export function qs<T extends HTMLElement = HTMLElement>(root: ParentNode, selector: string): T {
-    // Find the requested element inside its container.
     const el = root.querySelector<T>(selector);
-    // Fail clearly if the expected screen element is missing.
     if (!el) {
         throw new Error(`Element not found: ${selector}`);
     }
@@ -84,9 +79,7 @@ export function confirmModal(opts: {
 }): Promise<boolean> {
     const { title, message, confirmText = 'Delete' } = opts;
 
-    // Wait until the user confirms or cancels the dialog.
     return new Promise((resolve) => {
-        // Create the overlay and its Confirm and Cancel buttons.
         const el = document.createElement('div');
         el.className = 'modal-backdrop-lite';
         el.innerHTML = `
@@ -100,13 +93,11 @@ export function confirmModal(opts: {
             </div>
           </div>`;
 
-        // Close the dialog and return true for Confirm or false for Cancel.
         const done = (v: boolean): void => {
             el.remove();
             resolve(v);
         };
 
-        // Cancel or an overlay click returns false; Confirm returns true.
         el.addEventListener('click', (e) => {
             const t = e.target as HTMLElement;
             if (t === el || t.closest('[data-no]')) {
@@ -116,7 +107,6 @@ export function confirmModal(opts: {
             }
         });
 
-        // Attach the dialog to the page so the user can respond.
         document.body.appendChild(el);
     });
 }

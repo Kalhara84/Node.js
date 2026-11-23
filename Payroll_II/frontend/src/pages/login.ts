@@ -1,12 +1,10 @@
-// Build the login form, check empty fields and open the allowed page after login.
 import { loginHero, logo, shield } from '../assets/index.ts';
-import { login } from '../services/auth.ts';
+import { login, homeFor } from '../services/auth.ts';
 import { esc, errMsg, qs } from '../utils/ui.ts';
 import type { PageContext } from '../types.ts';
 
 // Render user login page
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
-    // Build the login screen with its form, images and sign-in button.
     el.innerHTML = `
       <div class="login-page">
         <section class="login-hero">
@@ -53,7 +51,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         </section>
       </div>`;
 
-    // Find the form inputs, error area and button inside this screen.
     const $ = <T extends HTMLElement = HTMLElement>(s: string): T => qs<T>(el, s);
     const errBox = $('#login-error');
     const btn = $<HTMLButtonElement>('#login-btn');
@@ -61,7 +58,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     // Toggle password visibility (show/hide)
     $('#toggle-pw').onclick = () => {
         const pw = $<HTMLInputElement>('#password');
-        // Choose whether the eye button should reveal or hide the password.
         const show = pw.type === 'password';
         pw.type = show ? 'text' : 'password';
         $('#toggle-pw i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
@@ -69,35 +65,27 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Handle sign-in submission
     $<HTMLFormElement>('#login-form').onsubmit = async (e) => {
-        // Stop the page reload and clear the previous error.
         e.preventDefault();
         errBox.innerHTML = '';
 
-        // Read the inputs; trim spaces only from the ends of the username.
         const username = $<HTMLInputElement>('#username').value.trim();
         const password = $<HTMLInputElement>('#password').value;
 
-        // Show an error above the form; escape its text before adding it to HTML.
         const showError = (m: string): void => {
             errBox.innerHTML = `<div class="alert alert-danger py-2 d-flex align-items-center gap-2"><i class="bi bi-exclamation-circle"></i> ${esc(m)}</div>`;
         };
 
-        // Stop here if either field is empty; do not contact the server.
         if (!username || !password) {
             return showError('Please enter your user name and password');
         }
 
-        // Prevent repeat clicks and show a loading message while signing in.
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
 
         try {
-            // Send the details through services/auth.ts and wait for the result.
             const user = await login(username, password);
-            // Open Dashboard with employee-view permission; otherwise open My Account.
-            ctx.navigate(user.access?.employees.view ? '/dashboard' : '/account', true);
+            ctx.navigate(homeFor(user), true);
         } catch (err) {
-            // Show the failed login message and let the user try again.
             showError(errMsg(err));
             btn.disabled = false;
             btn.innerHTML = 'Sign in <i class="bi bi-arrow-right ms-1"></i>';

@@ -1,4 +1,3 @@
-// Read the port setting and start the Express API server.
 import app from './app';
 
 // Default port number
@@ -6,7 +5,6 @@ let port = 3001;
 
 // Use PORT from environment if specified
 if (process.env.PORT && process.env.PORT.trim() !== '') {
-    // Convert the configured port text to a number before validating it.
     port = Number(process.env.PORT);
 }
 

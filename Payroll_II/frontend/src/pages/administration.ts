@@ -1,12 +1,11 @@
-// Manage programs, user accounts and program rights through administration APIs.
 import { request } from '../services/api.ts';
+import { can } from '../services/auth.ts';
 import { esc, qs, errMsg, alertBox, loading, confirmModal } from '../utils/ui.ts';
 import type { PageContext } from '../types.ts';
 
 type Row = Record<string, string | number | null>;
 type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[] };
 
-// Keep permission field names in the same order as their visible labels.
 const flags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
 const flagLabels = ['Access', 'Add', 'Amend', 'Delete'];
 
@@ -66,13 +65,11 @@ function input(name: string, label: string, value: unknown, max: number, require
 
 // Render administration page (Programs, Users, Rights)
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
-    // Use the URL to choose Programs, Users or Rights mode.
     const mode = location.pathname.split('/').pop()!;
     const rights = mode === 'rights';
     const users = mode === 'users';
     const title = rights ? 'User Rights' : users ? 'User Master' : 'Program Master';
 
-    // Keep loaded records, dropdowns, the edited record and the selected user.
     let rows: Row[] = [];
     let lookups: Lookups;
     let editing: Row | null = null;
@@ -82,7 +79,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     el.innerHTML = loading();
 
     try {
-        // Load administration dropdowns and records together.
         const result = await Promise.all([
             call<Lookups>('/lookups'),
             call<Row[]>(users || rights ? '/users' : '/programs')
@@ -95,14 +91,13 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         return;
     }
 
-    // Build tabs, filters, an editor area and the records table.
     el.innerHTML = `
       <nav class="admin-tabs mb-3" aria-label="Administration">
         ${[
             ['programs', 'bi-grid', 'Programs'],
             ['users', 'bi-people', 'Users'],
             ['rights', 'bi-shield-lock', 'User rights']
-        ].map(([key, icon, label]) => `
+        ].filter(([key]) => can(key as 'programs' | 'users' | 'rights')).map(([key, icon, label]) => `
             <a href="/administration/${key}" data-link class="${mode === key ? 'active' : ''}" ${mode === key ? 'aria-current="page"' : ''}>
               <i class="bi ${icon}" aria-hidden="true"></i>${label}
             </a>
@@ -118,7 +113,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             <div class="page-sub">${rights ? 'Manage access by user, module and program' : users ? 'Manage user profiles and sign-in details' : 'Manage application programs and their modules'}</div>
           </div>
         </div>
-        ${rights ? '<span class="admin-banner-note">Choose a user to manage permissions</span>' : `<button id="add" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add ${users ? 'user' : 'program'}</button>`}
+        ${rights ? '<span class="admin-banner-note">Choose a user to manage permissions</span>' : can(users ? 'users' : 'programs', 'add') ? `<button id="add" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add ${users ? 'user' : 'program'}</button>` : ''}
       </div>
 
       <div id="notice" role="status" aria-live="polite"></div>
@@ -150,7 +145,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
       </div>`;
 
     const $ = <T extends HTMLElement = HTMLElement>(s: string) => qs<T>(el, s);
-    // Display success or error messages above the records.
     const notice = (text: string, error = false) => {
         $('#notice').innerHTML = error ? alertBox(text) : `<div class="alert alert-success">${esc(text)}</div>`;
     };
@@ -161,7 +155,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         const module = users ? '' : $<HTMLSelectElement>('#module').value;
         const submodule = users ? '' : $<HTMLSelectElement>('#submodule').value;
 
-        // Keep records matching the module, submodule and search text.
         return rows.filter((r) => {
             const matchesModule = !module || String(r.prgmodsno) === module;
             const matchesSubmodule = !submodule || String(r.prgsmdsno) === submodule;
@@ -172,7 +165,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Render table headers and data rows
     function draw(): void {
-        // Show no rights until a user is chosen; otherwise use the filtered records.
         const list = rights && !selectedUser ? [] : visible();
 
         $('#head').innerHTML = `<tr>${(
@@ -183,7 +175,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 : ['Code', 'Name / description', 'Module', 'Submodule', 'Order', 'Level', 'Actions']
         ).map((t, i) => `<th>${rights && i > 1 ? `<label class="d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" data-column="${flags[i - 2]}" aria-label="Select all shown ${t} permissions" ${list.length && list.filter((r) => (i === 2 ? r.prglvl === 'S' : r.prglvl === 'M')).length && list.filter((r) => (i === 2 ? r.prglvl === 'S' : r.prglvl === 'M')).every((r) => r[flags[i - 2]] === 'y') ? 'checked' : ''}>${t}</label>` : t}</th>`).join('')}</tr>`;
 
-        // Build the correct row layout for Users, Rights or Programs mode.
         $('#rows').innerHTML = list.length
             ? list.map((r) => {
                   if (users) {
@@ -196,7 +187,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                         <td>${esc(r.usdtel)}</td>
                         <td>${esc(r.usdmail)}</td>
                         <td><span class="badge ${r.usdactive === 'Y' ? 'bg-success' : 'bg-secondary'}">${r.usdactive === 'Y' ? 'Active' : 'Inactive'}</span></td>
-                        <td><button class="btn btn-sm btn-outline-primary" data-edit="${r.usdsno}">Edit</button></td>
+                        <td>${can('users', 'amend') ? `<button class="btn btn-sm btn-outline-primary" data-edit="${r.usdsno}">Edit</button>` : ''}</td>
                       </tr>`;
                   }
                   if (rights) {
@@ -216,8 +207,8 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                     <td>${esc(r.prgorder)}</td>
                     <td>${r.prglvl === 'M' ? 'Multi' : 'Single'}</td>
                     <td class="text-nowrap">
-                      <button class="btn btn-sm btn-outline-primary" data-edit="${r.prgsno}">Edit</button>
-                      <button class="btn btn-sm btn-outline-danger" data-delete="${r.prgsno}">Delete</button>
+                      ${can('programs', 'amend') ? `<button class="btn btn-sm btn-outline-primary" data-edit="${r.prgsno}">Edit</button>` : ''}
+                      ${can('programs', 'delete') ? `<button class="btn btn-sm btn-outline-danger" data-delete="${r.prgsno}">Delete</button>` : ''}
                     </td>
                   </tr>`;
               }).join('')
@@ -236,7 +227,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Open add/edit record form
     function editor(row: Row | null): void {
-        // Remember the selected record; null means a new record.
         editing = row;
         const r = row ?? {};
 
@@ -278,13 +268,11 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
               </details>` : ''}
           </div>`;
 
-        // Close the editor without saving changes.
         $('#cancel').onclick = () => {
             $('#editor').innerHTML = '';
             editing = null;
         };
 
-        // Read the editor inputs and create or update the selected record.
         $('#form').onsubmit = async (e) => {
             e.preventDefault();
             const form = e.currentTarget as HTMLFormElement;
@@ -293,7 +281,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             button.disabled = true;
 
             try {
-                // Use POST for a new record and PUT with its ID when editing.
                 await call(`/${mode}${editing ? '/' + editing[users ? 'usdsno' : 'prgsno'] : ''}`, editing ? 'PUT' : 'POST', body);
                 rows = await call<Row[]>('/' + mode);
                 if (!ctx.alive()) return;
@@ -308,7 +295,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         };
 
         if (!users) {
-            // Add a module or submodule, then refresh the dropdowns.
             $('#lookup-form').onsubmit = async (e) => {
                 e.preventDefault();
                 const form = e.currentTarget as HTMLFormElement;
@@ -343,8 +329,8 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         $('#editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // Connect Add, search and filters to the editor and table redraw.
-    if (!rights) $('#add').onclick = () => editor(null);
+    const addButton = el.querySelector<HTMLButtonElement>('#add');
+    if (addButton) addButton.onclick = () => editor(null);
     $('#search').oninput = draw;
 
     if (!users) {
@@ -354,9 +340,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     if (rights) {
         rows = [];
-        // Load the chosen user's rights and discard replies from older selections.
         $('#user').onchange = async () => {
-            // Number this selection so a slower previous reply cannot replace its data.
             const current = ++version;
             selectedUser = $<HTMLSelectElement>('#user').value;
             rows = [];
@@ -378,7 +362,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     // Checkbox changes for rights
     el.addEventListener('change', (e) => {
         const t = e.target as HTMLInputElement;
-        // A column checkbox changes visible programs supporting that permission.
         if (t.dataset.column) {
             for (const r of visible()) {
                 if (t.dataset.column === 'usryn' ? r.prglvl === 'S' : r.prglvl === 'M') {
@@ -387,7 +370,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             }
             draw();
         }
-        // A row checkbox updates that program's permission in memory.
         if (t.dataset.flag) {
             const r = rows.find((row) => String(row.prgsno) === t.dataset.id);
             if (r) r[t.dataset.flag] = t.checked ? 'y' : 'n';
@@ -399,14 +381,12 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         const t = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
         if (!t) return;
 
-        // Open the chosen record in the editor.
         if (t.dataset.edit) {
             editor(rows.find((r) => String(r[users ? 'usdsno' : 'prgsno']) === t.dataset.edit)!);
             return;
         }
 
         try {
-            // Confirm program deletion before sending a DELETE request.
             if (t.dataset.delete) {
                 const confirmed = await confirmModal({
                     title: 'Delete program?',
@@ -424,7 +404,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 return;
             }
 
-            // Select or clear applicable permission flags for all visible records.
             if (t.dataset.bulk) {
                 for (const r of visible()) {
                     flags.forEach((f, i) => {
@@ -437,11 +416,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 return;
             }
 
-            // Save or delete rights for the visible programs of the selected user.
             if (t.id === 'save-rights' || t.id === 'delete-rights') {
                 const clear = t.id === 'delete-rights';
                 const user = selectedUser;
-                // Build the program IDs and y/n flags to send to the backend.
                 const selected = visible().map((r) => ({
                     prgsno: r.prgsno,
                     ...Object.fromEntries(flags.map((f) => [f, r[f] === 'y' ? 'y' : 'n']))
@@ -470,6 +447,5 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         }
     });
 
-    // Display the initial table after connecting its controls.
     draw();
 }

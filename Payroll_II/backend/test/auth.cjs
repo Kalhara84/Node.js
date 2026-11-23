@@ -1,10 +1,8 @@
-// Test login token checks, password hashes and controller error handling.
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const { requireAuth, wrap } = require('../dist/middleware');
 const { signToken, verifyToken, hashPassword, verifyPassword } = require('../dist/lib/auth');
 
-// Test: missing or invalid authorization returns 401 without throwing.
 test('missing or invalid authorization returns 401 without throwing', () => {
     for (const authorization of [undefined, '', 'Basic abc', 'Bearer invalid']) {
         const req = { headers: { authorization } };
@@ -22,7 +20,6 @@ test('missing or invalid authorization returns 401 without throwing', () => {
     }
 });
 
-// Test: valid token keeps the authenticated user and advances the request.
 test('valid token keeps the authenticated user and advances the request', () => {
     const user = { sub: 1, usr: 'admin', name: 'Administrator' };
     const token = signToken(user);
@@ -37,7 +34,6 @@ test('valid token keeps the authenticated user and advances the request', () => 
     assert.equal(verifyToken(`${token}changed`), null);
 });
 
-// Test: password hashing accepts the original password and rejects others.
 test('password hashing accepts the original password and rejects others', () => {
     const stored = hashPassword('example-password');
     assert.equal(verifyPassword('example-password', stored), true);
@@ -45,10 +41,8 @@ test('password hashing accepts the original password and rejects others', () => 
     assert.equal(verifyPassword('example-password', 'invalid'), false);
 });
 
-// Test: controller wrapper forwards both synchronous and asynchronous errors.
 test('controller wrapper forwards both synchronous and asynchronous errors', async () => {
     const expected = new Error('Controller failed');
-    // Try immediate errors and errors thrown by asynchronous controllers.
     const controllers = [
         () => {
             throw expected;

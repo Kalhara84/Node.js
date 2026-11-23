@@ -1,5 +1,5 @@
-// Load a selected user's program rights, edit checkboxes, then save or delete rights.
 import { request } from '../services/api.ts';
+import { can } from '../services/auth.ts';
 import { alertBox, confirmModal, errMsg, esc, loading, qs } from '../utils/ui.ts';
 import type { PageContext } from '../types.ts';
 
@@ -34,7 +34,6 @@ type Checked = {
     usrusdsnoauto: string;
 };
 
-// Keep permission names in the same order as the table columns.
 const flags: UsrFlag[] = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
 const labels = ['Y/N', 'Add', 'Amend', 'Delete'];
 const api = '/administration/usrenter';
@@ -68,7 +67,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     let users: Usd[];
 
     try {
-        // Load user choices and module lists before building the form.
         [lookups, users] = await Promise.all([
             request<typeof lookups>('/administration/lookups'),
             request<Usd[]>('/administration/users')
@@ -80,11 +78,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     if (!ctx.alive()) return;
 
-    // Build user filters, the permission table area and action buttons.
     el.innerHTML = `
       <nav class="admin-tabs mb-3" aria-label="Administration">
-        <a href="/administration/programs" data-link><i class="bi bi-grid"></i>Programs</a>
-        <a href="/administration/users" data-link><i class="bi bi-people"></i>Users</a>
+        ${can('programs') ? '<a href="/administration/programs" data-link><i class="bi bi-grid"></i>Programs</a>' : ''}
+        ${can('users') ? '<a href="/administration/users" data-link><i class="bi bi-people"></i>Users</a>' : ''}
         <a href="/usrenter" data-link class="active" aria-current="page"><i class="bi bi-shield-lock"></i>User rights</a>
       </nav>
 
@@ -172,7 +169,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     const matrix = qs(el, '#usr-matrix');
     const control = <T extends HTMLElement>(name: string) => qs<T>(form, `[name="${name}"]`);
 
-    // Keep the checked selection, current edits, saved copy and request state.
     let te_scope: Scope | null = null;
     let te_rows: Prg[] = [];
     let te_saved: Prg[] = [];
@@ -205,7 +201,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Update status indicators and column header checkbox states
     function status(): void {
-        // Compare edited rows with the saved copy to count unsaved changes.
         let changed = 0;
         for (const [index, row] of te_rows.entries()) {
             if (flags.some((flag) => editable(row, flag) && (row[flag] === 'y') !== (te_saved[index]?.[flag] === 'y'))) {
@@ -222,7 +217,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             const checkedCount = applicable.filter((row) => row[flag] === 'y').length;
             checkbox.disabled = applicable.length === 0;
             checkbox.checked = applicable.length > 0 && checkedCount === applicable.length;
-            // Show a mixed state when only some applicable programs are checked.
             checkbox.indeterminate = checkedCount > 0 && checkedCount < applicable.length;
         }
     }
@@ -292,7 +286,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Reset table when filter changes
     function invalidate(): void {
-        // Cancel the old selection so it cannot be saved under new filters.
         te_version++;
         te_scope = null;
         te_rows = [];
@@ -329,14 +322,11 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     // Load rights for the chosen scope
     async function load(scope: Scope): Promise<void> {
         const version = ++te_version;
-        // Ask the backend for programs and rights within the checked scope.
         const result = await request<Checked>(`${api}?${new URLSearchParams(scope)}`);
-        // Discard this reply if the page or selected scope changed while waiting.
         if (!ctx.alive() || version !== te_version) return;
 
         te_scope = scope;
         te_rows = result.rows;
-        // Copy saved rows separately so edits can be compared or reset.
         te_saved = result.rows.map((row) => ({ ...row }));
 
         qs(el, '#usr-summary').textContent = `${result.usrusdsnoauto} - ${result.usdnam} | ${te_rows.length} programs`;
@@ -403,7 +393,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     control<HTMLButtonElement>('check_all').onclick = () => checkAll(true);
     control<HTMLButtonElement>('clear_all').onclick = () => checkAll(false);
-    // Undo checkbox edits by restoring the last loaded rows.
     control<HTMLButtonElement>('reset').onclick = () => {
         te_rows = te_saved.map((row) => ({ ...row }));
         paint();
@@ -412,12 +401,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Save or delete permissions
     async function save(remove: boolean): Promise<void> {
-        // Save only after CHECK has loaded a non-empty selection.
         if (te_busy || !te_scope || !te_rows.length) return;
         const scope = { ...te_scope };
         const version = te_version;
 
-        // Ask before deleting the checked selection's rights.
         if (remove) {
             const confirmed = await confirmModal({
                 title: 'Delete user rights?',
@@ -429,7 +416,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
         if (!ctx.alive() || version !== te_version || te_busy) return;
 
-        // Send the scope, action, program IDs and a y/n array for each permission.
         const payload = {
             ...scope,
             save: !remove,
@@ -446,7 +432,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         notice.innerHTML = '';
 
         try {
-            // Post the rights to the backend, then reload saved values.
             const result = await request<{ message: string }>(api, {
                 method: 'POST',
                 body: JSON.stringify(payload)
@@ -454,7 +439,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             if (!ctx.alive()) return;
 
             try {
-                // Reload rights to show what the database actually saved.
                 await load(scope);
             } catch {
                 invalidate();

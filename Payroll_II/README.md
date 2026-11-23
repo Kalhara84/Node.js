@@ -161,6 +161,20 @@ ported by this integration; their database table definitions are retained; the S
 `p_login.php` is referenced by the employee source but absent from the archive;
 the app's shared login handles that dependency. No additional PHP login file is needed.
 
+## Screen access from the database
+
+Every screen is controlled by program rights stored in `prgmast` / `usrmast`; administrators can use every screen. The screens are already registered as programs in `db/payroll_db.sql`; give users their rights on the User Rights screen.
+
+| Screen | Program (`prgmast.prgnam`) | Rights |
+|---|---|---|
+| Dashboard | `dashboard` | Access |
+| Employees | `p_empm`, `p_empenter` | Access, Add, Amend, Delete |
+| Program Master | `a_programs` | Add, Amend, Delete |
+| User Master | `a_users` | Add, Amend |
+| User Rights | `usrenter` | Access |
+
+To control a new screen: add one line for it in `SCREENS` in `backend/src/lib/permissions.ts`, add its program row in the database, protect its routes with `requireScreen('<screen>', '<action>')`, and add it to the `Screen` type, the menu and the route list in `frontend/src`. A `.php` ending on a program name in the database is ignored.
+
 ## User access assignment (`usrenter`)
 
 Open **User Rights** in the sidebar, or `/usrenter`. The previous

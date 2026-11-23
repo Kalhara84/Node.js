@@ -1,4 +1,3 @@
-// Fetch employee summaries and display dashboard cards, charts and recent employees.
 import { api } from '../services/api.ts';
 import { currentUser } from '../services/auth.ts';
 import { esc, money, errMsg, qs, CATEGORY, GENDER, loading, alertBox, emptyState } from '../utils/ui.ts';
@@ -29,7 +28,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     const user = currentUser();
     if (!user) return;
 
-    // Format the browser date for the dashboard welcome banner.
     const today = new Date().toLocaleDateString('en-GB', {
         weekday: 'long',
         day: 'numeric',
@@ -37,7 +35,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         year: 'numeric'
     });
 
-    // Build the welcome banner and the empty area for dashboard results.
     el.innerHTML = `
       <div class="hero-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 fade-in">
         <div>
@@ -57,25 +54,19 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Fetch and display dashboard stats and charts
     async function load(): Promise<void> {
-        // Animate Refresh and show a loading message during the API call.
         icon.classList.add('spin');
         body.innerHTML = loading('Loading dashboard...');
         try {
-            // Request dashboard data; services/api.ts attaches the saved token.
             const data = await api.dashboard();
-            // Ignore late data if another page has been opened.
             if (!ctx.alive()) return;
-            // Turn the returned data into dashboard cards and charts.
             body.innerHTML = view(data);
         } catch (e) {
             if (ctx.alive()) body.innerHTML = alertBox(errMsg(e));
         } finally {
-            // Stop the loading animation whether the request succeeds or fails.
             icon.classList.remove('spin');
         }
     }
 
-    // Reuse load() for the Refresh button and the first page load.
     qs(el, '#refresh').onclick = load;
     await load();
 }
