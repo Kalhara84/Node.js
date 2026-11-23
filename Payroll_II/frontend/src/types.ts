@@ -86,7 +86,8 @@ export interface Paged<T> {
 }
 // Rights of the signed-in user on each screen (from the program rights in the database)
 export type Rights = { view: boolean; add: boolean; amend: boolean; delete: boolean };
-export type Screen = 'dashboard' | 'employees' | 'programs' | 'users' | 'rights';
+// Use the same program key registered for any current or future page.
+export type Screen = string;
 export type Access = { admin: boolean } & Record<Screen, Rights>;
 
 export interface AuthUser {

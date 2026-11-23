@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from 'express';
 import { hashPassword } from '../lib/auth';
 import { pool } from '../lib/db';
 import { fail } from '../lib/errors';
-import { SCREENS } from '../lib/permissions';
 
 // Return profile fields only; never include password hashes in user responses.
 const publicUserColumns = 'usdsno, usdcomsno, usdusd, usduno, usdnam, usdad1, usdad2, usdad3, usdtel, usdfax, usdmail, usdnic, usddes, usdactive, usdadmin';
@@ -137,10 +136,10 @@ function programValues(body: Record<string, unknown>): { module: number; submodu
     if (!['S', 'M'].includes(String(body.prglvl))) {
         fail('Choose Single or Multi level');
     }
-    // A registered key must belong to a page implemented in this application.
+    // Allow future page keys; the new page and API must use this same key for access checks.
     const name = string(body.prgnam, 'Name', 35, true);
-    if (!Object.values(SCREENS).some(screen => screen.programs.includes(name))) {
-        fail('Choose an implemented application page');
+    if (!/^[a-z][a-z0-9_-]*$/.test(name) || ['admin', 'constructor', 'prototype'].includes(name)) {
+        fail('Use a program key starting with a lowercase letter, followed by lowercase letters, numbers, hyphens or underscores');
     }
     return {
         module,
@@ -193,14 +192,7 @@ export const AdministrationController = {
             pool.query('SELECT locsno, locnam FROM s_locmast ORDER BY locnam')
         ]);
         res.json({
-            modules: modules.rows, submodules: submodules.rows, locations: locations.rows,
-            programOptions: [
-                { key: 'employees', label: 'Employee Master' },
-                { key: 'users', label: 'User Master' },
-                { key: 'dashboard', label: 'Dashboard' },
-                { key: 'programs', label: 'Program Master' },
-                { key: 'rights', label: 'User Rights' }
-            ]
+            modules: modules.rows, submodules: submodules.rows, locations: locations.rows
         });
     },
 

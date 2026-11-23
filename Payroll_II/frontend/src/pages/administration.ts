@@ -4,7 +4,7 @@ import { esc, qs, errMsg, alertBox, loading, confirmModal } from '../utils/ui.ts
 import type { PageContext } from '../types.ts';
 
 type Row = Record<string, string | number | boolean | null>;
-type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[]; programOptions: Row[] };
+type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[] };
 
 const flags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
 const flagLabels = ['View', 'Add', 'Amend', 'Delete'];
@@ -249,7 +249,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                       select('prgsmdsno', 'Submodule', options(lookups.submodules, 'syssno', 'sysdes', r.prgsmdsno), true) +
                       input('prgorder', 'Order', r.prgorder, 5, true) +
                       select('prglvl', 'Permissions', `<option value="S" ${r.prglvl === 'S' ? 'selected' : ''}>View only</option><option value="M" ${r.prglvl !== 'S' ? 'selected' : ''}>View, Add, Amend and Delete</option>`) +
-                      select('prgnam', 'Application page', options(lookups.programOptions, 'key', 'label', r.prgnam), true) +
+                      input('prgnam', 'Program key (example: attendance)', r.prgnam, 35, true) +
                       input('prgdes', 'Description', r.prgdes, 60, true)}
               </div>
               <div id="form-error" class="mt-3" role="alert"></div>

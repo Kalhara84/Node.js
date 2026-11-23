@@ -100,7 +100,8 @@ test('invalid program fields and IDs are rejected before writes', async context 
     for (const changes of [
         { prgmodsno: '' }, { prgmodsno: 1.5 }, { prgsmdsno: 2147483648 },
         { prglvl: 'X' }, { prgorder: '123456' }, { prgnam: ' ' },
-        { prgnam: 42 }, { prgnam: 'missing-page' }, { prgdes: 'x'.repeat(61) }
+        { prgnam: 42 }, { prgnam: 'bad.key' }, { prgnam: 'admin' },
+        { prgnam: '__proto__' }, { prgnam: 'x'.repeat(36) }, { prgdes: 'x'.repeat(61) }
     ]) {
         assert.equal((await api.send('/programs', 'POST', { ...form(), ...changes })).status, 400);
     }
@@ -129,6 +130,19 @@ test('updating a program uses the URL ID and signed-in audit details', async con
 test('updating a missing program returns 404', async context => {
     const api = await fixture(context, { missing: true });
     assert.deepEqual(await api.send('/programs/999', 'PUT', form()), { status: 404, data: { message: 'Program not found' } });
+});
+
+// Future pages use a new key without extending a hardcoded page list.
+test('new page keys can be registered and updated', async context => {
+    const api = await fixture(context);
+    for (const [method, path, key] of [
+        ['POST', '/programs', 'attendance'], ['PUT', '/programs/21', 'leave_requests']
+    ]) {
+        const result = await api.send(path, method, { ...form(), prgnam: key });
+        assert.equal(result.status, method === 'POST' ? 201 : 200);
+        const write = api.calls.findLast(call => call.sql.startsWith(method === 'POST' ? 'INSERT' : 'UPDATE'));
+        assert.equal(write.values[4], key);
+    }
 });
 
 // Program deletion must also remove assigned rights in the same transaction.

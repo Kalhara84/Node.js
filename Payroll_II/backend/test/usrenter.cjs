@@ -15,7 +15,7 @@ async function fixture(context, options = {}) {
     context.mock.method(pool, 'query', async (sql, values) => {
         calls.push({ sql, values });
         if (sql.includes('usdactive')) return { rows: [{ usdactive: 'Y', usdadmin: options.admin !== false }] };
-        if (sql.includes('FROM usrmast')) return { rows: options.rights ?? [] };
+        if (sql.includes('FROM prgmast p LEFT JOIN usrmast r')) return { rows: options.rights ?? [] };
         if (sql.includes('FROM usdmast')) return { rows: [{ usdsno: 7, usdusd: 'USER7', usdnam: 'Test user' }] };
         return { rows: programs };
     });

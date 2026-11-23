@@ -14,8 +14,7 @@ test('imported Unix crypt passwords use published crypt(3) vectors',()=>{
 });
 test('employee actions use the registered web page and operation flags',async t=>{
  t.mock.method(pool,'query',async sql=>({rows:sql.includes('usdactive')?[{usdactive:'Y',usdadmin:false}]:[
-  {prgnam:'employees',prglvl:'M',usryn:'y',usraddyn:'y',usrameyn:'n',usrdelyn:'n'},
-  {prgnam:'unregistered-page',prglvl:'M',usryn:'y',usraddyn:'n',usrameyn:'y',usrdelyn:'n'}
+  {prgnam:'employees',prglvl:'M',usryn:'y',usraddyn:'y',usrameyn:'n',usrdelyn:'n'}
  ]}));
  const none={view:false,add:false,amend:false,delete:false};
  assert.deepEqual(await accountAccess(5),{admin:false,dashboard:none,employees:{view:true,add:true,amend:false,delete:false},programs:none,users:none,rights:none});
@@ -78,13 +77,13 @@ function account(context, page, flags, level = 'M') {
     context.mock.method(pool, 'query', async (sql, values) => {
         if (sql.includes('usdactive')) return { rows: [{ usdactive: 'Y', usdadmin: false }] };
         assert.match(sql, /p\.prgapp='payroll-web'/);
-        assert.ok(values[1].includes(page));
+        assert.equal(values[1], false);
         return { rows: [{ prgnam: page, prglvl: level, usryn: 'n', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n', ...flags }] };
     });
 }
 
-// These are the two pages currently registered in Program Master.
-for (const page of ['employees', 'users']) {
+// Existing pages and future pages follow the same permission checks.
+for (const page of ['employees', 'users', 'attendance']) {
     test(`${page}: View-only users cannot add, amend or delete`, async context => {
         account(context, page, { usryn: 'y' });
         const access = await accountAccess(7);
@@ -119,6 +118,22 @@ test('a newly created user without saved program rights has no business-page acc
     context.mock.method(pool, 'query', async sql => ({ rows: sql.includes('usdactive') ? [{ usdactive: 'Y', usdadmin: false }] : [] }));
     const access = await accountAccess(7);
     assert.equal(Object.entries(access).filter(([key]) => key !== 'admin').every(([, rights]) => Object.values(rights).every(value => value === false)), true);
+});
+
+test('unknown page requests are denied without throwing an error', async () => {
+    let status;
+    const res = { locals: { access: { admin: true } }, status(value) { status = value; return this; }, json() {} };
+    await requireScreen('not_registered')({}, res, () => assert.fail('Unknown page was allowed'));
+    assert.equal(status, 403);
+});
+
+test('saved restrictions also apply to administrators on future pages', async context => {
+    context.mock.method(pool, 'query', async sql => ({ rows: sql.includes('usdactive') ? [{ usdactive: 'Y', usdadmin: true }] : [
+        { prgnam: 'attendance', prglvl: 'M', usryn: 'n', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n' }
+    ] }));
+    const access = await accountAccess(7);
+    assert.equal(access.admin, true);
+    assert.deepEqual(access.attendance, { view: false, add: false, amend: false, delete: false });
 });
 
 // Admin status is retained; saved page-level restrictions still take precedence.
