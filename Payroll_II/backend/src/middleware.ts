@@ -3,6 +3,10 @@ import { verifyToken } from './lib/auth';
 import type { TokenPayload } from './types';
 import { randomUUID } from 'node:crypto';
 
+const methodColors: Record<string, number> = {
+    GET: 32, POST: 33, PUT: 34, PATCH: 35, DELETE: 31, OPTIONS: 36, HEAD: 90,
+};
+
 // Keep each completed request on one line without logging private payloads.
 export const requestLogger: RequestHandler = (req, res, next) => {
     const started = performance.now();
@@ -13,7 +17,11 @@ export const requestLogger: RequestHandler = (req, res, next) => {
         const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
         const status = aborted ? 'ABORTED' : res.statusCode;
         const error = res.locals.logError ? ` | ${res.locals.logError}` : '';
-        const line = `  ${time}  ${req.method.padEnd(7)} ${path}  ${status}  ${Math.round(performance.now() - started)} ms  ${res.getHeader('content-length') ?? 0} B${error}`;
+        const output = aborted || res.statusCode >= 400 ? process.stderr : process.stdout;
+        const method = output.isTTY && process.env.NO_COLOR === undefined
+            ? `\x1b[${methodColors[req.method] ?? 37}m${req.method}\x1b[0m`
+            : req.method;
+        const line = `  ${time}  ${method}${' '.repeat(Math.max(0, 7 - req.method.length))} ${path}  ${status}  ${Math.round(performance.now() - started)} ms  ${res.getHeader('content-length') ?? 0} B${error}`;
         if (aborted || res.statusCode >= 500) console.error(line);
         else if (res.statusCode >= 400) console.warn(line);
         else console.log(line);
