@@ -5,6 +5,9 @@ import { requireScreen } from '../lib/permissions';
 
 const router = Router();
 
+// Load the minimal user choices under the User Rights screen permission.
+router.get('/users', wrap(UsrEnterController.users));
+
 // Show programs of the selected user / module / submodule with their rights (CHECK)
 router.get('/', wrap(UsrEnterController.check));
 

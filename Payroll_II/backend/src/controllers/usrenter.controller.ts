@@ -1,9 +1,16 @@
 import type { Request, Response } from 'express';
 import { fail } from '../lib/errors';
+import { pool } from '../lib/db';
 import { UsrEnterModel } from '../models/usrenter.model';
 import { usrAction, usrRows, usrScope } from '../validators/usrenter.validator';
 
 export const UsrEnterController = {
+    // The rights screen needs user choices, not access to full User Master profiles.
+    async users(_req: Request, res: Response): Promise<void> {
+        const result = await pool.query('SELECT usdsno,usdusd,usdnam FROM usdmast ORDER BY usdusd');
+        res.json(result.rows);
+    },
+
     // CHECK: show the programs of the selected user / module / submodule with their rights
     async check(req: Request, res: Response): Promise<void> {
         const scope = usrScope(req.query);

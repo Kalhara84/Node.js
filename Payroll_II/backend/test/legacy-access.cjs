@@ -120,3 +120,23 @@ test('a newly created user without saved program rights has no business-page acc
     const access = await accountAccess(7);
     assert.equal(Object.entries(access).filter(([key]) => key !== 'admin').every(([, rights]) => Object.values(rights).every(value => value === false)), true);
 });
+
+// Admin status is retained; saved page-level restrictions still take precedence.
+test('an administrator can be denied an entire page without losing administrator status', async context => {
+    context.mock.method(pool, 'query', async sql => ({ rows: sql.includes('usdactive') ? [{ usdactive: 'Y', usdadmin: true }] : [
+        { prgnam: 'employees', prglvl: 'M', usryn: 'n', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n' }
+    ] }));
+    const access = await accountAccess(7);
+    assert.equal(access.admin, true);
+    assert.deepEqual(access.employees, { view: false, add: false, amend: false, delete: false });
+    assert.deepEqual(access.users, { view: true, add: true, amend: true, delete: true });
+});
+
+test('an administrator can be restricted to viewing a page without write access', async context => {
+    context.mock.method(pool, 'query', async sql => ({ rows: sql.includes('usdactive') ? [{ usdactive: 'Y', usdadmin: true }] : [
+        { prgnam: 'users', prglvl: 'M', usryn: 'y', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n' }
+    ] }));
+    const access = await accountAccess(7);
+    assert.equal(access.admin, true);
+    assert.deepEqual(access.users, { view: true, add: false, amend: false, delete: false });
+});

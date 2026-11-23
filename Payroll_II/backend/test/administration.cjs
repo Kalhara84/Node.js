@@ -87,7 +87,7 @@ function rightsDatabase(context, options = {}) {
     context.mock.method(pool, 'connect', async () => ({
         async query(sql, values) {
             calls.push({ sql: sql.trim(), values });
-            if (sql.includes('FOR UPDATE')) return { rows: [{}], rowCount: 1 };
+            if (sql.includes('FOR UPDATE')) return { rows: [{ usdadmin: options.targetAdmin === true }], rowCount: 1 };
             if (sql.startsWith('SELECT prgsno')) return {
                 rows: [{ prgsno: 21, prglvl: 'S' }, { prgsno: 22, prglvl: 'M' }],
                 rowCount: options.changedPrograms ? 1 : 2
@@ -154,4 +154,35 @@ test('changed administration programs reject rights saving before writes', async
     assert.equal(db.calls.some(call => call.sql.startsWith('INSERT')), false);
     assert.equal(db.calls.at(-1).sql, 'ROLLBACK');
     assert.equal(db.released(), true);
+});
+
+test('clearing administrator rights preserves explicit denial instead of restoring full access', async context => {
+    const db = rightsDatabase(context, { targetAdmin: true });
+    await AdministrationController.saveRights(request({ ...rights(), clear: true }), response());
+    assert.deepEqual(db.calls.filter(call => call.sql.startsWith('INSERT')).map(call => call.values), [
+        [7, 21, 'n', 'n', 'n', 'n', 'EDITOR'],
+        [7, 22, 'n', 'n', 'n', 'n', 'EDITOR']
+    ]);
+    assert.equal(db.calls.some(call => call.sql.startsWith('DELETE')), false);
+});
+
+test('ordinary account creators cannot promote a new user to administrator', async context => {
+    let queried = false;
+    context.mock.method(pool, 'query', async () => { queried = true; throw new Error('Unexpected write'); });
+    const res = response(false);
+    await AdministrationController.createUser(request({ usdusd: 'newuser', usdpwd: 'secret', usdadmin: 'true' }), res);
+    assert.equal(res.code, 403);
+    assert.equal(queried, false);
+});
+
+test('an administrator can choose another account role and disable another administrator', async context => {
+    let values;
+    context.mock.method(pool, 'query', async (sql, args) => { values = args; return { rows: [{ usdsno: 7, usdadmin: true, usdactive: 'N' }] }; });
+    const res = response();
+    await AdministrationController.updateUser(request({ usdnam: 'Other admin', usdadmin: 'true', usdactive: 'N' }), res);
+    assert.equal(res.code, 200);
+    assert.equal(res.data.usdadmin, true);
+    assert.equal(res.data.usdactive, 'N');
+    assert.ok(values.includes(true));
+    assert.ok(values.includes('N'));
 });

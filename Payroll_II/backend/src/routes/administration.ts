@@ -32,7 +32,7 @@ router.put('/programs/:id', requireScreen('programs', 'amend'), wrap(Administrat
 router.delete('/programs/:id', requireScreen('programs', 'delete'), wrap(AdministrationController.deleteProgram));
 
 // --- 4. User Routes ---
-router.get('/users', requireScreen(['users', 'rights']), wrap(AdministrationController.users));
+router.get('/users', requireScreen('users'), wrap(AdministrationController.users));
 
 // Create new user account
 router.post('/users', requireScreen('users', 'add'), wrap(AdministrationController.createUser));

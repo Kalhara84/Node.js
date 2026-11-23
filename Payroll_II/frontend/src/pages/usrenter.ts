@@ -69,7 +69,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     try {
         [lookups, users] = await Promise.all([
             request<typeof lookups>('/administration/lookups'),
-            request<Usd[]>('/administration/users')
+            request<Usd[]>('/administration/usrenter/users')
         ]);
     } catch (error) {
         if (ctx.alive()) el.innerHTML = alertBox(errMsg(error));

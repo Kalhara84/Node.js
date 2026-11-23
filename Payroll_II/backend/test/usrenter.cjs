@@ -22,7 +22,7 @@ async function fixture(context, options = {}) {
     context.mock.method(pool, 'connect', async () => ({
         async query(sql, values) {
             calls.push({ sql, values });
-            if (sql.includes('FOR UPDATE')) return { rowCount: 1, rows: [{}] };
+            if (sql.includes('FOR UPDATE')) return { rowCount: 1, rows: [{ usdadmin: options.targetAdmin === true }] };
             if (sql.startsWith('SELECT p.*')) return { rows: options.programs ?? programs };
             if (sql.startsWith('INSERT') && options.failSave) throw new Error('Database write failed');
             return { rowCount: 1, rows: [] };
@@ -116,7 +116,8 @@ test('ordinary users get only the screens their program rights allow', async con
     const api = await fixture(context, { admin: false, rights: [{ prgnam: 'rights', prglvl: 'S', usryn: 'y', usraddyn: 'n', usrameyn: 'n', usrdelyn: 'n' }] });
     assert.equal((await api.send(null, '?usrusdsno=7&modopt=A&smodopt=A')).status, 200);
     assert.equal((await api.get('/programs')).status, 403);
-    assert.equal((await api.get('/users')).status, 200);
+    assert.equal((await api.get('/users')).status, 403);
+    assert.equal((await api.get('/usrenter/users')).status, 200);
 });
 test('program master needs its own program rights', async context => {
     const api = await fixture(context, { admin: false, rights: [{ prgnam: 'programs', prglvl: 'M', usryn: 'n', usraddyn: 'n', usrameyn: 'y', usrdelyn: 'n' }] });
@@ -132,4 +133,17 @@ test('view-only User Rights access cannot save or delete permissions', async con
     assert.equal((await api.send(body())).status, 403);
     assert.equal((await api.send({ ...body(), save: false, delete: true })).status, 403);
     assert.equal(api.calls.some(call => call.sql === 'BEGIN'), false);
+});
+
+// Removing another admin's access must not restore that account's default full rights.
+test('DELETE on an administrator saves explicit denied rights', async context => {
+    const api = await fixture(context, { targetAdmin: true });
+    assert.equal((await api.send({ ...body(), save: false, delete: true })).status, 200);
+    const writes = api.calls.filter(call => call.sql.startsWith('INSERT'));
+    assert.deepEqual(writes.map(call => call.values), [
+        [7, 21, 'n', 'n', 'n', 'n', 'ADMIN'],
+        [7, 22, 'n', 'n', 'n', 'n', 'ADMIN']
+    ]);
+    assert.equal(api.calls.some(call => call.sql.startsWith('DELETE')), false);
+    assert.equal(api.released(), true);
 });
