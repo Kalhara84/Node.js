@@ -55,10 +55,10 @@ export const api = {
     // Authenticate user
     login: (username: string, password: string) => {
         // Send the username and password as JSON to /auth/login.
+        // false means this login request does not need an existing token.
         return request<{ token: string; user: AuthUser }>('/auth/login', {
             method: 'POST',
             body: JSON.stringify({ username, password })
-        // false means this login request does not need an existing token.
         }, false);
     },
 
