@@ -1,7 +1,11 @@
+-- Start one transaction so this database import succeeds or fails together.
 BEGIN;
+-- Keep ordinary SQL string backslashes literal; E-prefixed strings still support escapes.
 SET standard_conforming_strings = on;
+-- Prevent two copies of this import from running at the same time in this database.
 SELECT pg_advisory_xact_lock(740219852);
 
+-- Create the imported a_absmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_absmast" (
   "abssno" SERIAL,
   "absdepsno" INTEGER NOT NULL default '0',
@@ -14,6 +18,7 @@ CREATE TABLE IF NOT EXISTS "a_absmast" (
 );
 
 -- a_absmast: 50 original source rows.
+-- Load the imported rows below into a_absmast; existing conflict rules appear after the row values.
 INSERT INTO "a_absmast" ("abssno","absdepsno","absdepdes","absddt","abslocsno","absaresno","abscount") VALUES
 (1,9,E'CASUAL FIELD ASSISTANT',E'2013-01-29',1,41,2),
 (2,37,E'CONTRACT',E'2013-01-29',1,41,0),
@@ -67,6 +72,7 @@ INSERT INTO "a_absmast" ("abssno","absdepsno","absdepdes","absddt","abslocsno","
 (50,2,E'NURSERY STAFF',E'2013-02-02',1,41,0)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_atttran table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_atttran" (
   "attsno" SERIAL,
   "attmacsno" varchar(20) NOT NULL default '0',
@@ -88,6 +94,7 @@ CREATE TABLE IF NOT EXISTS "a_atttran" (
 );
 
 -- a_atttran: 50 original source rows.
+-- Load the imported rows below into a_atttran; existing conflict rules appear after the row values.
 INSERT INTO "a_atttran" ("attsno","attmacsno","attcrdno","attddt","atttime","attucdnew","attentddt","attenttime","attucdame","attameddt","attametime","attdelflg","atttrfflg","attnootflg","attapiyn","attcheckingstatus") VALUES
 (1,E'4',1016,E'2012-08-01',E'00:00:14',E'',NULL,E'00:00:00',E'',NULL,E'00:00:00',E'D',E'',E'',E'',E''),
 (2,E'4',1000,E'2012-08-01',E'00:00:19',E'',NULL,E'00:00:00',E'',NULL,E'00:00:00',E'D',E'',E'',E'',E''),
@@ -141,6 +148,7 @@ INSERT INTO "a_atttran" ("attsno","attmacsno","attcrdno","attddt","atttime","att
 (50,E'4',1027,E'2012-08-01',E'18:45:08',E'',NULL,E'00:00:00',E'',NULL,E'00:00:00',E'',E'',E'',E'',E'')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_atttran_test table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_atttran_test" (
   "attsno" SERIAL,
   "attmacsno" varchar(20) NOT NULL default '0',
@@ -173,6 +181,7 @@ CREATE TABLE IF NOT EXISTS "a_atttran_test" (
 );
 
 -- a_atttran_test: 50 original source rows.
+-- Load the imported rows below into a_atttran_test; existing conflict rules appear after the row values.
 INSERT INTO "a_atttran_test" ("attsno","attmacsno","attcrdno","attddt","atttime","attstreet","attarea","attcity","attstate","attcountry","attlatitude","attlongitude","attlocation","attandroidid","attapiyn","attcheckingstatus","attucdnew","attentddt","attenttime","attucdame","attameddt","attametime","attdelflg","atttrfflg","attnootflg","attsftsno","attdensno") VALUES
 (92,E'001',E'002658',E'2025-03-02',E'07:56:47',E'',E'',E'',E'',E'',E'',E'',E'',E'',E'y',E'',E'2000',E'2025-03-17',E'14:31:56',E'',NULL,E'00:00:00',E'',E'',E'',0,0),
 (91,E'001',E'002658',E'2025-03-01',E'17:57:03',E'',E'',E'',E'',E'',E'',E'',E'',E'',E'y',E'',E'2000',E'2025-03-17',E'14:29:03',E'',NULL,E'00:00:00',E'',E'',E'',0,0),
@@ -226,6 +235,7 @@ INSERT INTO "a_atttran_test" ("attsno","attmacsno","attcrdno","attddt","atttime"
 (52,E'UEED244500067',E'30569',E'2025-01-21',E'12:10:27',E'',E'',E'',E'',E'',E'',E'',E'',E'',E'y',E'255',E'2000',E'2025-03-12',E'15:36:03',E'',NULL,E'00:00:00',E'',E'',E'',0,0)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_denmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_denmast" (
   "densno" SERIAL,
   "denddt" date  default NULL,
@@ -260,6 +270,7 @@ CREATE TABLE IF NOT EXISTS "a_denmast" (
 );
 
 -- a_denmast: 50 original source rows.
+-- Load the imported rows below into a_denmast; existing conflict rules appear after the row values.
 INSERT INTO "a_denmast" ("densno","denddt","denlocsno","denaresno","dendepsno","denmacsno","denempmapcode","dlyactinhh","dlyactinmm","dlyactouthh","dlyactoutmm","otbftime","otaftime","denot1","denot2","dennoot","dentrf","denempsno","denattsno","denotdepsno","denucdnew","denentddt","denenttime","denlatemin","nolatflg","denpayottrf","denpaylttrf","dlyadddecot","denattinctrf") VALUES
 (1,E'2012-04-02',3,42,27,4,E'12',7,27,18,5,18.00,50.00,68.00,0.00,E'n',E'y',9,3222,0,E'hrd',E'2012-05-02',E'12:09:33',0,E'n',E'',E'',E'',E''),
 (2,E'2012-04-02',3,42,31,4,E'17',7,37,17,15,8.00,0.00,0.00,0.00,E'n',E'y',12,3216,0,E'hrd',E'2012-05-02',E'12:09:33',0,E'n',E'',E'',E'',E''),
@@ -313,6 +324,7 @@ INSERT INTO "a_denmast" ("densno","denddt","denlocsno","denaresno","dendepsno","
 (50,E'2012-04-04',3,42,36,4,E'1010',7,17,18,19,28.00,64.00,92.00,0.00,E'n',E'y',684,3415,0,E'hrd',E'2012-05-02',E'12:14:25',0,E'n',E'',E'',E'',E'')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_denmast_tmp table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_denmast_tmp" (
   "densno" SERIAL,
   "denddt" date  default NULL,
@@ -346,6 +358,7 @@ CREATE TABLE IF NOT EXISTS "a_denmast_tmp" (
 );
 
 -- a_denmast_tmp: 50 original source rows.
+-- Load the imported rows below into a_denmast_tmp; existing conflict rules appear after the row values.
 INSERT INTO "a_denmast_tmp" ("densno","denddt","denlocsno","denaresno","dendepsno","denmacsno","denempmapcode","dlyactinhh","dlyactinmm","dlyactouthh","dlyactoutmm","otbftime","otaftime","denot1","denot2","dennoot","dentrf","denempsno","denattsno","denucdnew","denentddt","denenttime","denlatemin","nolatflg","denpayottrf","denpaylttrf","dlyadddecot","denattinctrf") VALUES
 (694160,E'2020-09-11',2,42,18,4,E'198',8,40,16,47,0.00,17.00,0.00,0.00,E'y',E'y',612,1551624,E'nathasha',E'2020-09-25',E'10:14:56',10,E'n',E'',E'',E'',E''),
 (694161,E'2020-09-11',2,42,336,4,E'237',7,48,21,3,12.00,243.00,255.00,0.00,E'n',E'y',613,1551662,E'nathasha',E'2020-09-25',E'10:14:56',0,E'n',E'',E'',E'',E''),
@@ -399,6 +412,7 @@ INSERT INTO "a_denmast_tmp" ("densno","denddt","denlocsno","denaresno","dendepsn
 (696340,E'2020-09-11',1,41,33,4,E'202330',7,10,16,23,5.00,8.00,13.00,0.00,E'y',E'y',302,1561911,E'inokahr',E'2020-10-05',E'09:50:39',0,E'y',E'',E'',E'',E'')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_deprate table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_deprate" (
   "dprsno" INTEGER NOT NULL default '0',
   "dprcomsno" INTEGER NOT NULL default '0',
@@ -426,6 +440,7 @@ ON CONFLICT DO NOTHING;
 END
 $deprate$;
 
+-- Create the imported a_dlymast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_dlymast" (
   "dlysno" SERIAL,
   "dlyddt" date  default NULL,
@@ -450,6 +465,7 @@ CREATE TABLE IF NOT EXISTS "a_dlymast" (
 );
 
 -- a_dlymast: 50 original source rows.
+-- Load the imported rows below into a_dlymast; existing conflict rules appear after the row values.
 INSERT INTO "a_dlymast" ("dlysno","dlyddt","dlyaresno","dlycomsno","dlydepsno","dlysthh","dlystmm","dlyfnhh","dlyfnmm","dlyholsthh","dlyholstmm","dlyholfnhh","dlyholfnmm","dlyucdnew","dlyentddt","dlyenttime","dlyucdame","dlyameddt","dlyametime") VALUES
 (1,E'2012-04-01',41,1,2,7,15,16,15,7,15,12,15,E'hrd',E'2012-04-26',E'12:26:45',E'hrd',E'2012-11-05',E'11:43:15'),
 (2,E'2012-04-01',41,1,3,7,15,16,15,7,15,16,15,E'hrd',E'2012-04-26',E'12:27:50',E'',NULL,E'00:00:00'),
@@ -503,6 +519,7 @@ INSERT INTO "a_dlymast" ("dlysno","dlyddt","dlyaresno","dlycomsno","dlydepsno","
 (50,E'2012-04-01',42,2,25,8,30,16,30,0,0,0,0,E'hrd',E'2012-04-26',E'13:31:23',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_holmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_holmast" (
   "holsno" SERIAL,
   "holddt" date  default NULL,
@@ -518,6 +535,7 @@ CREATE TABLE IF NOT EXISTS "a_holmast" (
 );
 
 -- a_holmast: 50 original source rows.
+-- Load the imported rows below into a_holmast; existing conflict rules appear after the row values.
 INSERT INTO "a_holmast" ("holsno","holddt","holtypsno","holucdnew","holentddt","holenttime","holucdame","holameddt","holametime","holotrate") VALUES
 (1,E'2010-02-02',12,E'2000',E'2010-03-01',E'18:48:32',E'2000',E'2010-03-01',E'19:04:19',0.00),
 (2,E'2010-02-12',9,E'2000',E'2010-03-01',E'18:49:00',E'2000',E'2012-03-22',E'11:12:47',1.50),
@@ -571,6 +589,7 @@ INSERT INTO "a_holmast" ("holsno","holddt","holtypsno","holucdnew","holentddt","
 (51,E'2012-10-13',43,E'hrd',E'2012-10-24',E'13:04:15',E'',NULL,E'00:00:00',1.50)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_incwormast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_incwormast" (
   "incworsno" SERIAL,
   "incworyear" INTEGER NOT NULL default '0',
@@ -589,6 +608,7 @@ CREATE TABLE IF NOT EXISTS "a_incwormast" (
 );
 
 -- a_incwormast: 50 original source rows.
+-- Load the imported rows below into a_incwormast; existing conflict rules appear after the row values.
 INSERT INTO "a_incwormast" ("incworsno","incworyear","incwormon","incworlocsno","incwordepsno","incworucdnew","incworentddt","incworenttime","incworucdame","incworameddt","incworametime","incworkdays") VALUES
 (1,2012,E'09',1,1,E'hrd',E'2012-10-09',10,E'',NULL,E'00:00:00',24.00),
 (2,2012,E'09',1,16,E'hrd',E'2012-10-09',10,E'',NULL,E'00:00:00',24.00),
@@ -642,6 +662,7 @@ INSERT INTO "a_incwormast" ("incworsno","incworyear","incwormon","incworlocsno",
 (50,2012,E'09',4,37,E'hrd',E'2012-10-09',10,E'',NULL,E'00:00:00',24.00)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_levtran table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_levtran" (
   "levsno" SERIAL,
   "levddt" date  default NULL,
@@ -671,6 +692,7 @@ CREATE TABLE IF NOT EXISTS "a_levtran" (
 );
 
 -- a_levtran: 50 original source rows.
+-- Load the imported rows below into a_levtran; existing conflict rules appear after the row values.
 INSERT INTO "a_levtran" ("levsno","levddt","levempsno","leaveab","leavean","leaveca","leavell","leavemed","leaveadt","leavespe","leavevst","leavehfd","leavenp","leaveshl","levucdnew","leventddt","leventtime","levtrf","levyear","levdelflg","levdelucd","delddt","deltime","levtrfpay") VALUES
 (1,E'2012-09-01',181,0.00,0.00,0.00,0.00,1.00,0.00,0.00,0.00,0.00,0.00,0.00,E'THEJANI',E'2012-10-03',E'11:36:59',E'y',E'2012',E'',E'',NULL,E'00:00:00',E'Y'),
 (2,E'2012-09-01',374,0.00,1.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,E'THEJANI',E'2012-10-03',E'11:36:59',E'y',E'2012',E'D',E'THEJANI',E'2012-10-04',E'18:34:44',E''),
@@ -724,6 +746,7 @@ INSERT INTO "a_levtran" ("levsno","levddt","levempsno","leaveab","leavean","leav
 (50,E'2012-09-03',1150,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,1.00,0.00,E'THEJANI',E'2012-10-03',E'12:00:02',E'y',E'2012',E'D',E'THEJANI',E'2012-10-04',E'18:40:13',E'')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_logmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_logmast" (
   "logsno" SERIAL,
   "logucd" varchar(30) default NULL,
@@ -736,6 +759,7 @@ CREATE TABLE IF NOT EXISTS "a_logmast" (
 );
 
 -- a_logmast: 50 original source rows.
+-- Load the imported rows below into a_logmast; existing conflict rules appear after the row values.
 INSERT INTO "a_logmast" ("logsno","logucd","logddt","logtime","logprgnam","logaction","logdes") VALUES
 (1,E'hrd',E'2012-05-03',E'13:33:49',E'a_deltrfotden.php',E'Delete Denmast',E'2012-04-27-12'),
 (2,E'hrd',E'2012-05-09',E'15:37:35',E'a_deltrfotden.php',E'Delete Denmast',E'2012-04-04-1119'),
@@ -789,6 +813,7 @@ INSERT INTO "a_logmast" ("logsno","logucd","logddt","logtime","logprgnam","logac
 (50,E'THEJANI',E'2012-11-17',E'11:55:36',E'a_deltrfotden.php',E'Delete Denmast',E'2012-11-01-700338')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_nigtran table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_nigtran" (
   "nigsno" SERIAL,
   "nigempsno" INTEGER NOT NULL default '0',
@@ -799,6 +824,7 @@ CREATE TABLE IF NOT EXISTS "a_nigtran" (
 );
 
 -- a_nigtran: 50 original source rows.
+-- Load the imported rows below into a_nigtran; existing conflict rules appear after the row values.
 INSERT INTO "a_nigtran" ("nigsno","nigempsno","nigddt","nigcoun","nigtrfpay") VALUES
 (1,128,E'2012-09-04',1,E'Y'),
 (2,137,E'2012-09-04',1,E'Y'),
@@ -852,6 +878,7 @@ INSERT INTO "a_nigtran" ("nigsno","nigempsno","nigddt","nigcoun","nigtrfpay") VA
 (50,307,E'2012-09-05',1,E'Y')
 ON CONFLICT DO NOTHING;
 
+-- Create a_sysmast to store shared lookup values, including modules, submodules and areas.
 CREATE TABLE IF NOT EXISTS "a_sysmast" (
   "syssno" SERIAL,
   "sysrtp" INTEGER NOT NULL default '0',
@@ -871,6 +898,7 @@ CREATE TABLE IF NOT EXISTS "a_sysmast" (
 );
 
 -- a_sysmast: 50 original source rows.
+-- Load the imported rows below into a_sysmast; existing conflict rules appear after the row values.
 INSERT INTO "a_sysmast" ("syssno","sysrtp","sysrno","sysdes","sysdes1","sysdes2","syscomsno","sysucdnew","sysentddt","sysenttime","sysucdame","sysameddt","sysametime") VALUES
 (1,1,E'1',E'Ab Sent',E'Leave type',NULL,1,E'2000',E'2010-02-26',E'19:38:57',E'2000',E'2012-03-06',E'18:46:19'),
 (2,1,E'2',E'Annual',E'Leave type',NULL,1,E'2000',E'2010-02-26',E'19:39:08',E'2000',E'2012-03-06',E'18:46:42'),
@@ -924,6 +952,7 @@ INSERT INTO "a_sysmast" ("syssno","sysrtp","sysrno","sysdes","sysdes1","sysdes2"
 (50,33,E'1',E'MASTER FILE',E'',NULL,0,E'2000',E'2012-10-05',E'10:08:56',NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_wormast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_wormast" (
   "worsno" SERIAL,
   "woryear" INTEGER NOT NULL default '0',
@@ -942,6 +971,7 @@ CREATE TABLE IF NOT EXISTS "a_wormast" (
 );
 
 -- a_wormast: 50 original source rows.
+-- Load the imported rows below into a_wormast; existing conflict rules appear after the row values.
 INSERT INTO "a_wormast" ("worsno","woryear","wormon","worlocsno","wordepsno","worucdnew","worentddt","worenttime","worucdame","worameddt","worametime","workdays") VALUES
 (2,2012,E'04',1,3,E'hrd',E'2012-05-07',10,E'',NULL,E'00:00:00',9.99),
 (3,2012,E'04',1,7,E'hrd',E'2012-05-07',10,E'',NULL,E'00:00:00',9.99),
@@ -995,6 +1025,7 @@ INSERT INTO "a_wormast" ("worsno","woryear","wormon","worlocsno","wordepsno","wo
 (51,2012,E'05',4,6,E'hrd',E'2012-05-31',16,E'',NULL,E'00:00:00',9.99)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported a_wosmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "a_wosmast" (
   "wossno" SERIAL,
   "wosyear" INTEGER NOT NULL default '0',
@@ -1012,10 +1043,12 @@ CREATE TABLE IF NOT EXISTS "a_wosmast" (
 );
 
 -- a_wosmast: 1 original source rows.
+-- Load the imported rows below into a_wosmast; existing conflict rules appear after the row values.
 INSERT INTO "a_wosmast" ("wossno","wosyear","wosmon","wossecsno","wosucdnew","wosentddt","wosenttime","wosucdame","wosameddt","wosametime","woswkdays") VALUES
 (1,2024,8,593,E'2000',E'2024-10-29',E'07:37:15',E'',NULL,E'00:00:00',29.00)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported bookings table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "bookings" (
   "id" SERIAL,
   "id_item" INTEGER NOT NULL default '0',
@@ -1026,11 +1059,13 @@ CREATE TABLE IF NOT EXISTS "bookings" (
 );
 
 -- bookings: 2 original source rows.
+-- Load the imported rows below into bookings; existing conflict rules appear after the row values.
 INSERT INTO "bookings" ("id","id_item","the_date","id_state","id_booking") VALUES
 (1,1,E'2013-10-18',1,0),
 (2,1,E'2013-10-19',2,0)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported bookings_admin_users table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "bookings_admin_users" (
   "id" SERIAL,
   "level" INTEGER NOT NULL default '2',
@@ -1043,10 +1078,12 @@ CREATE TABLE IF NOT EXISTS "bookings_admin_users" (
 );
 
 -- bookings_admin_users: 1 original source rows.
+-- Load the imported rows below into bookings_admin_users; existing conflict rules appear after the row values.
 INSERT INTO "bookings_admin_users" ("id","level","username","password","state","date_visit","visits") VALUES
 (1,1,E'admin',E'fe01ce2a7fbac8fafaed7c982a04e229',1,E'2013-10-17 15:08:40',4)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported bookings_config table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "bookings_config" (
   "id" SERIAL,
   "title" varchar(255) NOT NULL default '',
@@ -1063,10 +1100,12 @@ CREATE TABLE IF NOT EXISTS "bookings_config" (
 );
 
 -- bookings_config: 1 original source rows.
+-- Load the imported rows below into bookings_config; existing conflict rules appear after the row values.
 INSERT INTO "bookings_config" ("id","title","num_months","default_lang","theme","start_day","date_format","click_past_dates","cal_url","local_path","version") VALUES
 (1,E'Availability Calendar',1,E'en',E'default',E'mon',E'eu',E'off',E'/calender',E'/calendar',E'v3.03.07')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported bookings_items table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "bookings_items" (
   "id" SERIAL,
   "id_user" INTEGER NOT NULL default '1',
@@ -1079,10 +1118,12 @@ CREATE TABLE IF NOT EXISTS "bookings_items" (
 );
 
 -- bookings_items: 1 original source rows.
+-- Load the imported rows below into bookings_items; existing conflict rules appear after the row values.
 INSERT INTO "bookings_items" ("id","id_user","id_ref_external","desc_en","desc_es","list_order","state") VALUES
 (1,1,0,E'Demo Item',E'Demo',1,1)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported bookings_last_update table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "bookings_last_update" (
   "id" SERIAL,
   "id_item" INTEGER NOT NULL default '0',
@@ -1091,10 +1132,12 @@ CREATE TABLE IF NOT EXISTS "bookings_last_update" (
 );
 
 -- bookings_last_update: 1 original source rows.
+-- Load the imported rows below into bookings_last_update; existing conflict rules appear after the row values.
 INSERT INTO "bookings_last_update" ("id","id_item","date_mod") VALUES
 (1,1,E'2013-10-17 13:52:15')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported bookings_states table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "bookings_states" (
   "id" SERIAL,
   "desc_en" varchar(100) NOT NULL default '',
@@ -1108,6 +1151,7 @@ CREATE TABLE IF NOT EXISTS "bookings_states" (
 );
 
 -- bookings_states: 6 original source rows.
+-- Load the imported rows below into bookings_states; existing conflict rules appear after the row values.
 INSERT INTO "bookings_states" ("id","desc_en","desc_es","code","state","list_order","class","show_in_key") VALUES
 (1,E'Poya Day',E'Poya Day',E'b',1,0,E'booked_pr',1),
 (2,E'MF Meeting',E'MF Meeting',E'b_am',1,1,E'booked_am',1),
@@ -1117,6 +1161,7 @@ INSERT INTO "bookings_states" ("id","desc_en","desc_es","code","state","list_ord
 (6,E'Provisional pm',E'Provisional pm',E'pr_pm',1,5,E'booked_pr_pm',1)
 ON CONFLICT DO NOTHING;
 
+-- Create f_depmast to store departments used by employee records and dashboard summaries.
 CREATE TABLE IF NOT EXISTS "f_depmast" (
   "depsno" SERIAL,
   "depdep" varchar(6) NOT NULL default '',
@@ -1136,6 +1181,7 @@ CREATE TABLE IF NOT EXISTS "f_depmast" (
 );
 
 -- f_depmast: 47 original source rows.
+-- Load the imported rows below into f_depmast; existing conflict rules appear after the row values.
 INSERT INTO "f_depmast" ("depsno","depdep","depdes","depscgpcn","depvatpcn","deprsvpcn","depoutbilyn","depucdnew","depentddt","depenttime","depucdame","depameddt","depametime") VALUES
 (1,E'Accoun',E'Accounts',0.00,0.00,0.00,E'',E'2000',E'2012-03-04',E'18:42:00',E'',E'2012-05-08',E'11:18:47'),
 (2,E'NURSER',E'NURSERY STAFF',NULL,NULL,NULL,NULL,E'2000',E'2012-03-19',E'10:15:03',NULL,NULL,NULL),
@@ -1186,6 +1232,7 @@ INSERT INTO "f_depmast" ("depsno","depdep","depdes","depscgpcn","depvatpcn","dep
 (336,E'OFFASS',E'OFFICE ASSISTANT',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_btxmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_btxmast" (
   "btxsno" SERIAL,
   "btxtable" DOUBLE PRECISION NOT NULL default '0.00',
@@ -1202,6 +1249,7 @@ CREATE TABLE IF NOT EXISTS "p_btxmast" (
 );
 
 -- p_btxmast: 50 original source rows.
+-- Load the imported rows below into p_btxmast; existing conflict rules appear after the row values.
 INSERT INTO "p_btxmast" ("btxsno","btxtable","btxframt","btxtoamt","btxpcn","btxucdnew","btxentddt","btxenttime","btxucdame","btxameddt","btxametime") VALUES
 (1144,0.50,0.00,26098.00,0.00,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00'),
 (1145,0.50,26099.00,26212.00,0.50,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00'),
@@ -1255,6 +1303,7 @@ INSERT INTO "p_btxmast" ("btxsno","btxtable","btxframt","btxtoamt","btxpcn","btx
 (1193,0.50,172128.00,172844.00,24.50,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Create p_empmast to store employee personal, job, salary, bank and contact details.
 CREATE TABLE IF NOT EXISTS "p_empmast" (
   "empsno" SERIAL,
   "empeno" INTEGER NOT NULL default '0',
@@ -1330,6 +1379,7 @@ CREATE TABLE IF NOT EXISTS "p_empmast" (
 );
 
 -- p_empmast: 50 original source rows.
+-- Load the imported rows below into p_empmast; existing conflict rules appear after the row values.
 INSERT INTO "p_empmast" ("empsno","empeno","empinital","empnam","empscgpcn","empcat","empdepsno","emparesno","empnopflg","empsal","empsala","empsalb","empbasisno","empepfyn","emppasportno","emppayeyn","empmof","empidno","empjoin","empdesig","empdob","empleft","empcob","emptno","empprl","empactflg","empscgpts","empbnkacno","empbnkcode","empbnkbranch","empepfno","emptax","empgin","emptin","emppostcode","empcossno","empsecsno","empsts","empcasdays","empanudays","empmeddays","empssddt","empsdob","empswddt","empshddt","empbshob","empucdnew","empentddt","empenttime","empucdame","empameddt","empametime","empmapcode","emplocsno","empad1","empad2","empad3","empad4","empemail","empmrdtst","empbnkid","empotflg","empanual","empcasal","empleuleu","emptel","empattincflg","emplateflg","empnsatlflg","imgurl") VALUES
 (1,1,E'',E'Mrs W.K.G. DIAS',0.00,E'W',1,42,E'N',28000.00,0.00,0.00,229,E'Y',E'',E'',E'M',E'736450151V',E'2004-03-01',E'PRODUCTION MANAGER ',E'1973-05-24',NULL,0.00,0,0.00,E'N',0,E'12100004845',E'\t\t\t',E'',1,0.00,0.00,E'',E'',0,570,E'',0,0,0,NULL,0.00,NULL,NULL,0.00,E'2000',E'2012-03-19',E'10:14:38',E'nathasha',E'2023-09-07',E'18:53:42',3001,3,E'',E'',E'',E'',E'',E'',E'',E'N',E'',E'',E'',E'',E'',E'Y',E'',E''),
 (2,2,E'',E'Miss H.A.S.N. HAPUARACHCHI',0.00,E'W',1,0,E'',10250.00,0.00,0.00,0,E'Y',E'',E'',E'M',E'\r\n\t\t\t     777991515',E'2004-03-01',E'LABORATORY SUPERVISOR',E'1977-10-25',NULL,0.00,0,0.00,E'N',0,E'',E'\r\n\t\t\t',E'',2,0.00,0.00,E'',E'',0,571,E'',0,0,0,NULL,0.00,NULL,NULL,0.00,E'2000',E'2012-03-19',E'10:14:38',E'',NULL,E'00:00:00',2,3,E'NO. 82',E'GURUGAMA',E'KIRINDIWALA',E'',E'',E'S',E'',E'',E'',E'',E'',E'',E'',E'Y',E'',E''),
@@ -1383,6 +1433,7 @@ INSERT INTO "p_empmast" ("empsno","empeno","empinital","empnam","empscgpcn","emp
 (50,50,E'',E'Miss N.W. EDIRISINGHE',0.00,E'W',1,42,E'',10500.00,0.00,0.00,228,E'Y',E'',E'',E'F',E'835372928V',E'2007-12-04',E'LAB ASSISTANT',E'1983-02-06',NULL,0.00,0,0.00,E'N',0,E'4111004785',E'\t\t\t     7214',E'4',62,0.00,0.00,E'',E'',0,576,E'',0,0,0,NULL,0.00,NULL,NULL,0.00,E'2000',E'2012-03-19',E'10:14:38',E'hrd',E'2012-03-26',E'12:27:10',62,3,E'NO. 67/5,',E'ST. BRIDGETS ROAD',E'NAGODA',E'WELISARA',E'',E'S',E'NDB NUGEGO',E'',E'',E'',E'',E'',E'',E'Y',E'',E'')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_hstmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_hstmast" (
   "hstsno" SERIAL,
   "hstempsno" INTEGER NOT NULL default '0',
@@ -1402,6 +1453,7 @@ CREATE TABLE IF NOT EXISTS "p_hstmast" (
 );
 
 -- p_hstmast: 50 original source rows.
+-- Load the imported rows below into p_hstmast; existing conflict rules appear after the row values.
 INSERT INTO "p_hstmast" ("hstsno","hstempsno","hstyer","hstmon","hsttyp","hstamt","hstempeno","hstucdnew","hstentddt","hstenttime","hstucdame","hstameddt","hstametime") VALUES
 (1,9,2012,4,E'055',3000.00,E'9',E'hrd',E'2012-05-23',E'13:08:51',E'',NULL,E'00:00:00'),
 (2,9,2012,4,E'003',3000.00,E'9',E'hrd',E'2012-05-23',E'13:08:51',E'',NULL,E'00:00:00'),
@@ -1455,6 +1507,7 @@ INSERT INTO "p_hstmast" ("hstsno","hstempsno","hstyer","hstmon","hsttyp","hstamt
 (50,36,2012,4,E'092',11782.25,E'36',E'hrd',E'2012-05-23',E'13:08:51',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_logmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_logmast" (
   "logsno" SERIAL,
   "logucd" varchar(30) default NULL,
@@ -1467,6 +1520,7 @@ CREATE TABLE IF NOT EXISTS "p_logmast" (
 );
 
 -- p_logmast: 50 original source rows.
+-- Load the imported rows below into p_logmast; existing conflict rules appear after the row values.
 INSERT INTO "p_logmast" ("logsno","logucd","logddt","logtime","logprgnam","logaction","logdes") VALUES
 (1,E'2000',E'2012-05-07',E'12:43:58',E'p_pclcmn.php',E'PAYCALC',E'Pay Calculated for Month "Apr-2012"'),
 (2,E'2000',E'2012-05-11',E'10:07:11',E'p_pclcmn.php',E'PAYCALC',E'Pay Calculated for Month "Apr-2012"'),
@@ -1520,6 +1574,7 @@ INSERT INTO "p_logmast" ("logsno","logucd","logddt","logtime","logprgnam","logac
 (50,E'hrd',E'2012-06-11',E'10:21:07',E'p_pclcmn.php',E'PAYCALC',E'Pay Calculated for Month "May-2012"')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_lonmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_lonmast" (
   "lonsno" SERIAL,
   "lonempsno" INTEGER NOT NULL default '0',
@@ -1542,6 +1597,7 @@ CREATE TABLE IF NOT EXISTS "p_lonmast" (
 );
 
 -- p_lonmast: 50 original source rows.
+-- Load the imported rows below into p_lonmast; existing conflict rules appear after the row values.
 INSERT INTO "p_lonmast" ("lonsno","lonempsno","lontyp","lonamt","lonins","lonout","londedamt","londdt","lontotinstol","londidinstol","lonucdnew","lonentddt","lonenttime","lonucdame","lonameddt","lonametime") VALUES
 (806,394,E'084',143010.00,4086.00,44946.00,0.00,E'2014-10-03',35,24,E'nathasha',E'2014-10-03',E'09:43:18',E'nathasha',E'2016-09-22',E'17:00:17'),
 (106,281,E'083',76500.00,4500.00,18000.00,0.00,E'2012-04-01',17,13,E'',NULL,E'00:00:00',E'IT',E'2013-05-22',E'15:04:45'),
@@ -1595,6 +1651,7 @@ INSERT INTO "p_lonmast" ("lonsno","lonempsno","lontyp","lonamt","lonins","lonout
 (964,1512,E'080',7002.00,2334.00,7002.00,0.00,E'2015-05-07',3,0,E'nathasha',E'2015-05-07',E'09:56:38',E'nathasha',E'2015-05-07',E'10:02:33')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_mblmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_mblmast" (
   "mblsno" SERIAL,
   "mblyear" varchar(4) NOT NULL default '',
@@ -1610,6 +1667,7 @@ CREATE TABLE IF NOT EXISTS "p_mblmast" (
 );
 
 -- p_mblmast: 50 original source rows.
+-- Load the imported rows below into p_mblmast; existing conflict rules appear after the row values.
 INSERT INTO "p_mblmast" ("mblsno","mblyear","mblmon","mblempsno","mbltelno","mblamt","mbltrfflg","mblucdnew","mblentddt","mblenttime") VALUES
 (115,E'2012',E'04',9,E'718547235',132.24,E'',E'2000',E'2012-05-10',E'13:26:32'),
 (116,E'2012',E'04',9,E'718547236',993.58,E'',E'2000',E'2012-05-10',E'13:26:32'),
@@ -1663,6 +1721,7 @@ INSERT INTO "p_mblmast" ("mblsno","mblyear","mblmon","mblempsno","mbltelno","mbl
 (164,E'2012',E'04',401,E'718547172',405.56,E'',E'2000',E'2012-05-10',E'13:26:37')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_ptrmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_ptrmast" (
   "ptrsno" SERIAL,
   "ptrempsno" INTEGER NOT NULL default '0',
@@ -1679,6 +1738,7 @@ CREATE TABLE IF NOT EXISTS "p_ptrmast" (
 );
 
 -- p_ptrmast: 50 original source rows.
+-- Load the imported rows below into p_ptrmast; existing conflict rules appear after the row values.
 INSERT INTO "p_ptrmast" ("ptrsno","ptrempsno","ptrtyp","ptramt","ptrucdnew","ptrentddt","ptrenttime","ptrucdame","ptrameddt","ptrametime") VALUES
 (4050,401,E'3333',3000.00,E'hrd',E'2013-05-09',E'23:15:47',E'',NULL,E'00:00:00'),
 (413,405,E'3333',3000.00,E'HRE',E'2012-06-07',E'11:57:25',E'',NULL,E'00:00:00'),
@@ -1732,6 +1792,7 @@ INSERT INTO "p_ptrmast" ("ptrsno","ptrempsno","ptrtyp","ptramt","ptrucdnew","ptr
 (6369,1792,E'002',3500.00,E'nathasha',E'2016-08-03',E'15:02:48',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Create p_sysmast to store payroll lookup values, including sections, cost centres and work basis.
 CREATE TABLE IF NOT EXISTS "p_sysmast" (
   "syssno" SERIAL,
   "sysrtp" INTEGER NOT NULL default '0',
@@ -1752,6 +1813,7 @@ CREATE TABLE IF NOT EXISTS "p_sysmast" (
 );
 
 -- p_sysmast: 50 original source rows.
+-- Load the imported rows below into p_sysmast; existing conflict rules appear after the row values.
 INSERT INTO "p_sysmast" ("syssno","sysrtp","sysrno","sysdes","sysdes1","sysdes2","sysdes3","syscomsno","sysucdnew","sysentddt","sysenttime","sysucdame","sysameddt","sysametime") VALUES
 (61,2,E'080',E'FESTIVAL ADVANCE',E'',NULL,E'',1,E'2000',E'2008-01-15',E'14:07:01',NULL,NULL,NULL),
 (156,4,E'001',E'BASIC SALARY',E'',E'',E'',1,E'2000',E'2008-04-03',E'12:18:50',E'nathasha',E'2025-02-10',E'07:13:50'),
@@ -1805,6 +1867,7 @@ INSERT INTO "p_sysmast" ("syssno","sysrtp","sysrno","sysdes","sysdes1","sysdes2"
 (488,9,E'056',E'W/SHOP',E'',E'',E'',1,E'2000',E'2010-03-12',E'17:13:51',E'2000',E'2025-04-09',E'18:27:45')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_taxmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_taxmast" (
   "taxsno" SERIAL,
   "taxtable" INTEGER NOT NULL default '0',
@@ -1821,6 +1884,7 @@ CREATE TABLE IF NOT EXISTS "p_taxmast" (
 );
 
 -- p_taxmast: 50 original source rows.
+-- Load the imported rows below into p_taxmast; existing conflict rules appear after the row values.
 INSERT INTO "p_taxmast" ("taxsno","taxtable","taxframt","taxtoamt","taxamt","taxucdnew","taxentddt","taxenttime","taxucdame","taxameddt","taxametime") VALUES
 (837,5,0.00,326087.00,0.00,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00'),
 (838,5,326088.00,326609.00,24.00,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00'),
@@ -1874,6 +1938,7 @@ INSERT INTO "p_taxmast" ("taxsno","taxtable","taxframt","taxtoamt","taxamt","tax
 (886,5,351131.00,351652.00,1176.00,E'',NULL,E'00:00:00',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_telmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_telmast" (
   "telsno" SERIAL,
   "telempsno" INTEGER NOT NULL default '0',
@@ -1882,6 +1947,7 @@ CREATE TABLE IF NOT EXISTS "p_telmast" (
 );
 
 -- p_telmast: 50 original source rows.
+-- Load the imported rows below into p_telmast; existing conflict rules appear after the row values.
 INSERT INTO "p_telmast" ("telsno","telempsno","telno") VALUES
 (7,9,E'718547235'),
 (8,9,E'718547236'),
@@ -1935,6 +2001,7 @@ INSERT INTO "p_telmast" ("telsno","telempsno","telno") VALUES
 (126,538,E'718547213')
 ON CONFLICT DO NOTHING;
 
+-- Create the imported p_trnmast table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "p_trnmast" (
   "trnsno" SERIAL,
   "trnempsno" INTEGER NOT NULL default '0',
@@ -1952,6 +2019,7 @@ CREATE TABLE IF NOT EXISTS "p_trnmast" (
 );
 
 -- p_trnmast: 50 original source rows.
+-- Load the imported rows below into p_trnmast; existing conflict rules appear after the row values.
 INSERT INTO "p_trnmast" ("trnsno","trnempsno","trntyp","trnamt","trndes","trnucdnew","trnentddt","trnenttime","trnucdame","trnameddt","trnametime") VALUES
 (1,365,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
 (2,1123,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
@@ -2005,6 +2073,7 @@ INSERT INTO "p_trnmast" ("trnsno","trnempsno","trntyp","trnamt","trndes","trnucd
 (50,2964,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Create prgmast to store application programs, their modules, display order and Single/Multi level.
 CREATE TABLE IF NOT EXISTS "prgmast" (
   "prgsno" SERIAL,
   "prgmodsno" INTEGER NOT NULL default '0',
@@ -2024,6 +2093,7 @@ CREATE TABLE IF NOT EXISTS "prgmast" (
 );
 
 -- prgmast: 50 original source rows.
+-- Load the imported rows below into prgmast; existing conflict rules appear after the row values.
 INSERT INTO "prgmast" ("prgsno","prgmodsno","prgsmdsno","prgorder","prglvl","prgnam","prgdes","prgucdnew","prgentddt","prgenttime","prgucdame","prgameddt","prgametime") VALUES
 (1,54,50,E'1',E'S',E'p_empm.php',E'Employee Master File -M',E'2000',E'2012-10-05',E'10:15:44',NULL,NULL,NULL),
 (2,54,50,E'2',E'M',E'p_empenter.php',E'Employee Master File -Ent',E'2000',E'2012-10-05',E'10:16:19',NULL,NULL,NULL),
@@ -2077,6 +2147,7 @@ INSERT INTO "prgmast" ("prgsno","prgmodsno","prgsmdsno","prgorder","prglvl","prg
 (50,55,51,E'51',E'S',E'p_salenter.php',E'Salary Advance',E'2000',E'2012-10-05',E'11:09:54',NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
+-- Create s_locmast to store locations used by employees and user profiles.
 CREATE TABLE IF NOT EXISTS "s_locmast" (
   "locsno" SERIAL,
   "locloc" varchar(6) NOT NULL default '',
@@ -2110,6 +2181,7 @@ CREATE TABLE IF NOT EXISTS "s_locmast" (
 );
 
 -- s_locmast: 8 original source rows.
+-- Load the imported rows below into s_locmast; existing conflict rules appear after the row values.
 INSERT INTO "s_locmast" ("locsno","locloc","locnam","loctyp","locad1","locad2","locad3","locad4","loctelno","locfaxno","locemail","locucdnew","locentddt","locenttime","locucdame","locameddt","locametime","locshlmin","locepfreg","loctinno","zone","employeer_no","pay_mode","Dic_off_code","bank_code","branch_code","acc_no") VALUES
 (1,E'MIKEFL',E'MIKE FLORA (PVT) LTD',E'',E'',E'',E'',E'',E'',E'',E'',E'',NULL,E'00:00:00',E'',NULL,E'00:00:00',120.00,E'B014659',E'104064655',E'B',14659,4,11,7135,1,123456),
 (2,E'MKA',E'MIHIDU KEERTHIRATHNE',E'',E'',E'',E'',E'',E'',E'',E'',NULL,NULL,NULL,NULL,NULL,NULL,120.00,E'',E'',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
@@ -2121,6 +2193,7 @@ INSERT INTO "s_locmast" ("locsno","locloc","locnam","loctyp","locad1","locad2","
 (9,E'MILP',E'MIKE LEISURE (PVT) LTD',NULL,E'',E'',E'',E'',E'',E'',E'',E'RZ',E'2025-10-24',NULL,NULL,NULL,NULL,0.00,E'',E'',NULL,NULL,NULL,NULL,NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
+-- Create the imported temp table if it does not already exist.
 CREATE TABLE IF NOT EXISTS "temp" (
   "densno" INTEGER NOT NULL default '0',
   "denddt" date  default NULL,
@@ -2154,6 +2227,7 @@ CREATE TABLE IF NOT EXISTS "temp" (
 );
 
 -- temp: 50 original source rows.
+-- Load the imported rows below into temp; existing conflict rules appear after the row values.
 INSERT INTO "temp" ("densno","denddt","denlocsno","denaresno","dendepsno","denmacsno","denempmapcode","dlyactinhh","dlyactinmm","dlyactouthh","dlyactoutmm","otbftime","otaftime","denot1","denot2","dennoot","dentrf","denempsno","denattsno","denucdnew","denentddt","denenttime","denlatemin","nolatflg","denpayottrf","denpaylttrf","dlyadddecot","denattinctrf") VALUES
 (590706,E'2019-06-19',4,41,34,2,E'100282',6,36,16,12,39.00,0.00,39.00,0.00,E'y',E'y',437,1328188,E'inokahr',E'2019-06-20',E'14:59:42',3,E'y',E'',E'',E'',E''),
 (590707,E'2019-06-19',4,41,2,2,E'101071',7,43,16,47,0.00,32.00,0.00,0.00,E'y',E'y',462,1328276,E'inokahr',E'2019-06-20',E'14:59:42',0,E'y',E'',E'',E'',E''),
@@ -2207,6 +2281,7 @@ INSERT INTO "temp" ("densno","denddt","denlocsno","denaresno","dendepsno","denma
 (590775,E'2019-06-19',4,41,33,1,E'101770',16,45,22,0,0.00,300.00,300.00,0.00,E'n',E'y',1763,1328004,E'inokahr',E'2019-06-20',E'14:59:42',0,E'y',E'',E'',E'',E'')
 ON CONFLICT DO NOTHING;
 
+-- Create usdmast to store login accounts, password hashes, active flags and user profile details.
 CREATE TABLE IF NOT EXISTS "usdmast" (
   "usdsno" SERIAL,
   "usdcomsno" INTEGER NOT NULL default '0',
@@ -2235,6 +2310,7 @@ CREATE TABLE IF NOT EXISTS "usdmast" (
 );
 
 -- usdmast: 11 original source rows.
+-- Load the imported rows below into usdmast; existing conflict rules appear after the row values.
 INSERT INTO "usdmast" ("usdsno","usdcomsno","usdusd","usdpwd","usduno","usdnam","usdad1","usdad2","usdad3","usdtel","usdfax","usdmail","usdnic","usddes","usducdnew","usdentddt","usdenttime","usducdame","usdameddt","usdametime") VALUES
 (3,0,E'umesh',E'pwIkkzkRCAnVM',99,E'HRM',E'',E'',E'',E'',E'',E'hr@mikeflora.com',E'',E'ADM',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
 (23,0,E'madhu',E'pwY6bjfQbMAXM',99,E'madhu',E'',E'',E'',E'',E'',E'',E'',E'USR',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00'),
@@ -2249,6 +2325,7 @@ INSERT INTO "usdmast" ("usdsno","usdcomsno","usdusd","usdpwd","usduno","usdnam",
 (20,0,E'ravi',E'pwrgiP1WACGfA',0,E'',E'',E'',E'',E'',E'',E'',E'',E'',NULL,NULL,E'00:00:00',NULL,NULL,E'00:00:00')
 ON CONFLICT DO NOTHING;
 
+-- Create usrmast to store permission flags linking each user to a program.
 CREATE TABLE IF NOT EXISTS "usrmast" (
   "usrsno" SERIAL,
   "usrusdsno" INTEGER NOT NULL default '0',
@@ -2271,6 +2348,7 @@ CREATE TABLE IF NOT EXISTS "usrmast" (
 );
 
 -- usrmast: 50 original source rows.
+-- Load the imported rows below into usrmast; existing conflict rules appear after the row values.
 INSERT INTO "usrmast" ("usrsno","usrusdsno","usrprgsno","usryn","usraddyn","usrameyn","usrdelyn","usrdisyn","usrupdyn","usrvssyn","usrucdnew","usrentddt","usrenttime","usrucdame","usrameddt","usrametime") VALUES
 (1269,1,39,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
 (1268,1,38,E'y',E'n',E'n',E'n',NULL,NULL,NULL,E'2000',E'2012-10-09',E'11:33:56',NULL,NULL,NULL),
@@ -2324,164 +2402,215 @@ INSERT INTO "usrmast" ("usrsno","usrusdsno","usrprgsno","usryn","usraddyn","usra
 (1711,9,58,E'n',E'n',E'n',E'n',NULL,NULL,NULL,E'IT',E'2012-10-12',E'16:25:31',NULL,NULL,NULL)
 ON CONFLICT DO NOTHING;
 
+-- Speed up lookups on a_atttran using attcrdno.
 CREATE INDEX IF NOT EXISTS "a_atttran_idx_a_atttran_attcrdno" ON "a_atttran" ("attcrdno");
+-- Speed up lookups on a_denmast using denddt,denempsno.
 CREATE INDEX IF NOT EXISTS "a_denmast_idx_a_denmast_denddt_denempsno" ON "a_denmast" ("denddt","denempsno");
+-- Speed up lookups on a_denmast_tmp using denddt,denempsno.
 CREATE INDEX IF NOT EXISTS "a_denmast_tmp_idx_a_denmast_denddt_denempsno" ON "a_denmast_tmp" ("denddt","denempsno");
+-- Speed up lookups on a_levtran using levddt,levempsno.
 CREATE INDEX IF NOT EXISTS "a_levtran_idx_a_levtran_levddt_levempsno" ON "a_levtran" ("levddt","levempsno");
+-- Speed up lookups on bookings using id_item.
 CREATE INDEX IF NOT EXISTS "bookings_id_item" ON "bookings" ("id_item");
+-- Speed up lookups on bookings using id_state.
 CREATE INDEX IF NOT EXISTS "bookings_id_state" ON "bookings" ("id_state");
+-- Speed up lookups on bookings_items using id_user.
 CREATE INDEX IF NOT EXISTS "bookings_items_id_user" ON "bookings_items" ("id_user");
+-- Speed up lookups on bookings_items using id_ref_external.
 CREATE INDEX IF NOT EXISTS "bookings_items_id_ref_external" ON "bookings_items" ("id_ref_external");
+-- Speed up lookups on bookings_last_update using id_item.
 CREATE INDEX IF NOT EXISTS "bookings_last_update_id_item" ON "bookings_last_update" ("id_item");
+-- Speed up lookups on p_hstmast using hstempsno.
 CREATE INDEX IF NOT EXISTS "p_hstmast_hstempsno" ON "p_hstmast" ("hstempsno");
+-- Speed up lookups on p_hstmast using hstyer.
 CREATE INDEX IF NOT EXISTS "p_hstmast_hstyer" ON "p_hstmast" ("hstyer");
+-- Speed up lookups on p_hstmast using hstmon.
 CREATE INDEX IF NOT EXISTS "p_hstmast_hstmon" ON "p_hstmast" ("hstmon");
+-- Speed up lookups on p_hstmast using hsttyp.
 CREATE INDEX IF NOT EXISTS "p_hstmast_hsttyp" ON "p_hstmast" ("hsttyp");
+-- Speed up lookups on p_hstmast using hstempeno.
 CREATE INDEX IF NOT EXISTS "p_hstmast_hstempeno" ON "p_hstmast" ("hstempeno");
 
 -- Keep generated IDs above imported IDs without rewinding existing sequences.
+-- Keep the next generated abssno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_absmast', 'abssno'),
   GREATEST(COALESCE(MAX("abssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_absmast_abssno_seq'), 1)),
   MAX("abssno") IS NOT NULL) FROM "a_absmast";
+-- Keep the next generated attsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_atttran', 'attsno'),
   GREATEST(COALESCE(MAX("attsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_atttran_attsno_seq'), 1)),
   MAX("attsno") IS NOT NULL) FROM "a_atttran";
+-- Keep the next generated attsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_atttran_test', 'attsno'),
   GREATEST(COALESCE(MAX("attsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_atttran_test_attsno_seq'), 1)),
   MAX("attsno") IS NOT NULL) FROM "a_atttran_test";
+-- Keep the next generated densno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_denmast', 'densno'),
   GREATEST(COALESCE(MAX("densno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_denmast_densno_seq'), 1)),
   MAX("densno") IS NOT NULL) FROM "a_denmast";
+-- Keep the next generated densno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_denmast_tmp', 'densno'),
   GREATEST(COALESCE(MAX("densno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_denmast_tmp_densno_seq'), 1)),
   MAX("densno") IS NOT NULL) FROM "a_denmast_tmp";
+-- Keep the next generated dlysno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_dlymast', 'dlysno'),
   GREATEST(COALESCE(MAX("dlysno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_dlymast_dlysno_seq'), 1)),
   MAX("dlysno") IS NOT NULL) FROM "a_dlymast";
+-- Keep the next generated holsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_holmast', 'holsno'),
   GREATEST(COALESCE(MAX("holsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_holmast_holsno_seq'), 1)),
   MAX("holsno") IS NOT NULL) FROM "a_holmast";
+-- Keep the next generated incworsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_incwormast', 'incworsno'),
   GREATEST(COALESCE(MAX("incworsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_incwormast_incworsno_seq'), 1)),
   MAX("incworsno") IS NOT NULL) FROM "a_incwormast";
+-- Keep the next generated levsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_levtran', 'levsno'),
   GREATEST(COALESCE(MAX("levsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_levtran_levsno_seq'), 1)),
   MAX("levsno") IS NOT NULL) FROM "a_levtran";
+-- Keep the next generated logsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_logmast', 'logsno'),
   GREATEST(COALESCE(MAX("logsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_logmast_logsno_seq'), 1)),
   MAX("logsno") IS NOT NULL) FROM "a_logmast";
+-- Keep the next generated nigsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_nigtran', 'nigsno'),
   GREATEST(COALESCE(MAX("nigsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_nigtran_nigsno_seq'), 1)),
   MAX("nigsno") IS NOT NULL) FROM "a_nigtran";
+-- Keep the next generated syssno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_sysmast', 'syssno'),
   GREATEST(COALESCE(MAX("syssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_sysmast_syssno_seq'), 1)),
   MAX("syssno") IS NOT NULL) FROM "a_sysmast";
+-- Keep the next generated worsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_wormast', 'worsno'),
   GREATEST(COALESCE(MAX("worsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_wormast_worsno_seq'), 1)),
   MAX("worsno") IS NOT NULL) FROM "a_wormast";
+-- Keep the next generated wossno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('a_wosmast', 'wossno'),
   GREATEST(COALESCE(MAX("wossno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'a_wosmast_wossno_seq'), 1)),
   MAX("wossno") IS NOT NULL) FROM "a_wosmast";
+-- Keep the next generated id ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('bookings', 'id'),
   GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'bookings_id_seq'), 1)),
   MAX("id") IS NOT NULL) FROM "bookings";
+-- Keep the next generated id ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('bookings_admin_users', 'id'),
   GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'bookings_admin_users_id_seq'), 1)),
   MAX("id") IS NOT NULL) FROM "bookings_admin_users";
+-- Keep the next generated id ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('bookings_config', 'id'),
   GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'bookings_config_id_seq'), 1)),
   MAX("id") IS NOT NULL) FROM "bookings_config";
+-- Keep the next generated id ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('bookings_items', 'id'),
   GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'bookings_items_id_seq'), 1)),
   MAX("id") IS NOT NULL) FROM "bookings_items";
+-- Keep the next generated id ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('bookings_last_update', 'id'),
   GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'bookings_last_update_id_seq'), 1)),
   MAX("id") IS NOT NULL) FROM "bookings_last_update";
+-- Keep the next generated id ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('bookings_states', 'id'),
   GREATEST(COALESCE(MAX("id"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'bookings_states_id_seq'), 1)),
   MAX("id") IS NOT NULL) FROM "bookings_states";
+-- Keep the next generated depsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('f_depmast', 'depsno'),
   GREATEST(COALESCE(MAX("depsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'f_depmast_depsno_seq'), 1)),
   MAX("depsno") IS NOT NULL) FROM "f_depmast";
+-- Keep the next generated btxsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_btxmast', 'btxsno'),
   GREATEST(COALESCE(MAX("btxsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_btxmast_btxsno_seq'), 1)),
   MAX("btxsno") IS NOT NULL) FROM "p_btxmast";
+-- Keep the next generated empsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_empmast', 'empsno'),
   GREATEST(COALESCE(MAX("empsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_empmast_empsno_seq'), 1)),
   MAX("empsno") IS NOT NULL) FROM "p_empmast";
+-- Keep the next generated hstsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_hstmast', 'hstsno'),
   GREATEST(COALESCE(MAX("hstsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_hstmast_hstsno_seq'), 1)),
   MAX("hstsno") IS NOT NULL) FROM "p_hstmast";
+-- Keep the next generated logsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_logmast', 'logsno'),
   GREATEST(COALESCE(MAX("logsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_logmast_logsno_seq'), 1)),
   MAX("logsno") IS NOT NULL) FROM "p_logmast";
+-- Keep the next generated lonsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_lonmast', 'lonsno'),
   GREATEST(COALESCE(MAX("lonsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_lonmast_lonsno_seq'), 1)),
   MAX("lonsno") IS NOT NULL) FROM "p_lonmast";
+-- Keep the next generated mblsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_mblmast', 'mblsno'),
   GREATEST(COALESCE(MAX("mblsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_mblmast_mblsno_seq'), 1)),
   MAX("mblsno") IS NOT NULL) FROM "p_mblmast";
+-- Keep the next generated ptrsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_ptrmast', 'ptrsno'),
   GREATEST(COALESCE(MAX("ptrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_ptrmast_ptrsno_seq'), 1)),
   MAX("ptrsno") IS NOT NULL) FROM "p_ptrmast";
+-- Keep the next generated syssno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_sysmast', 'syssno'),
   GREATEST(COALESCE(MAX("syssno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_sysmast_syssno_seq'), 1)),
   MAX("syssno") IS NOT NULL) FROM "p_sysmast";
+-- Keep the next generated taxsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_taxmast', 'taxsno'),
   GREATEST(COALESCE(MAX("taxsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_taxmast_taxsno_seq'), 1)),
   MAX("taxsno") IS NOT NULL) FROM "p_taxmast";
+-- Keep the next generated telsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_telmast', 'telsno'),
   GREATEST(COALESCE(MAX("telsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_telmast_telsno_seq'), 1)),
   MAX("telsno") IS NOT NULL) FROM "p_telmast";
+-- Keep the next generated trnsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('p_trnmast', 'trnsno'),
   GREATEST(COALESCE(MAX("trnsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_trnmast_trnsno_seq'), 1)),
   MAX("trnsno") IS NOT NULL) FROM "p_trnmast";
+-- Keep the next generated prgsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('prgmast', 'prgsno'),
   GREATEST(COALESCE(MAX("prgsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'prgmast_prgsno_seq'), 1)),
   MAX("prgsno") IS NOT NULL) FROM "prgmast";
+-- Keep the next generated locsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('s_locmast', 'locsno'),
   GREATEST(COALESCE(MAX("locsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 's_locmast_locsno_seq'), 1)),
   MAX("locsno") IS NOT NULL) FROM "s_locmast";
+-- Keep the next generated usdsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('usdmast', 'usdsno'),
   GREATEST(COALESCE(MAX("usdsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'usdmast_usdsno_seq'), 1)),
   MAX("usdsno") IS NOT NULL) FROM "usdmast";
+-- Keep the next generated usrsno ID above imported rows without lowering its current sequence.
 SELECT setval(pg_get_serial_sequence('usrmast', 'usrsno'),
   GREATEST(COALESCE(MAX("usrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'usrmast_usrsno_seq'), 1)),
   MAX("usrsno") IS NOT NULL) FROM "usrmast";
+-- Save the imported tables, rows, indexes and sequence changes.
 COMMIT;
