@@ -11,7 +11,10 @@ const programQuery = `SELECT p.*,m.sysdes AS module,s.sysdes AS submodule,r.usry
 
 export const UsrEnterModel = {
     async findUser(id: number) {
-        const r = await pool.query('SELECT usdsno,usdusd,usdnam,usdadmin FROM usdmast WHERE usdsno=$1', [id]);
+        const r = await pool.query(
+            'SELECT usdsno,usdusd,usdnam,usdadmin FROM usdmast WHERE usdsno=$1', 
+            [id]
+        );
         return r.rows[0] ?? null;
     },
 

@@ -9,12 +9,18 @@ export const AdministrationModel = {
 
     // Active flag + administrator flag of the signed-in user
     async accountStatus(id: number) {
-        const r = await pool.query('SELECT usdactive, usdadmin FROM usdmast WHERE usdsno=$1', [id]);
+        const r = await pool.query(
+            'SELECT usdactive, usdadmin FROM usdmast WHERE usdsno=$1', 
+            [id]
+        );
         return r.rows[0] ?? null;
     },
 
     async isAdministrator(id: number): Promise<boolean> {
-        const r = await pool.query('SELECT 1 FROM usdmast WHERE usdsno=$1 AND usdadmin=true', [id]);
+        const r = await pool.query(
+            'SELECT 1 FROM usdmast WHERE usdsno=$1 AND usdadmin=true', 
+            [id]
+        );
         return !!r.rowCount;
     },
 
@@ -22,9 +28,15 @@ export const AdministrationModel = {
 
     async lookups() {
         const [modules, submodules, locations] = await Promise.all([
-            pool.query('SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=32 ORDER BY sysdes'),
-            pool.query('SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=33 ORDER BY sysdes'),
-            pool.query('SELECT locsno, locnam FROM s_locmast ORDER BY locnam')
+            pool.query(
+                'SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=32 ORDER BY sysdes'
+            ),
+            pool.query(
+                'SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=33 ORDER BY sysdes'
+            ),
+            pool.query(
+                'SELECT locsno, locnam FROM s_locmast ORDER BY locnam'
+            )
         ]);
         return {
             modules: modules.rows,
@@ -42,7 +54,10 @@ export const AdministrationModel = {
     },
 
     async locationExists(id: unknown): Promise<boolean> {
-        const r = await pool.query('SELECT 1 FROM s_locmast WHERE locsno=$1', [id]);
+        const r = await pool.query(
+            'SELECT 1 FROM s_locmast WHERE locsno=$1',
+             [id]
+        );
         return !!r.rowCount;
     },
 
@@ -93,9 +108,17 @@ export const AdministrationModel = {
         const c = await pool.connect();
         try {
             await c.query('BEGIN');
-            await c.query('LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE');
-            await c.query('DELETE FROM usrmast WHERE usrprgsno=$1', [id]);
-            const r = await c.query('DELETE FROM prgmast WHERE prgsno=$1', [id]);
+            await c.query(
+                'LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE'
+            );
+            await c.query(
+                'DELETE FROM usrmast WHERE usrprgsno=$1', 
+                [id]
+            );
+            const r = await c.query(
+                'DELETE FROM prgmast WHERE prgsno=$1', 
+                [id]
+            );
             await c.query('COMMIT');
             return !!r.rowCount;
         } catch (e) {
@@ -109,7 +132,9 @@ export const AdministrationModel = {
     // ---------- Users ----------
 
     async users() {
-        const r = await pool.query(`SELECT ${publicUserColumns} FROM usdmast ORDER BY usdusd`);
+        const r = await pool.query(
+            `SELECT ${publicUserColumns} FROM usdmast ORDER BY usdusd`
+        );
         return r.rows;
     },
 
@@ -161,7 +186,11 @@ export const AdministrationModel = {
                 fail('User not found');
             }
 
-            const programs = await c.query('SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[])', [ids]);
+            const programs = await c.query(
+                'SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[])', 
+                [ids]
+            );
+
             if (programs.rowCount !== ids.length) {
                 fail('Program no longer exists; reload');
             }
@@ -169,7 +198,12 @@ export const AdministrationModel = {
 
             for (const row of rows) {
                 if (clear) {
-                    await c.query('DELETE FROM usrmast WHERE usrusdsno=$1 AND usrprgsno=$2', [userId, row.prgsno]);
+                    
+                    await c.query(
+                        'DELETE FROM usrmast WHERE usrusdsno=$1 AND usrprgsno=$2', 
+                        [userId, row.prgsno]
+                    );
+
                     continue;
                 }
 
