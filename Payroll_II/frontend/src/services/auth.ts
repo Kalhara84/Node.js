@@ -1,0 +1,41 @@
+import { api, TOKEN_KEY, USER_KEY, request } from './api.ts';
+import type { AuthUser } from '../types.ts';
+
+// Get current logged-in user from localStorage
+export function currentUser(): AuthUser | null {
+    try {
+        if (!localStorage.getItem(TOKEN_KEY)) {
+            return null;
+        }
+        return JSON.parse(localStorage.getItem(USER_KEY) || 'null') as AuthUser | null;
+    } catch {
+        return null;
+    }
+}
+
+// Authenticate user and persist credentials
+export async function login(username: string, password: string): Promise<AuthUser> {
+    const res = await api.login(username, password);
+    localStorage.setItem(TOKEN_KEY, res.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+    return res.user;
+}
+
+// Log out user and clear stored token and profile
+export function logout(): void {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+}
+
+// Refresh current user permissions from backend /auth/me
+export async function refreshUser(): Promise<AuthUser> {
+    const result = await request<AuthUser>('/auth/me');
+    const user = { ...currentUser(), ...result };
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    return user;
+}
+
+// Check employee permission flags (view, add, amend, delete)
+export function canEmployee(action: 'view' | 'add' | 'amend' | 'delete'): boolean {
+    return currentUser()?.access?.employees[action] === true;
+}
