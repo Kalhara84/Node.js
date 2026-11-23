@@ -1,6 +1,11 @@
 import app from './app';
 import { checkDatabaseConnection, pool } from './lib/db';
-import { errorDetails, log } from './lib/logger';
+
+const started = performance.now();
+const color = (code: number, text: string): string => process.stdout.isTTY && !process.env.NO_COLOR
+    ? `\x1b[${code}m${text}\x1b[0m` : text;
+const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : 'Unknown error')
+    .replace(/[\x00-\x1f\x7f-\x9f]/g, ' ');
 
 // Default port number
 let port = 3001;
@@ -20,16 +25,18 @@ async function start(): Promise<void> {
     const server = app.listen(port, () => {
         const address = server.address();
         const actualPort = typeof address === 'object' && address ? address.port : port;
-        log('info', 'Payroll API running', { url: `http://localhost:${actualPort}` });
+        console.log(`\n  ${color(32, 'PAYROLL API')}  ready in ${Math.round(performance.now() - started)} ms\n`);
+        console.log(`  ${color(32, '➜')}  Local:    ${color(36, `http://localhost:${actualPort}/`)}`);
+        console.log(`  ${color(32, '✓')}  Database: ${color(32, 'connected')}\n`);
     });
     server.on('error', (error) => {
-        log('error', 'HTTP server failed', errorDetails(error));
+        console.error(`  ${color(31, '✗')} HTTP server failed: ${errorMessage(error)}`);
         void pool.end().finally(() => { process.exitCode = 1; });
     });
 }
 
 void start().catch(async (error) => {
-    log('error', 'Backend startup failed', errorDetails(error));
+    console.error(`\n  ${color(31, '✗')} Database connection failed: ${errorMessage(error)}\n`);
     await pool.end();
     process.exitCode = 1;
 });

@@ -1,7 +1,27 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { verifyToken } from './lib/auth';
 import type { TokenPayload } from './types';
-import { errorDetails, log } from './lib/logger';
+import { randomUUID } from 'node:crypto';
+
+// Keep each completed request on one line without logging private payloads.
+export const requestLogger: RequestHandler = (req, res, next) => {
+    const started = performance.now();
+    const path = req.path.replace(/[\x00-\x1f\x7f-\x9f]/g, '');
+    res.setHeader('X-Request-ID', randomUUID());
+    let completed = false;
+    const print = (aborted = false): void => {
+        const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        const status = aborted ? 'ABORTED' : res.statusCode;
+        const error = res.locals.logError ? ` | ${res.locals.logError}` : '';
+        const line = `  ${time}  ${req.method.padEnd(7)} ${path}  ${status}  ${Math.round(performance.now() - started)} ms  ${res.getHeader('content-length') ?? 0} B${error}`;
+        if (aborted || res.statusCode >= 500) console.error(line);
+        else if (res.statusCode >= 400) console.warn(line);
+        else console.log(line);
+    };
+    res.once('finish', () => { completed = true; print(); });
+    res.once('close', () => { if (!completed) print(true); });
+    next();
+};
 
 // Extend Express Request object to include authenticated user
 declare module 'express-serve-static-core' {
@@ -47,12 +67,12 @@ export function notFound(_req: Request, res: Response): void {
 // Global server error handler middleware
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
     if ((err as { type?: string })?.type === 'entity.parse.failed') {
-        log('warn', 'Invalid JSON body', { requestId: res.locals.requestId });
+        res.locals.logError = 'Invalid JSON body';
         res.status(400).json({ message: 'Invalid JSON body' });
         return;
     }
 
-    log('error', 'API request error', { requestId: res.locals.requestId, ...errorDetails(err) });
+    res.locals.logError = (err instanceof Error ? err.message : 'Unknown error').replace(/[\x00-\x1f\x7f-\x9f]/g, ' ');
     if (res.headersSent) return _next(err);
     res.status(500).json({ message: 'Server error' });
 }

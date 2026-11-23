@@ -1,8 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import routes from './routes';
-import { notFound, errorHandler } from './middleware';
-import { requestLogger } from './request-logger';
+import { notFound, errorHandler, requestLogger } from './middleware';
 
 const app = express();
 app.use(requestLogger);
