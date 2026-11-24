@@ -8,13 +8,19 @@ const publicUserColumns = 'usdsno, usdcomsno, usdusd, usduno, usdnam, usdad1, us
 
 // Check the stored administrator flag before allowing account changes.
 async function isAdministrator(id: number): Promise<boolean> {
-    const result = await pool.query('SELECT 1 FROM usdmast WHERE usdsno=$1 AND usdadmin=true', [id]);
+    const result = await pool.query(
+        'SELECT 1 FROM usdmast WHERE usdsno=$1 AND usdadmin=true', 
+        [id]
+    );
     return !!result.rowCount;
 }
 
 // Confirm a selected location exists before assigning it to an account.
 async function locationExists(id: unknown): Promise<boolean> {
-    const result = await pool.query('SELECT 1 FROM s_locmast WHERE locsno=$1', [id]);
+    const result = await pool.query(
+        'SELECT 1 FROM s_locmast WHERE locsno=$1', 
+        [id]
+    );
     return !!result.rowCount;
 }
 
@@ -91,6 +97,7 @@ function validateUser(body: Record<string, unknown>, create: boolean) {
 
 // Validate the rights list sent from the user rights screen
 function validateRights(body: Record<string, unknown>) {
+    
     const rows = body.rows;
 
     if (!Array.isArray(rows) || rows.length > 10000) {
@@ -111,6 +118,7 @@ function validateRights(body: Record<string, unknown>) {
     }
 
     return { rows, ids, clear: body.clear === true };
+
 }
 
 // Request body as a plain object (empty object when missing)
@@ -118,33 +126,43 @@ const bodyOf = (req: Request): Record<string, unknown> => req.body ?? {};
 
 // Only an existing admin may create another admin or change an account's admin status.
 function applyRole(req: Request, res: Response, data: Record<string, unknown>): boolean {
+    
     const role = bodyOf(req).usdadmin;
+    
     if (role === undefined) {
         return true;
     }
+
     if (!res.locals.access?.admin) {
         res.status(403).json({ message: 'Only an administrator can change administrator status' });
         return false;
     }
+
     if (![true, false, 'true', 'false'].includes(role as boolean | string)) {
         fail('Choose User or Administrator');
     }
+
     data.usdadmin = role === true || role === 'true';
     return true;
+
 }
 
 // Check Program Master inputs here and keep SQL values in column order.
 function programValues(body: Record<string, unknown>): { module: number; submodule: number; values: unknown[] } {
+    
     const module = integer(body.prgmodsno, 'Module');
     const submodule = integer(body.prgsmdsno, 'Submodule');
+    
     if (!['S', 'M'].includes(String(body.prglvl))) {
         fail('Choose Single or Multi level');
     }
+
     // Allow future page keys; the new page and API must use this same key for access checks.
     const name = string(body.prgnam, 'Name', 35, true);
     if (!/^[a-z][a-z0-9_-]*$/.test(name) || ['admin', 'constructor', 'prototype'].includes(name)) {
         fail('Use a program key starting with a lowercase letter, followed by lowercase letters, numbers, hyphens or underscores');
     }
+
     return {
         module,
         submodule,
@@ -157,6 +175,7 @@ function programValues(body: Record<string, unknown>): { module: number; submodu
             string(body.prgdes, 'Description', 60, true)
         ]
     };
+
 }
 
 // Confirm both selected IDs exist in the correct module/submodule categories.
@@ -165,9 +184,11 @@ async function checkProgramScope(module: number, submodule: number): Promise<voi
         'SELECT syssno FROM a_sysmast WHERE (syssno=$1 AND sysrtp=32) OR (syssno=$2 AND sysrtp=33)',
         [module, submodule]
     );
+
     if (result.rowCount !== 2) {
         fail('Choose a valid module and submodule');
     }
+
 }
 
 export const AdministrationController = {
@@ -179,7 +200,9 @@ export const AdministrationController = {
             return;
         }
         if (e.code === '23505') {
-            res.status(409).json({ message: 'This code or module/submodule/order already exists' });
+            res.status(409).json(
+                { message: 'This code or module/submodule/order already exists' }
+            );
             return;
         }
         next(err);
@@ -191,9 +214,15 @@ export const AdministrationController = {
     async lookups(_req: Request, res: Response): Promise<void> {
         // Load dropdowns together; User Master also uses this existing endpoint.
         const [modules, submodules, locations] = await Promise.all([
-            pool.query('SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=32 ORDER BY sysdes'),
-            pool.query('SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=33 ORDER BY sysdes'),
-            pool.query('SELECT locsno, locnam FROM s_locmast ORDER BY locnam')
+            pool.query(
+                'SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=32 ORDER BY sysdes'
+            ),
+            pool.query(
+                'SELECT syssno, sysdes FROM a_sysmast WHERE sysrtp=33 ORDER BY sysdes'
+            ),
+            pool.query(
+                'SELECT locsno, locnam FROM s_locmast ORDER BY locnam'
+            )
         ]);
         res.json({
             modules: modules.rows, submodules: submodules.rows, locations: locations.rows
@@ -274,12 +303,23 @@ export const AdministrationController = {
         try {
             // Delete assigned rights and the program together, under the same lock.
             await client.query('BEGIN');
-            await client.query('LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE');
+            await client.query(
+                'LOCK TABLE prgmast IN SHARE ROW EXCLUSIVE MODE'
+            );
             // A URL ID from another application's catalog must not delete its rights.
-            const program = await client.query("SELECT prgsno FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'", [id]);
+            const program = await client.query(
+                "SELECT prgsno FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'", 
+                [id]
+            );
             if (program.rowCount) {
-                await client.query('DELETE FROM usrmast WHERE usrprgsno=$1', [id]);
-                await client.query("DELETE FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'", [id]);
+                await client.query(
+                    'DELETE FROM usrmast WHERE usrprgsno=$1', 
+                    [id]
+                );
+                await client.query(
+                    "DELETE FROM prgmast WHERE prgsno=$1 AND prgapp='payroll-web'", 
+                    [id]
+                );
             }
             await client.query('COMMIT');
             deleted = !!program.rowCount;
@@ -291,14 +331,18 @@ export const AdministrationController = {
             // Return the connection even when a query fails.
             client.release();
         }
-        res.status(deleted ? 200 : 404).json({ message: deleted ? 'Program deleted' : 'Program not found' });
+        res.status(deleted ? 200 : 404).json(
+            { message: deleted ? 'Program deleted' : 'Program not found' }
+        );
     },
 
     // ---------- Users ----------
 
     // List application users
     async users(_req: Request, res: Response): Promise<void> {
-        const result = await pool.query(`SELECT ${publicUserColumns} FROM usdmast ORDER BY usdusd`);
+        const result = await pool.query(
+            `SELECT ${publicUserColumns} FROM usdmast ORDER BY usdusd`
+        );
         res.json(result.rows);
     },
 
@@ -331,7 +375,9 @@ export const AdministrationController = {
 
         // Only an administrator may change an administrator account (stops password takeover)
         if (!res.locals.access?.admin && (await isAdministrator(id))) {
-            res.status(403).json({ message: 'Only an administrator can change an administrator account' });
+            res.status(403).json(
+                { message: 'Only an administrator can change an administrator account' }
+            );
             return;
         }
 
@@ -348,6 +394,7 @@ export const AdministrationController = {
 
         // Update the URL account ID and record the signed-in user making the change.
         const keys = Object.keys(data);
+        
         const result = await pool.query(`
             UPDATE usdmast
             SET ${keys.map((key, i) => `${key}=$${i + 1}`).join(',')}, usducdame=$${keys.length + 1}, usdameddt=CURRENT_DATE, usdametime=LOCALTIME
@@ -384,34 +431,54 @@ export const AdministrationController = {
     // Update program rights for a user
     async saveRights(req: Request, res: Response): Promise<void> {
         const id = integer(req.params.id, 'User');
+        
         const { rows, ids, clear } = validateRights(bodyOf(req));
 
         const client = await pool.connect();
         try {
             // Keep the selected user and program list stable while saving all rights.
             await client.query('BEGIN');
-            await client.query('LOCK TABLE prgmast IN SHARE MODE');
-            const target = await client.query('SELECT usdadmin FROM usdmast WHERE usdsno=$1 FOR UPDATE', [id]);
+            
+            await client.query(
+                'LOCK TABLE prgmast IN SHARE MODE'
+            );
+            
+            const target = await client.query(
+                'SELECT usdadmin FROM usdmast WHERE usdsno=$1 FOR UPDATE', 
+                [id]
+            );
+            
             if (!target.rowCount) {
                 fail('User not found');
             }
-            const programs = await client.query("SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[]) AND prgapp='payroll-web'", [ids]);
+
+            const programs = await client.query(
+                "SELECT prgsno, prglvl FROM prgmast WHERE prgsno=ANY($1::int[]) AND prgapp='payroll-web'", 
+                [ids]
+            );
+           
             if (programs.rowCount !== ids.length) {
                 fail('Program no longer exists; reload');
             }
+
             const levels = new Map<number, string>(programs.rows.map((program) => [program.prgsno, program.prglvl]));
 
             for (const row of rows) {
                 if (clear && !target.rows[0].usdadmin) {
                     // Remove only the submitted user/program pairs.
-                    await client.query('DELETE FROM usrmast WHERE usrusdsno=$1 AND usrprgsno=$2', [id, row.prgsno]);
+                    await client.query(
+                        'DELETE FROM usrmast WHERE usrusdsno=$1 AND usrprgsno=$2', 
+                        [id, row.prgsno]
+                    );
                     continue;
                 }
 
                 // Single programs use View only; Multi programs allow all four independent ticks.
                 const level = levels.get(Number(row.prgsno));
+                
                 // Explicit No flags keep restrictions effective even when the account is an admin.
                 const values = rightFlags.map((flag, i) => !clear && (level === 'M' || (level === 'S' && i === 0)) ? row[flag] : 'n');
+                
                 await client.query(`
                     INSERT INTO usrmast(usrusdsno, usrprgsno, usryn, usraddyn, usrameyn, usrdelyn, usrucdnew, usrentddt, usrenttime)
                     VALUES($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, LOCALTIME)
@@ -420,6 +487,7 @@ export const AdministrationController = {
                 `, [id, row.prgsno, ...values, req.user!.usr]);
             }
             await client.query('COMMIT');
+
         } catch (error) {
             // Undo the complete save if validation or any SQL operation fails.
             await client.query('ROLLBACK');
@@ -428,6 +496,7 @@ export const AdministrationController = {
             // Always return the database connection to the pool.
             client.release();
         }
+
         res.json({ message: `${rows.length} program rights updated` });
     },
 };

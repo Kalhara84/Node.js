@@ -3,17 +3,20 @@ export interface Department {
     depdep: string;
     depdes: string | null;
 }
+
 export interface Location {
     locsno: number;
     locloc: string;
     locnam: string | null;
 }
+
 export interface SysItem {
     syssno: number;
     sysrtp: number;
     sysrno: string;
     sysdes: string;
 }
+
 export interface Lookups {
     locations: Location[];
     departments: Department[];
@@ -22,6 +25,7 @@ export interface Lookups {
     basis: SysItem[];
     areas: SysItem[];
 }
+
 export interface Employee {
     empsno: number;
     empeno: number;
@@ -77,6 +81,7 @@ export interface Employee {
     emplateflg: string;
     empnsatlflg: string;
 }
+
 export interface Paged<T> {
     data: T[];
     total: number;
@@ -84,12 +89,14 @@ export interface Paged<T> {
     limit: number;
     totalPages: number;
 }
+
 export interface AuthUser {
     id: number;
     username: string;
     name: string;
     role: string;
 }
+
 /** what we store inside the login token */
 export interface TokenPayload {
     sub: number;
@@ -97,10 +104,12 @@ export interface TokenPayload {
     name: string;
     exp: number;
 }
+
 export interface ChartItem {
     label: string | number;
     value: number;
 }
+
 export interface DashboardData {
     asOf: string;
     totals: {
@@ -127,6 +136,7 @@ export interface DashboardData {
         empjoin: string | null;
     }[];
 }
+
 /** employee fields that can be sent when creating / updating */
 export type EmployeeInput = Partial<Omit<Employee, 'empsno' | 'department_name' | 'location_name'>>;
 export interface UserRow {

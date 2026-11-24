@@ -7,7 +7,9 @@ import { usrAction, usrRows, usrScope } from '../validators/usrenter.validator';
 export const UsrEnterController = {
     // The rights screen needs user choices, not access to full User Master profiles.
     async users(_req: Request, res: Response): Promise<void> {
-        const result = await pool.query('SELECT usdsno,usdusd,usdnam FROM usdmast ORDER BY usdusd');
+        const result = await pool.query(
+            'SELECT usdsno,usdusd,usdnam FROM usdmast ORDER BY usdusd'
+        );
         res.json(result.rows);
     },
 
@@ -21,7 +23,9 @@ export const UsrEnterController = {
         }
 
         const rows = await UsrEnterModel.programs(scope);
-        res.json({ ...scope, usrusdsnoauto: user.usdusd, usdnam: user.usdnam, usdadmin: user.usdadmin, rows });
+        res.json(
+            { ...scope, usrusdsnoauto: user.usdusd, usdnam: user.usdnam, usdadmin: user.usdadmin, rows }
+        );
     },
 
     // SAVE or DELETE: change the rights of the selected programs
@@ -32,6 +36,8 @@ export const UsrEnterController = {
         const rows = usrRows(input);
 
         await UsrEnterModel.apply(scope, rows, action, req.user!.usr);
-        res.json({ message: `${rows.length} program rights ${action === 'delete' ? 'deleted' : 'saved'}` });
+        res.json(
+            { message: `${rows.length} program rights ${action === 'delete' ? 'deleted' : 'saved'}` }
+        );
     },
 };

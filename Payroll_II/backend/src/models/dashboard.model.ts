@@ -2,7 +2,9 @@ import { pool } from '../lib/db';
 import type { DashboardData } from '../types';
 export const DashboardModel = {
     async summary(): Promise<DashboardData> {
+       
         const client = await pool.connect();
+        
         try {
             await client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
             const [totals, category, gender, department, location, payrollDept, joins, recent] = [
@@ -42,6 +44,7 @@ export const DashboardModel = {
                       FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
                       ORDER BY e.empentddt DESC NULLS LAST, e.empenttime DESC NULLS LAST, e.empsno DESC LIMIT 6`),
             ];
+
             await client.query('COMMIT');
             const t = totals.rows[0];
             return {
@@ -65,6 +68,7 @@ export const DashboardModel = {
                 joinsByYear: joins.rows,
                 recent: recent.rows,
             };
+            
         } catch (error) {
             await client.query('ROLLBACK');
             throw error;

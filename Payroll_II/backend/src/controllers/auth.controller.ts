@@ -13,13 +13,17 @@ export const AuthController = {
         const password = typeof body.password === 'string' ? body.password : '';
 
         if (!username || !password) {
-            res.status(400).json({ message: 'Username and password are required' });
+            res.status(400).json(
+                { message: 'Username and password are required' }
+            );
             return;
         }
 
         const user = await UserModel.findByUsername(username);
         if (!user || user.usdactive !== 'Y' || !verifyPassword(password, user.usdpwd)) {
-            res.status(401).json({ message: 'Invalid username or password' });
+            res.status(401).json(
+                { message: 'Invalid username or password' }
+            );
             return;
         }
 
@@ -64,13 +68,21 @@ export const AuthController = {
             newPassword.length > 256 ||
             newPassword !== confirmPassword
         ) {
-            res.status(400).json({ message: 'Enter your current password and matching new passwords (maximum 256 characters)' });
+            res.status(400).json(
+                { message: 'Enter your current password and matching new passwords (maximum 256 characters)' }
+            );
             return;
         }
 
-        const row = (await pool.query('SELECT usdpwd FROM usdmast WHERE usdsno=$1', [req.user!.sub])).rows[0];
+        const row = (await pool.query(
+            'SELECT usdpwd FROM usdmast WHERE usdsno=$1', 
+            [req.user!.sub])
+        ).rows[0];
+
         if (!row || !verifyPassword(currentPassword, row.usdpwd)) {
-            res.status(400).json({ message: 'Current password is incorrect' });
+            res.status(400).json(
+                { message: 'Current password is incorrect' }
+            );
             return;
         }
 
@@ -81,10 +93,14 @@ export const AuthController = {
         );
 
         if (!r.rowCount) {
-            res.status(409).json({ message: 'Password was changed elsewhere. Sign in again.' });
+            res.status(409).json(
+                { message: 'Password was changed elsewhere. Sign in again.' }
+            );
             return;
         }
 
-        res.json({ message: 'Password changed successfully' });
+        res.json(
+            { message: 'Password changed successfully' }
+        );
     },
 };

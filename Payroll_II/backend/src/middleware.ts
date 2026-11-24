@@ -4,7 +4,13 @@ import type { TokenPayload } from './types';
 import { randomUUID } from 'node:crypto';
 
 const methodColors: Record<string, number> = {
-    GET: 32, POST: 33, PUT: 34, PATCH: 35, DELETE: 31, OPTIONS: 36, HEAD: 90,
+    GET: 32, 
+    POST: 33, 
+    PUT: 34, 
+    PATCH: 35, 
+    DELETE: 31, 
+    OPTIONS: 36, 
+    HEAD: 90,
 };
 
 // Keep each completed request on one line without logging private payloads.
@@ -13,15 +19,18 @@ export const requestLogger: RequestHandler = (req, res, next) => {
     const path = req.path.replace(/[\x00-\x1f\x7f-\x9f]/g, '');
     res.setHeader('X-Request-ID', randomUUID());
     let completed = false;
+    
     const print = (aborted = false): void => {
         const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
         const status = aborted ? 'ABORTED' : res.statusCode;
         const error = res.locals.logError ? ` | ${res.locals.logError}` : '';
         const output = aborted || res.statusCode >= 400 ? process.stderr : process.stdout;
+        
         const method = output.isTTY && process.env.NO_COLOR === undefined
             ? `\x1b[${methodColors[req.method] ?? 37}m${req.method}\x1b[0m`
             : req.method;
         const line = `  ${time}  ${method}${' '.repeat(Math.max(0, 7 - req.method.length))} ${path}  ${status}  ${Math.round(performance.now() - started)} ms  ${res.getHeader('content-length') ?? 0} B${error}`;
+        
         if (aborted || res.statusCode >= 500) {
             console.error(line);
         }
@@ -61,7 +70,10 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     }
 
     if (!user) {
-        res.status(401).json({ message: 'Unauthorized' });
+        res.status(401).json(
+            { message: 'Unauthorized' }
+        );
+
         return;
     }
 
@@ -89,7 +101,11 @@ export function notFound(_req: Request, res: Response): void {
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction): void {
     if ((err as { type?: string })?.type === 'entity.parse.failed') {
         res.locals.logError = 'Invalid JSON body';
-        res.status(400).json({ message: 'Invalid JSON body' });
+        
+        res.status(400).json(
+            { message: 'Invalid JSON body' }
+        );
+
         return;
     }
 
@@ -97,5 +113,8 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     if (res.headersSent) {
         return _next(err);
     }
-    res.status(500).json({ message: 'Server error' });
+
+    res.status(500).json(
+        { message: 'Server error' }
+    );
 }

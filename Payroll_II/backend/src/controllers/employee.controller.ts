@@ -38,7 +38,9 @@ async function duplicateError(data: EmployeeInput, ignoreId?: number): Promise<s
 export const EmployeeController = {
     // Generate next available employee number
     async nextNumber(_req: Request, res: Response): Promise<void> {
-        res.json({ empeno: await EmployeeModel.nextNumber() });
+        res.json(
+            { empeno: await EmployeeModel.nextNumber() }
+        );
     },
 
     // List employees with search filter and pagination
@@ -126,7 +128,9 @@ export const EmployeeController = {
         }
 
         await EmployeeModel.remove(n);
-        res.json({ message: `Employee ${emp.empeno} deleted` });
+        res.json(
+            { message: `Employee ${emp.empeno} deleted` }
+        );
     },
 };
 

@@ -16,6 +16,7 @@ const SELECT_JOINED = `
         );
         return r.rows[0].empeno;
     },
+
     /** list with search + paging */
     async list(search: string, page: number, limit: number): Promise<Paged<Employee>> {
         const params: unknown[] = [];
@@ -26,15 +27,29 @@ const SELECT_JOINED = `
         }
         const count = await pool.query<{
             count: string;
-        }>(`SELECT COUNT(*) FROM p_empmast e ${where}`, params);
+        }>(
+            `SELECT COUNT(*) FROM p_empmast e ${where}`, 
+            params
+        );
+
         const total = Number(count.rows[0].count);
+        
         const rows = await pool.query<Employee>(`${SELECT_JOINED} ${where} ORDER BY e.empeno ASC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`, [...params, limit, (page - 1) * limit]);
-        return { data: rows.rows, total, page, limit, totalPages: Math.max(1, Math.ceil(total / limit)) };
+        
+        return { 
+            data: rows.rows, 
+            total,
+            page, 
+            limit, 
+            totalPages: Math.max(1, Math.ceil(total / limit)) 
+        };
+
     },
     async findById(id: number): Promise<Employee | null> {
         const r = await pool.query<Employee>(`${SELECT_JOINED} WHERE e.empsno = $1`, [id]);
         return r.rows[0] ?? null;
     },
+
     async findByEmpNo(empeno: number): Promise<{
         empsno: number;
     } | null> {
@@ -43,6 +58,7 @@ const SELECT_JOINED = `
         }>('SELECT empsno FROM p_empmast WHERE empeno = $1', [empeno]);
         return r.rows[0] ?? null;
     },
+
     async findByMapCode(code: number): Promise<{
         empsno: number;
     } | null> {
@@ -51,6 +67,7 @@ const SELECT_JOINED = `
         }>('SELECT empsno FROM p_empmast WHERE empmapcode = $1', [code]);
         return r.rows[0] ?? null;
     },
+
     /** column names come from the validator whitelist, values are always parameters */
     async create(data: EmployeeInput): Promise<number> {
         const client = await pool.connect();
@@ -61,6 +78,7 @@ const SELECT_JOINED = `
             const next = await client.query<{ empeno: number }>(
                 'SELECT GREATEST(COALESCE(MAX(empeno), 0), 0) + 1 AS empeno FROM p_empmast',
             );
+
             const generated = { ...data, empeno: next.rows[0].empeno };
             const cols = Object.keys(generated);
             const marks = cols.map((_, i) => `$${i + 1}`);
@@ -68,8 +86,10 @@ const SELECT_JOINED = `
                 `INSERT INTO p_empmast (${cols.join(', ')}) VALUES (${marks.join(', ')}) RETURNING empsno`,
                 Object.values(generated),
             );
+
             await client.query('COMMIT');
             return r.rows[0].empsno;
+
         } catch (error) {
             await client.query('ROLLBACK');
             throw error;
@@ -81,19 +101,26 @@ const SELECT_JOINED = `
         data = { ...data };
         delete data.empeno;
         const cols = Object.keys(data);
+
         if (cols.length === 0) {
             return;
         }
+
         const sets = cols.map((c, i) => {
             return `${c} = $${i + 1}`;
         });
-        await pool.query(`UPDATE p_empmast SET ${sets.join(', ')} WHERE empsno = $${cols.length + 1}`, [
-            ...Object.values(data),
+
+        await pool.query(
+            `UPDATE p_empmast SET ${sets.join(', ')} WHERE empsno = $${cols.length + 1}`, 
+            [ ...Object.values(data),
             id,
         ]);
     },
     async remove(id: number): Promise<void> {
-        await pool.query('DELETE FROM p_empmast WHERE empsno = $1', [id]);
+        await pool.query(
+            'DELETE FROM p_empmast WHERE empsno = $1', 
+            [id]
+        );
     },
 
 
