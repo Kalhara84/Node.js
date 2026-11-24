@@ -1,0 +1,32 @@
+ATTENDANCE & PAYROLL SYSTEM
+===========================
+
+1. Install PostgreSQL 13+ and Node.js 20+.
+2. Create/import the database:
+
+   psql -U postgres -c "CREATE DATABASE payroll_db;"
+   psql -U postgres -d payroll_db -f db/payroll_db.sql
+
+3. Backend terminal:
+
+   cd backend
+   npm install
+   npm run dev
+
+4. Frontend terminal:
+
+   cd frontend
+   npm install
+   npm run dev
+
+5. Open:
+
+   http://localhost:3000
+
+Backend:
+   http://localhost:3001
+
+IMPORTANT:
+The frontend in this package is React + TypeScript. Do not mix it with the old
+frontend/src/app.ts or frontend/src/pages/*.ts files from the original SPA.
+There is no frontend models folder.
