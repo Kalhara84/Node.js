@@ -1,6 +1,7 @@
 import { logo } from './assets/index.ts';
 import { currentUser, logout, refreshUser, homeFor } from './services/auth.ts';
 import { esc, qs } from './utils/ui.ts';
+import { startAutoSelect2, destroySelect2 } from './utils/select2.ts';
 import type { AuthUser, PageContext, PageModule, Rights, Screen } from './types.ts';
 import * as login from './pages/login.ts';
 import * as dashboard from './pages/dashboard.ts';
@@ -96,6 +97,7 @@ let shellProfile = "";
 
 // SPA navigation function
 export function navigate(path: string, replace = false): void {
+    destroySelect2(document);
     if (replace) {
         history.replaceState({}, '', path);
     } else {
@@ -224,8 +226,10 @@ async function show(): Promise<void> {
     // Render public pages without app shell
     if (route.public || !user) {
         shellShown = false;
+        destroySelect2(root);
         root.innerHTML = '';
         await route.page.render(root, ctx);
+        startAutoSelect2(root);
         return;
     }
 
@@ -259,9 +263,11 @@ async function show(): Promise<void> {
 
     // Render target page into page container
     const page = qs(document, '#page');
+    destroySelect2(page);
     page.innerHTML = '';
     window.scrollTo(0, 0);
     await route.page.render(page, ctx);
+    startAutoSelect2(page);
 }
 
 // Handle client-side link navigation

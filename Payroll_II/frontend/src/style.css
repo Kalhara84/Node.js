@@ -80,6 +80,107 @@ h1, h2, h3, h4, h5 { color: var(--ink); font-weight: 700; letter-spacing: -0.01e
 .input-group > .form-control:not(:first-child), .input-group > .btn:not(:first-child) { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 .input-group > :not(:last-child) { border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
 
+/* ---------- select2 custom theme styling ---------- */
+.select2-container--bootstrap-5 {
+  font-family: inherit;
+  display: block;
+  width: 100% !important;
+}
+.select2-container--bootstrap-5 .select2-selection {
+  border-radius: 12px !important;
+  border: 1px solid #e2def5 !important;
+  min-height: 42px !important;
+  padding: 0.58rem 0.8rem !important;
+  background-color: #fff !important;
+  color: var(--ink) !important;
+  font-size: 0.95rem;
+  font-weight: 400;
+  display: flex !important;
+  align-items: center;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+.select2-container--bootstrap-5.select2-container--focus .select2-selection,
+.select2-container--bootstrap-5.select2-container--open .select2-selection {
+  border-color: #a995ff !important;
+  box-shadow: 0 0 0 4px rgba(109, 74, 255, 0.13) !important;
+}
+.select2-container--bootstrap-5 .select2-selection--single {
+  padding-right: 2.2rem !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%235a5580' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.85rem center !important;
+  background-size: 14px 10px !important;
+}
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+  padding: 0 !important;
+  color: var(--ink) !important;
+  line-height: normal !important;
+  font-size: 0.95rem !important;
+}
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered .select2-selection__placeholder {
+  color: #5a5580 !important;
+}
+.select2-container--bootstrap-5.select2-container--disabled .select2-selection,
+fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
+  background-color: #f8f7fd !important;
+  border-color: #e8e4f5 !important;
+  color: #a49fc8 !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+  pointer-events: none !important;
+}
+.select2-container--bootstrap-5 .select2-dropdown {
+  border: 1px solid #e2def5 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 30px -8px rgba(43, 29, 122, 0.16), 0 4px 12px -2px rgba(43, 29, 122, 0.06) !important;
+  background-color: #fff !important;
+  overflow: hidden;
+  margin-top: 4px;
+  z-index: 1060 !important;
+}
+.select2-container--bootstrap-5 .select2-dropdown .select2-search {
+  padding: 8px 10px !important;
+  background-color: #fff;
+}
+.select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field {
+  border-radius: 8px !important;
+  border: 1px solid #e2def5 !important;
+  padding: 0.42rem 0.75rem !important;
+  font-size: 0.88rem !important;
+  font-family: inherit !important;
+  color: var(--ink) !important;
+}
+.select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field:focus {
+  border-color: #a995ff !important;
+  box-shadow: 0 0 0 3px rgba(109, 74, 255, 0.13) !important;
+  outline: none !important;
+}
+.select2-container--bootstrap-5 .select2-results__options {
+  padding: 4px 6px !important;
+  max-height: 240px !important;
+}
+.select2-container--bootstrap-5 .select2-results__option {
+  padding: 0.48rem 0.75rem !important;
+  font-size: 0.88rem !important;
+  border-radius: 8px !important;
+  margin-bottom: 2px !important;
+  color: var(--text) !important;
+  cursor: pointer;
+}
+.select2-container--bootstrap-5 .select2-results__option--highlighted {
+  background-color: #f0edff !important;
+  color: var(--brand-700) !important;
+  font-weight: 500;
+}
+.select2-container--bootstrap-5 .select2-results__option--selected {
+  background-color: var(--brand-600) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.select2-container--bootstrap-5 .select2-results__option--disabled {
+  color: #aaa6c6 !important;
+}
+
 /* ---------- layout ---------- */
 .app-shell { display: flex; min-height: 100vh; }
 
