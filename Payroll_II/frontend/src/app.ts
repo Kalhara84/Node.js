@@ -11,6 +11,7 @@ import * as employeeView from './pages/employee-view.ts';
 import * as employeeForm from './pages/employee-form.ts';
 import * as administration from './pages/administration.ts';
 import * as usrenter from './pages/usrenter.ts';
+import * as inqurgr from './pages/inqurgr.ts';
 import * as account from './pages/account.ts';
 
 const root = qs(document, '#root');
@@ -65,6 +66,7 @@ const ROUTES: Route[] = [
     { path: '/administration/users', page: administration, screen: 'users' },
     { path: '/administration/rights', page: usrenter, screen: 'rights' },
     { path: '/usrenter', page: usrenter, screen: 'rights' },
+    { path: '/inqurgr', page: inqurgr, screen: 'rights' },
 ];
 
 // Check if current URL matches a route and extract parameters like :id
@@ -253,7 +255,7 @@ async function show(): Promise<void> {
     }
 
     // Update topbar breadcrumbs and active menu state
-    const menuPath = path === '/administration/rights' ? '/usrenter' : path;
+    const menuPath = path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
     const current = MENU.find((m) => menuPath.startsWith(m.href));
 
     qs(document, '#crumb-title').textContent = current ? current.title : 'Payroll System';

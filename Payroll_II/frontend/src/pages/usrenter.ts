@@ -92,7 +92,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             <div class="page-sub">Choose a user, check programs and assign access.</div>
           </div>
         </div>
-        <span class="admin-banner-note">User program access</span>
+        <a href="/inqurgr" data-link id="inquire-user-rights" class="btn btn-primary">
+          <i class="bi bi-search me-2" aria-hidden="true"></i>inquire User Rights-Given User
+        </a>
       </div>
 
       <div id="notice" role="status" aria-live="polite"></div>
