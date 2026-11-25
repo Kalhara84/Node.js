@@ -12,3 +12,81 @@ npm run dev
 
 Backend Project Creation
 #################################################################
+Run these commands from the project root (STRBF_Test).
+
+1. Create the backend and install packages
+
+mkdir backend
+cd backend
+npm init -y
+npm install express cors pg
+npm install --save-dev typescript tsx @types/node @types/express @types/cors @types/pg
+mkdir src
+
+2. Create backend/tsconfig.json with the following content
+
+Create this file manually; npx tsc --init is not needed when using this configuration.
+
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts"]
+}
+
+3. Update backend/package.json
+
+Add the top-level "type" field and replace the "scripts" object with the following.
+This is a JSON fragment: keep the existing fields, dependencies and devDependencies,
+and separate top-level fields with commas.
+
+"type": "module",
+"scripts": {
+  "dev": "tsx watch src/index.ts",
+  "typecheck": "tsc --noEmit",
+  "build": "tsc",
+  "start": "node dist/index.js"
+}
+
+4. Create backend/src/index.ts
+
+import express from "express";
+import cors from "cors";
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.get("/", (_req, res) => {
+  res.send("Payroll API is running");
+});
+
+const PORT = 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+
+5. Run the development server from the backend directory
+
+npm run dev
+
+Open http://localhost:3001 in your browser.
+Expected response: Payroll API is running
+Use Ctrl+C to stop the server.
+
+6. Check TypeScript types, build and run the compiled backend
+
+npm run typecheck
+npm run build
+npm start
+
+
