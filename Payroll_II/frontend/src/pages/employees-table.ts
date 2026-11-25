@@ -268,10 +268,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         }
     }
 
-    // Generate landscape A3 PDF with all employee records
+    // Generate landscape A4 PDF with all employee records
     function exportPdf(employees: Employee[]): void {
         const { headers, rows } = buildExportData(employees);
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a3' });
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
         doc.setFontSize(14);
         doc.text('All Employee Details', 28, 30);
         doc.setFontSize(9);
@@ -326,7 +326,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
   <meta charset="utf-8" />
   <title>All Employee Details</title>
   <style>
-    @page { size: landscape; margin: 10mm; }
+    @page { size: A4 landscape; margin: 10mm; }
     body { font-family: Arial, sans-serif; color: #111; margin: 0; }
     h2 { margin: 0 0 4px; font-size: 16px; }
     .sub { margin: 0 0 10px; font-size: 11px; color: #555; }
