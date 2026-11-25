@@ -459,3 +459,33 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 .table-clean { font-size: 0.86rem; }
 .table-clean td, .table-clean thead th { padding-left: 10px; padding-right: 10px; }
+
+/* Read-only employee details table */
+.employee-details-card { overflow: hidden; }
+.employee-details-wrap { max-height: 65vh; min-height: 220px; border-block: 1px solid var(--line); }
+.employee-details-table { width: max-content; min-width: 100%; font-size: .9rem; }
+.employee-details-table th, .employee-details-table td { min-width: 145px; }
+.employee-details-table thead th {
+  position: sticky; top: 0; z-index: 3; background: #eeeaff;
+  color: #49358b; font-size: .8rem; text-transform: none; letter-spacing: normal;
+  padding: 16px 14px; border-bottom: 2px solid #d9d0fb;
+}
+.employee-details-table tbody td { padding: 14px; background: #fff; color: var(--ink); }
+.employee-details-table tbody tr:nth-child(even) td { background: #f8f7fc; }
+.employee-details-table tbody tr:hover td { background: #efebff; }
+.employee-details-table th:first-child, .employee-details-table td:first-child:not([colspan]) {
+  position: sticky; left: 0; z-index: 2; min-width: 100px; width: 100px; max-width: 100px;
+  font-weight: 600;
+}
+.employee-details-table th:nth-child(2), .employee-details-table td:nth-child(2) {
+  position: sticky; left: 100px; z-index: 2; min-width: 220px; width: 220px; max-width: 220px;
+  white-space: normal; overflow-wrap: anywhere; font-weight: 600;
+  border-right: 2px solid #d9d0fb;
+}
+.employee-details-table thead th:first-child, .employee-details-table thead th:nth-child(2) { z-index: 4; }
+.employee-details-wrap[aria-busy="true"] tbody { opacity: .5; }
+@media (max-width: 575px) {
+  .employee-details-table th:nth-child(2), .employee-details-table td:nth-child(2) {
+    min-width: 150px; width: 150px; max-width: 150px;
+  }
+}

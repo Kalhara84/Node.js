@@ -1,6 +1,6 @@
 import { api } from '../services/api.ts';
 import { alertBox, CATEGORY, emptyState, errMsg, esc, GENDER, money, qs, yn } from '../utils/ui.ts';
-import type { Employee, PageContext } from '../types.ts';
+import type { Employee, Paged, PageContext } from '../types.ts';
 
 // Employee table column headings
 const labels: Record<keyof Employee, string> = {
@@ -98,7 +98,10 @@ function display(employee: Employee, key: keyof Employee): string {
 
 // Render all employee details without row actions
 export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
-    let employees: Employee[] = [];
+    const limit = 25;
+    let page = 1;
+    let result: Paged<Employee> | null = null;
+    let busy = false;
 
     el.innerHTML = `
       <div class="mb-3">
@@ -106,65 +109,102 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         <div class="page-sub" id="count" role="status">Loading employees...</div>
       </div>
       <div id="err" role="alert"></div>
-      <div class="card-soft fade-in">
-        <div class="card-body-pad text-muted small">Scroll horizontally to view all employee details.</div>
-        <div class="table-responsive" tabindex="0" role="region" aria-label="All employee details" style="max-height:70vh">
-          <table class="table table-clean text-nowrap">
+      <div class="card-soft fade-in employee-details-card">
+        <div class="card-body-pad d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <div class="fw-semibold">Employee records</div>
+            <div class="text-muted small">Scroll sideways for more details. Employee numbers and names stay visible.</div>
+          </div>
+          <span class="badge badge-soft-blue">25 employees per page</span>
+        </div>
+        <div id="table-status" class="px-3 py-2 text-muted" role="status" hidden></div>
+        <div id="table-wrap" class="table-responsive employee-details-wrap" tabindex="0" role="region" aria-label="All employee details">
+          <table class="table table-clean employee-details-table">
             <caption class="visually-hidden">All employee details, read only</caption>
             <thead>
               <tr>
-                ${columns.map((key) => `<th scope="col">${esc(labels[key])}</th>`).join('')}
+                ${columns.map((key) => `<th scope="col"${amounts.has(key) ? ' class="text-end"' : ''}>${esc(labels[key])}</th>`).join('')}
               </tr>
             </thead>
             <tbody id="rows"></tbody>
           </table>
         </div>
+        <div id="pager" class="card-body-pad d-flex flex-wrap justify-content-between align-items-center gap-3"></div>
       </div>`;
 
     const $ = <T extends HTMLElement = HTMLElement>(s: string): T => qs<T>(el, s);
 
-    // Fetch all employee pages from API (maximum 100 records per request)
+    // Fetch only the requested page so the first records appear immediately
     async function load(): Promise<void> {
-        $('#rows').innerHTML = `<tr><td colspan="${columns.length}" class="text-center text-muted py-5">Loading...</td></tr>`;
+        if (busy) {
+            return;
+        }
+        busy = true;
+        $('#table-wrap').setAttribute('aria-busy', 'true');
+        $('#table-status').hidden = false;
+        $('#table-status').textContent = `Loading page ${page}...`;
+        el.querySelectorAll<HTMLButtonElement>('[data-page], #retry').forEach((button) => {
+            button.disabled = true;
+        });
         $('#err').innerHTML = '';
-        employees = [];
 
         try {
-            let page = 1;
-            let totalPages = 1;
-
-            do {
-                const result = await api.list('', page, 100);
-                if (!ctx.alive()) {
-                    return;
-                }
-
-                employees.push(...result.data);
-                totalPages = result.totalPages;
-                $('#count').textContent = `Loading employees: ${employees.length} of ${result.total}`;
-                page += 1;
-            } while (page <= totalPages);
-
+            const r = await api.list('', page, limit);
+            if (!ctx.alive()) {
+                return;
+            }
+            result = r;
             draw();
+            $('#table-wrap').scrollTop = 0;
         } catch (e) {
             if (!ctx.alive()) {
                 return;
             }
-            $('#err').innerHTML = alertBox(errMsg(e));
-            $('#count').textContent = 'Unable to load employees. Reload the page to try again.';
-            $('#rows').innerHTML = '';
+            $('#err').innerHTML = `${alertBox(errMsg(e))}<button id="retry" class="btn btn-outline-primary btn-sm mb-3">Retry page ${page}</button>`;
+            if (!result) {
+                $('#count').textContent = 'Unable to load employees.';
+            }
+        } finally {
+            busy = false;
+            if (ctx.alive()) {
+                $('#table-wrap').setAttribute('aria-busy', 'false');
+                $('#table-status').hidden = true;
+                drawPager();
+            }
         }
     }
 
     // Render employee rows and total count
     function draw(): void {
-        $('#count').textContent = `${employees.length} employees in total`;
+        if (!result) {
+            return;
+        }
+        $('#count').textContent = `${result.total} employees in total`;
 
-        if (employees.length) {
-            $('#rows').innerHTML = employees.map(row).join('');
+        if (result.data.length) {
+            $('#rows').innerHTML = result.data.map(row).join('');
         } else {
             $('#rows').innerHTML = `<tr><td colspan="${columns.length}">${emptyState('No employees found')}</td></tr>`;
         }
+    }
+
+    // Render navigation for the currently displayed page
+    function drawPager(): void {
+        if (!result) {
+            return;
+        }
+        const first = result.data.length ? (result.page - 1) * limit + 1 : 0;
+        const last = result.data.length ? first + result.data.length - 1 : 0;
+        const prevDisabled = result.page <= 1 ? 'disabled' : '';
+        const nextDisabled = result.page >= result.totalPages ? 'disabled' : '';
+
+        $('#pager').innerHTML = `
+          <div class="text-muted small">Showing ${first}–${last} of ${result.total} employees</div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm" data-page="${result.page - 1}" ${prevDisabled}>Previous</button>
+            <span class="text-muted small">Page ${result.page} of ${result.totalPages}</span>
+            <button class="btn btn-outline-primary btn-sm" data-page="${result.page + 1}" ${nextDisabled}>Next</button>
+          </div>`;
     }
 
     // Generate single employee table row
@@ -179,6 +219,19 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             ${cells}
           </tr>`;
     };
+
+    // Load the next batch only when requested
+    el.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const button = target.closest<HTMLButtonElement>('[data-page], #retry');
+        if (!button || button.disabled || busy) {
+            return;
+        }
+        if (button.dataset.page) {
+            page = Number(button.dataset.page);
+        }
+        void load();
+    });
 
     await load();
 }
