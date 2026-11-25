@@ -16,7 +16,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
           <h4 class="page-title">Employees</h4>
           <div class="page-sub" id="count">&nbsp;</div>
         </div>
-        ${canEmployee('add') ? `<a href="/employees/new" data-link class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Employee</a>` : ''}
+        <div class="d-flex align-items-center gap-2">
+          ${canEmployee('add') ? `<a href="/employees/new" data-link class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Employee</a>` : ''}
+          <a href="/employees/view" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary" title="View all employees in a new tab"><i class="bi bi-eye me-1"></i> View</a>
+        </div>
       </div>
       <div id="err"></div>
       <div class="card-soft fade-in">

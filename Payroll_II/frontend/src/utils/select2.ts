@@ -23,7 +23,7 @@ $(document).on('select2:open', () => {
     setTimeout(focusSearch, 0);
 });
 
-const observedSelects = new WeakSet<HTMLSelectElement>();
+const observedSelects = new WeakMap<HTMLSelectElement, MutationObserver>();
 
 /**
  * Enhance a single <select> element with Select2 and synchronization watchers.
@@ -48,38 +48,14 @@ export function enhanceSelect(select: HTMLSelectElement): void {
         });
 
         // Bubble change and input events to native DOM
-        $select.on('select2:select select2:unselect select2:clear', () => {
+        $select.on('select2:select.payroll select2:unselect.payroll select2:clear.payroll', () => {
             select.dispatchEvent(new Event('change', { bubbles: true }));
             select.dispatchEvent(new Event('input', { bubbles: true }));
         });
     }
 
-    // Observe changes to disabled state, value and child options if not already observed
+    // Select2 observes disabled attributes itself; only synchronize values and options here.
     if (!observedSelects.has(select)) {
-        observedSelects.add(select);
-
-        // Wrap 'disabled' setter to immediately update Select2 UI
-        const disabledDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'disabled')
-            || Object.getOwnPropertyDescriptor(Element.prototype, 'disabled');
-
-        if (disabledDescriptor && disabledDescriptor.set) {
-            Object.defineProperty(select, 'disabled', {
-                get() {
-                    return disabledDescriptor.get!.call(this);
-                },
-                set(val: boolean) {
-                    disabledDescriptor.set!.call(this, val);
-                    if (val) {
-                        this.setAttribute('disabled', '');
-                    } else {
-                        this.removeAttribute('disabled');
-                    }
-                    $select.prop('disabled', val);
-                    $select.trigger('change.select2');
-                },
-                configurable: true
-            });
-        }
 
         // Wrap 'value' setter to keep Select2 display in sync with programmatic value changes
         const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
@@ -90,29 +66,21 @@ export function enhanceSelect(select: HTMLSelectElement): void {
                 },
                 set(val: string) {
                     valueDescriptor.set!.call(this, val);
-                    $select.val(val).trigger('change.select2');
+                    $select.trigger('change.select2');
                 },
                 configurable: true
             });
         }
 
-        // MutationObserver for DOM changes (attributes and children)
-        const observer = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'disabled') {
-                    $select.prop('disabled', select.disabled);
-                    $select.trigger('change.select2');
-                } else if (mutation.type === 'childList') {
-                    $select.trigger('change.select2');
-                }
-            }
+        // Refresh the selected label when options change without rewriting the select.
+        const observer = new MutationObserver(() => {
+            $select.trigger('change.select2');
         });
 
         observer.observe(select, {
-            attributes: true,
-            attributeFilter: ['disabled'],
             childList: true
         });
+        observedSelects.set(select, observer);
     }
 }
 
@@ -130,6 +98,10 @@ export function initSelect2(root: HTMLElement | Document = document): void {
 export function destroySelect2(root: HTMLElement | Document = document): void {
     const selects = root.querySelectorAll<HTMLSelectElement>('select.select2-hidden-accessible');
     selects.forEach((select) => {
+        observedSelects.get(select)?.disconnect();
+        observedSelects.delete(select);
+        Reflect.deleteProperty(select, 'value');
+        $(select).off('.payroll');
         try {
             $(select).select2('destroy');
         } catch {

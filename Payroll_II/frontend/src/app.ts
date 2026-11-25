@@ -6,6 +6,7 @@ import type { AuthUser, PageContext, PageModule, Rights, Screen } from './types.
 import * as login from './pages/login.ts';
 import * as dashboard from './pages/dashboard.ts';
 import * as employees from './pages/employees.ts';
+import * as employeesTable from './pages/employees-table.ts';
 import * as employeeView from './pages/employee-view.ts';
 import * as employeeForm from './pages/employee-form.ts';
 import * as administration from './pages/administration.ts';
@@ -55,6 +56,7 @@ const ROUTES: Route[] = [
     // Employee pages
     { path: '/employees', page: employees, screen: 'employees' },
     { path: '/employees/new', page: employeeForm, screen: 'employees', action: 'add' },
+    { path: '/employees/view', page: employeesTable, screen: 'employees' },
     { path: '/employees/:id', page: employeeView, screen: 'employees' },
     { path: '/employees/:id/edit', page: employeeForm, screen: 'employees', action: 'amend' },
 
