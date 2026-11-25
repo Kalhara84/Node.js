@@ -462,7 +462,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 
 /* Read-only employee details table */
 .employee-details-card { overflow: hidden; }
-.employee-details-wrap { max-height: 65vh; min-height: 220px; border-block: 1px solid var(--line); }
+.employee-details-wrap { max-height: 75vh; min-height: 220px; border-bottom: 1px solid var(--line); }
 .employee-details-table { width: max-content; min-width: 100%; font-size: .9rem; }
 .employee-details-table th, .employee-details-table td { min-width: 145px; }
 .employee-details-table thead th {

@@ -32,6 +32,9 @@ router.get('/lookups', wrap(LookupController.all));
 // Get paginated employee list
 router.get('/employees', requireEmployee('view'), wrap(EmployeeController.list));
 
+// Get all employees (for export, copy, print)
+router.get('/employees/all', requireEmployee('view'), wrap(EmployeeController.all));
+
 // Create new employee
 router.post('/employees', requireEmployee('add'), wrap(EmployeeController.create));
 

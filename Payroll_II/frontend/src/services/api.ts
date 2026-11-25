@@ -69,6 +69,11 @@ export const api = {
         return request<Paged<Employee>>(`/employees?search=${encodeURIComponent(search)}&page=${page}&limit=${limit}`);
     },
 
+    // Fetch all employees for export, copy, and print
+    allEmployees: () => {
+        return request<Employee[]>('/employees/all');
+    },
+
     // Get single employee by ID
     get: (id: number) => {
         return request<Employee>(`/employees/${id}`);

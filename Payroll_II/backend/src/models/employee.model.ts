@@ -45,6 +45,13 @@ const SELECT_JOINED = `
         };
 
     },
+
+    /** Fetch all employees for export and print */
+    async all(): Promise<Employee[]> {
+        const rows = await pool.query<Employee>(`${SELECT_JOINED} ORDER BY e.empeno ASC`);
+        return rows.rows;
+    },
+
     async findById(id: number): Promise<Employee | null> {
         const r = await pool.query<Employee>(`${SELECT_JOINED} WHERE e.empsno = $1`, [id]);
         return r.rows[0] ?? null;

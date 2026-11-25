@@ -51,6 +51,11 @@ export const EmployeeController = {
         res.json(await EmployeeModel.list(search, page, limit));
     },
 
+    // Fetch all employees without pagination for export/print
+    async all(_req: Request, res: Response): Promise<void> {
+        res.json(await EmployeeModel.all());
+    },
+
     // Fetch employee by primary key ID
     async get(req: Request, res: Response): Promise<void> {
         const n = parseId(req.params.id);
