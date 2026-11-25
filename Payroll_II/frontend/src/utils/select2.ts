@@ -1,18 +1,26 @@
 import $ from 'jquery';
-import 'select2';
+import select2Factory from 'select2';
 
 // Attach jQuery to global window object
 (window as unknown as { $: typeof $; jQuery: typeof $ }).$ = $;
 (window as unknown as { $: typeof $; jQuery: typeof $ }).jQuery = $;
 
+// Initialize Select2 on our jQuery instance (handles Vite CJS/UMD interop)
+const initPlugin = (select2Factory as unknown as { default?: (root?: unknown, jq?: unknown) => void })?.default ?? select2Factory;
+if (typeof $.fn.select2 !== 'function' && typeof initPlugin === 'function') {
+    (initPlugin as (root?: unknown, jq?: unknown) => void)(window, $);
+}
+
 // Focus search input immediately upon dropdown opening
 $(document).on('select2:open', () => {
-    window.requestAnimationFrame(() => {
+    const focusSearch = () => {
         const input = document.querySelector<HTMLInputElement>('.select2-container--open .select2-search__field');
         if (input) {
             input.focus();
         }
-    });
+    };
+    focusSearch();
+    setTimeout(focusSearch, 0);
 });
 
 const observedSelects = new WeakSet<HTMLSelectElement>();
