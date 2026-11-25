@@ -1,0 +1,14 @@
+React Project Creation
+#################################################################
+
+npm create vite@latest frontend -- --template react-ts
+npm install
+npm install bootstrap bootstrap-icons jquery jspdf jspdf-autotable select2 select2-bootstrap-5-theme xlsx
+
+npm run dev
+
+
+
+
+Backend Project Creation
+#################################################################
