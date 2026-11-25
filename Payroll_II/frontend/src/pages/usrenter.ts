@@ -83,12 +83,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     }
 
     el.innerHTML = `
-      <nav class="admin-tabs mb-3" aria-label="Administration">
-        ${can('programs') ? '<a href="/administration/programs" data-link><i class="bi bi-grid"></i>Programs</a>' : ''}
-        ${can('users') ? '<a href="/administration/users" data-link><i class="bi bi-people"></i>Users</a>' : ''}
-        <a href="/usrenter" data-link class="active" aria-current="page"><i class="bi bi-shield-lock"></i>User rights</a>
-      </nav>
-
       <div class="admin-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div class="d-flex align-items-center gap-3">
           <span class="admin-banner-icon"><i class="bi bi-shield-lock"></i></span>

@@ -96,18 +96,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     }
 
     el.innerHTML = `
-      <nav class="admin-tabs mb-3" aria-label="Administration">
-        ${[
-            ['programs', 'bi-grid', 'Programs'],
-            ['users', 'bi-people', 'Users'],
-            ['rights', 'bi-shield-lock', 'User rights']
-        ].filter(([key]) => can(key as 'programs' | 'users' | 'rights')).map(([key, icon, label]) => `
-            <a href="/administration/${key}" data-link class="${mode === key ? 'active' : ''}" ${mode === key ? 'aria-current="page"' : ''}>
-              <i class="bi ${icon}" aria-hidden="true"></i>${label}
-            </a>
-        `).join('')}
-      </nav>
-
       <div class="admin-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div class="d-flex align-items-center gap-3">
           <span class="admin-banner-icon"><i class="bi ${rights ? 'bi-shield-lock' : users ? 'bi-people' : 'bi-grid'}" aria-hidden="true"></i></span>
