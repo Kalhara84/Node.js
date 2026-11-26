@@ -1,5 +1,6 @@
 import { request } from '../services/api.ts';
 import { alertBox, errMsg, esc, loading, qs } from '../utils/ui.ts';
+import { initSelect2 } from '../utils/select2.ts';
 import type { PageContext } from '../types.ts';
 
 type Usd = {
@@ -69,13 +70,19 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         </a>
       </div>
       <form name="inqurgr" id="inqurgr" class="card-soft p-4 mb-4 admin-records" novalidate>
-        <div class="admin-records-heading"><h5>1. Select user</h5></div>
+        <div class="admin-records-heading"><h5>1. Select user and program</h5></div>
         <div class="row g-3 align-items-end">
-          <div class="col-12">
+          <div class="col-md-6">
             <label class="form-label" for="usrusdsno">User</label>
             <select id="usrusdsno" name="usrusdsno" class="form-select" required>
               <option value="">Select a user...</option>
               ${users.map((user) => `<option value="${esc(user.usdsno)}">${esc(user.usdusd)} - ${esc(user.usdnam)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="usr-program">Program</label>
+            <select id="usr-program" name="program" class="form-select" disabled>
+              <option value="">Select a user first...</option>
             </select>
           </div>
         </div>
@@ -101,6 +108,8 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     const notice = qs(el, '#notice');
     const matrix = qs(el, '#usr-matrix');
     const control = <T extends HTMLElement>(name: string) => qs<T>(form, `[name="${name}"]`);
+    const program = control<HTMLSelectElement>('program');
+    initSelect2(form);
 
     let te_scope: Scope | null = null;
     let te_rows: Prg[] = [];
@@ -109,6 +118,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     // Toggle form loading state
     function busy(value: boolean): void {
         control<HTMLSelectElement>('usrusdsno').disabled = value || users.length === 0;
+        program.disabled = value || te_rows.length === 0;
         form.setAttribute('aria-busy', String(value));
     }
 
@@ -117,6 +127,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         te_version++;
         te_scope = null;
         te_rows = [];
+        program.innerHTML = '<option value="">Select a user first...</option>';
+        program.value = '';
+        program.disabled = true;
         notice.innerHTML = '';
         qs(el, '#usr-admin-note').innerHTML = '';
         qs(el, '#usr-summary').textContent = 'No user selected';
@@ -134,6 +147,9 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     // Render permission matrix with disabled checkboxes
     function paint(): void {
+        const rows = program.value && program.value !== 'all'
+            ? te_rows.filter((row) => row.prgnam === program.value)
+            : te_rows;
         if (te_rows.length === 0) {
             matrix.innerHTML = '<div class="usr-empty"><i class="bi bi-grid"></i><h6>No programs for this user</h6></div>';
             return;
@@ -154,7 +170,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                     </tr>
                   </thead>
                   <tbody>
-                    ${te_rows.map((row, index) => `
+                    ${rows.map((row, index) => `
                     <tr>
                       <td>${index + 1}</td>
                       <td>${esc(row.module)}<small class="d-block text-muted">${esc(row.submodule)}</small></td>
@@ -181,7 +197,13 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         }
 
         te_scope = scope;
-        te_rows = result.rows;
+        te_rows = result.rows.filter((row) => row.usryn === 'y'
+            || (row.prglvl === 'M' && flags.some((flag) => row[flag] === 'y')));
+        program.innerHTML = te_rows.length
+            ? '<option value="all">All programs</option>' + te_rows.map((row) =>
+                `<option value="${esc(row.prgnam)}">${esc(row.prgnam)} - ${esc(row.prgdes)}</option>`).join('')
+            : '<option value="">No programs for this user</option>';
+        program.value = te_rows.length ? 'all' : '';
 
         qs(el, '#usr-summary').textContent = `${result.usrusdsnoauto} - ${result.usdnam} | ${te_rows.length} programs`;
         qs(el, '#usr-admin-note').innerHTML = result.usdadmin
@@ -192,6 +214,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     }
 
     form.onsubmit = (event) => event.preventDefault();
+    program.addEventListener('change', paint);
     busy(false);
 
     // Load rights immediately when a user is selected.
