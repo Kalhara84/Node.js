@@ -41,7 +41,7 @@ const MENU: MenuItem[] = [
     { href: '/usrenter', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions', screen: 'rights' },
     { href: '/account', label: 'My Account', icon: 'bi-person-lock', title: 'My Account', sub: 'Password and sign-in settings' },
 
-    { href: '/blank', label: 'Blank Page', icon: '', title: 'Blank  Page', sub: 'Blank  Page' ,screen:'blank'},
+    { href: '/blank', label: 'Blank Page', icon: 'bi-file-earmark', title: 'Blank  Page', sub: 'Blank  Page' , screen:'blank'},
 ];
 
 // Route definition
@@ -75,13 +75,14 @@ const ROUTES: Route[] = [
     // Administration pages
     { path: '/administration/programs', page: administration, screen: 'programs' },
     { path: '/administration/users', page: administration, screen: 'users' },
+
     { path: '/administration/rights', page: usrenter, screen: 'rights' },
     { path: '/usrenter', page: usrenter, screen: 'rights' },
     { path: '/inqurgr', page: inqurgr, screen: 'rights' },
     {path: '/inqurgr2', page: inqurgr2, screen: 'rights' },
 
     //Blank Page
-    {path:'/blank',page:blank,screen:'blank'},
+    {path:'/blank',page:blank},
 ];
 
 // Check if current URL matches a route and extract parameters like :id

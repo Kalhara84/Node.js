@@ -50,6 +50,9 @@ export function homeFor(user: AuthUser | null): string {
     if (!user) {
         return '/login';
     }
+    // if(user.access?.rights?.view){
+    //     return '/blank'
+    // }
     if (user.access?.dashboard?.view) {
         return '/dashboard';
     }
@@ -71,6 +74,7 @@ export function homeFor(user: AuthUser | null): string {
     if (user.access?.rights?.view) {
         return '/usrenter';
     }
+    
     if(user.access?.rights?.view){
         return '/blank'
     }
