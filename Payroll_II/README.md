@@ -3,10 +3,13 @@
 | Part     | Technology                                                        | Port |
 |----------|-------------------------------------------------------------------|------|
 | Backend  | Node.js + Express + TypeScript + `pg`                             | 3001 |
-| Frontend | Vite + TypeScript (single page app) + Bootstrap 5 (violet/orange) | 3000 |
+| Frontend | React + Vite + TypeScript + Bootstrap 5 (violet/orange)           | 3000 |
 | Database | PostgreSQL                                                        | 5432 |
 
-Everything is TypeScript. There is no React and no Next.js.
+Everything is TypeScript. React owns the application shell and routing lifecycle.
+Existing page modules run inside a React-managed DOM boundary to preserve forms,
+tables, exports, and Select2 behavior. Their internals still use imperative DOM
+rendering; they have not been rewritten as JSX components. There is no Next.js.
 
 ## Project structure
 
@@ -20,8 +23,10 @@ Payroll_II/
     .env                     VITE_API_URL (backend address)
     public/                  served as-is: favicon.svg, assets/ (logo + SVG art)
     src/
-      main.ts                imports Bootstrap + style.css, starts app.ts
-      app.ts                 router + app shell (sidebar / topbar)
+      main.ts                imports styles and mounts the React root
+      App.tsx                React router, sidebar / topbar, page lifecycle
+      navigation.ts          menu definitions, routes, route matching
+      app.ts                 compatibility export for navigate()
       api.ts                 fetch wrapper for every API call
       auth.ts                login / logout / current user
       ui.ts  charts.ts       helpers, modal, SVG charts

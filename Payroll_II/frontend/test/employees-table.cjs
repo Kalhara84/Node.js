@@ -48,7 +48,7 @@ test('employee table fetches one batch at a time and retries failed pages', asyn
 
     async function navigate(page) {
         const button = { disabled: false, dataset: page ? { page: String(page) } : {} };
-        click({ target: { closest: () => button } });
+        click({ target: { closest: (selector) => selector === '[data-page], #retry' ? button : null } });
         await new Promise(setImmediate);
     }
 

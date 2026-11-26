@@ -84,3 +84,16 @@ test('navigation cleans up watchers and handlers before enhancing again', () => 
     assert.equal(select.handlers.size, 1);
     assert.equal(observers.length, 2);
 });
+
+test('React page cleanup disconnects the page observer and destroys dropdowns', () => {
+    const { context, Select, observers } = setup();
+    const select = new Select();
+    const host = { querySelectorAll: () => [select] };
+    context.startAutoSelect2(host);
+    assert.equal(select.initialized, true);
+    assert.equal(observers.length, 2);
+    context.stopAutoSelect2(host);
+    assert.ok(observers.every((observer) => observer.disconnected));
+    assert.equal(select.initialized, false);
+    assert.equal(select.handlers.size, 0);
+});

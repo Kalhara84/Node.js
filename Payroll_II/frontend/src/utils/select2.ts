@@ -115,6 +115,13 @@ export function destroySelect2(root: HTMLElement | Document = document): void {
 
 let pageObserver: MutationObserver | null = null;
 
+/** Release observers and widgets when React unmounts the page. */
+export function stopAutoSelect2(container: HTMLElement): void {
+    pageObserver?.disconnect();
+    pageObserver = null;
+    destroySelect2(container);
+}
+
 /**
  * Start observing DOM changes inside a container to automatically enhance new selects.
  */
