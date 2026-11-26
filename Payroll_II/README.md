@@ -32,6 +32,16 @@ Payroll_II/
 
 ## Requirements
 
+Attendance Correction is available at `/a_inqempatt` from the Attendance sidebar item.
+It converts the legacy `a_inqempatt.php` inquiry and adds record creation, editing,
+viewing and deletion. SQL lives in the attendance controller; no attendance model is used.
+For an existing database, run `node --env-file=.env scripts/migrate-attendance.cjs`
+from `backend` once. Both database setup files include the same migration for new installs.
+Assign `a_inqempatt` View/Add/Amend/Delete permissions through User Rights for non-admin users.
+The inquiry uses active employees, mapping codes and calendar months, with OT1/OT2/late totals.
+Corrections affect `a_denmast` only; payroll transfer/recalculation is not performed by this screen.
+Entry audit fields are retained on edit; amendment user/date/time are recorded separately.
+
 - Node.js 20 or newer (npm included)
 - PostgreSQL 13 or newer
 

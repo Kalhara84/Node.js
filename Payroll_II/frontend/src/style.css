@@ -489,3 +489,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
     min-width: 150px; width: 150px; max-width: 150px;
   }
 }
+/* Keep attendance headings visible when reviewing a full month. */
+.attendance-table { max-height: 65vh; }
+.attendance-table thead th { position: sticky; top: 0; z-index: 1; background: var(--bs-tertiary-bg, #f8f9fa); }
+.attendance-table tfoot th, .attendance-table tfoot td { background: var(--bs-tertiary-bg, #f8f9fa); }

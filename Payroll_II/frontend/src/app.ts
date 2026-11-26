@@ -10,6 +10,8 @@ import * as employeesTable from './pages/employees-table.ts';
 import * as employeeView from './pages/employee-view.ts';
 import * as employeeForm from './pages/employee-form.ts';
 import * as administration from './pages/administration.ts';
+import * as attendance from './pages/attendance.ts';
+import * as holidays from './pages/holidays.ts';
 import * as usrenter from './pages/usrenter.ts';
 import * as inqurgr from './pages/inqurgr.ts';
 import * as account from './pages/account.ts';
@@ -31,6 +33,8 @@ interface MenuItem {
 const MENU: MenuItem[] = [
     { href: '/dashboard', label: 'Dashboard', icon: 'bi-grid-1x2-fill', title: 'Dashboard', sub: 'Overview of your workforce', screen: 'dashboard' },
     { href: '/employees', label: 'Employees', icon: 'bi-people-fill', title: 'Employee Master', sub: 'Manage employee records', screen: 'employees' },
+    { href: '/a_inqempatt', label: 'Attendance', icon: 'bi-calendar-check', title: 'Attendance Correction', sub: 'Employee attendance, overtime and late minutes', screen: 'a_inqempatt' },
+    { href: '/a_holm', label: 'Holidays', icon: 'bi-calendar-event', title: 'Holiday Master', sub: 'Holiday dates, types and overtime rates', screen: 'a_holm' },
     { href: '/administration/programs', label: 'Programs', icon: 'bi-grid', title: 'Program Master', sub: 'Modules and program definitions', screen: 'programs' },
     { href: '/administration/users', label: 'Users', icon: 'bi-person-gear', title: 'User Master', sub: 'User profiles and accounts', screen: 'users' },
     { href: '/usrenter', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions', screen: 'rights' },
@@ -48,6 +52,9 @@ interface Route {
 
 // Application routes
 const ROUTES: Route[] = [
+    { path: '/a_holm', page: holidays, screen: 'a_holm' },
+    { path: '/a_holenter', page: holidays, screen: 'a_holm' },
+    { path: '/a_inqempatt', page: attendance, screen: 'a_inqempatt' },
     // Public routes (no login required)
     { path: '/login', page: login, public: true },
 
@@ -256,7 +263,7 @@ async function show(): Promise<void> {
     }
 
     // Update topbar breadcrumbs and active menu state
-    const menuPath = path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
+    const menuPath = path === '/a_holenter' ? '/a_holm' : path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
     const current = MENU.find((m) => menuPath.startsWith(m.href));
 
     qs(document, '#crumb-title').textContent = current ? current.title : 'Payroll System';

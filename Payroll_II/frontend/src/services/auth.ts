@@ -56,6 +56,12 @@ export function homeFor(user: AuthUser | null): string {
     if (user.access?.employees?.view) {
         return '/employees';
     }
+    if (user.access?.a_inqempatt?.view) {
+        return '/a_inqempatt';
+    }
+    if (user.access?.a_holm?.view) {
+        return '/a_holm';
+    }
     if (user.access?.users?.view) {
         return '/administration/users';
     }

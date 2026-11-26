@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import administration from './administration';
+import attendance from './attendance';
+import holidays from './holidays';
 import { requireActiveAccount, requireEmployee, requireScreen } from '../lib/permissions';
 import { requireAuth, wrap } from '../middleware';
 import { AuthController } from '../controllers/auth.controller';
@@ -23,6 +25,8 @@ router.get('/auth/me', AuthController.me);
 
 // --- 4. Administration Sub-Router ---
 router.use('/administration', administration);
+router.use('/attendance', attendance);
+router.use('/holidays', holidays);
 
 // --- 5. Dashboard & Master Lookups ---
 router.get('/dashboard', requireScreen('dashboard'), wrap(DashboardController.summary));
