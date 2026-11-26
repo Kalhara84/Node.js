@@ -183,7 +183,6 @@ async function show(): Promise<void> {
     if (user) {
         homePath = homeFor(user);
     }
-
     if (path === '/') {
         return navigate(homePath, true);
     }
