@@ -32,6 +32,17 @@ Payroll_II/
 
 ## Requirements
 
+Holiday Master (`a_holm.php` + `a_holenter.php`) is available from **Holidays** at
+`/a_holm`; `/a_holenter` opens the same screen. It includes the holiday list,
+year/search filters, view, add, edit and confirmed delete. Holiday types come from
+`a_sysmast` category 3. The date stays fixed during amendment, and entry/amendment
+audit fields follow the existing pattern. One holiday per date is enforced by a
+database unique index. SQL is in `holiday.controller.ts`, without a model file.
+For existing installations run `node --env-file=.env scripts/migrate-holidays.cjs`
+from `backend`. Both setup SQL files include the migration for new databases.
+Assign `a_holm` View/Add/Amend/Delete rights through User Rights. The two legacy PHP
+files form one module, so they share this single program registration.
+
 Attendance Correction is available at `/a_inqempatt` from the Attendance sidebar item.
 It converts the legacy `a_inqempatt.php` inquiry and adds record creation, editing,
 viewing and deletion. SQL lives in the attendance controller; no attendance model is used.
