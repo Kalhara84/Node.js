@@ -62,7 +62,11 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
           <h3 class="mb-1">Holiday Master</h3>
           <p class="text-muted mb-0">Manage holiday dates, holiday types and overtime rates.</p>
         </div>
-        ${can('a_holm', 'add') ? '<button class="btn btn-primary text-nowrap" id="add"><i class="bi bi-plus-lg me-1"></i>Add holiday</button>' : ''}
+        ${can('a_holm', 'add') ? `
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary text-nowrap" id="add-all"><i class="bi bi-calendar-plus me-1"></i>Add All</button>
+            <button class="btn btn-primary text-nowrap" id="add"><i class="bi bi-plus-lg me-1"></i>Add holiday</button>
+          </div>` : ''}
       </div>
       <div id="notice" role="status"></div>
       <div id="editor"></div>
@@ -152,6 +156,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         const add = el.querySelector<HTMLButtonElement>('#add');
         if (add) {
             add.disabled = busy;
+        }
+        const addAll = el.querySelector<HTMLButtonElement>('#add-all');
+        if (addAll) {
+            addAll.disabled = busy;
         }
         $<HTMLButtonElement>('#reload').disabled = busy;
     }
