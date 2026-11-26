@@ -96,7 +96,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
           <i class="bi bi-search me-2" aria-hidden="true"></i>inquire User Rights-Given User
         </a>
         <a href="/inqurgr" data-link id="inquire-user-rights" class="btn btn-primary">
-          <i class="bi bi-search me-2" aria-hidden="true"></i>inquire User Rights-Given User
+          <i class="bi bi-search me-2" aria-hidden="true"></i>inquire User Rights-Given User2
         </a>
       </div>
 

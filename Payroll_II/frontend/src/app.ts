@@ -13,6 +13,7 @@ import * as administration from './pages/administration.ts';
 import * as usrenter from './pages/usrenter.ts';
 import * as inqurgr from './pages/inqurgr.ts';
 import * as account from './pages/account.ts';
+import * as inqurgr2 from './pages/inqurgr2.ts'
 
 const root = qs(document, '#root');
 
@@ -67,6 +68,7 @@ const ROUTES: Route[] = [
     { path: '/administration/rights', page: usrenter, screen: 'rights' },
     { path: '/usrenter', page: usrenter, screen: 'rights' },
     { path: '/inqurgr', page: inqurgr, screen: 'rights' },
+    {path: '/inqurgr2', page: inqurgr2, screen: 'rights' },
 ];
 
 // Check if current URL matches a route and extract parameters like :id

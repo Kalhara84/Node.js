@@ -71,15 +71,12 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
       <form name="inqurgr" id="inqurgr" class="card-soft p-4 mb-4 admin-records" novalidate>
         <div class="admin-records-heading"><h5>1. Select user</h5></div>
         <div class="row g-3 align-items-end">
-          <div class="col-md-9">
+          <div class="col-12">
             <label class="form-label" for="usrusdsno">User</label>
             <select id="usrusdsno" name="usrusdsno" class="form-select" required>
               <option value="">Select a user...</option>
               ${users.map((user) => `<option value="${esc(user.usdsno)}">${esc(user.usdusd)} - ${esc(user.usdnam)}</option>`).join('')}
             </select>
-          </div>
-          <div class="col-md-3">
-            <button name="ok" type="submit" class="btn btn-primary" ${users.length ? '' : 'disabled'}><i class="bi bi-search me-2" aria-hidden="true"></i>CHECK</button>
           </div>
         </div>
         ${users.length ? '' : '<p class="text-muted mt-3 mb-0">No users available.</p>'}
@@ -88,14 +85,14 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
       <section class="card-soft p-3 admin-records">
         <div class="admin-records-heading">
           <h5>2. View program rights</h5>
-          <span id="usr-summary" aria-live="polite">No user checked</span>
+          <span id="usr-summary" aria-live="polite">No user selected</span>
         </div>
         <p class="text-muted small">Single: View only &middot; Multi: View / Add / Amend / Delete</p>
         <div id="usr-admin-note"></div>
         <div id="usr-matrix">
           <div class="usr-empty">
             <i class="bi bi-shield-check"></i>
-            <h6>Select a user and press CHECK to view their rights.</h6>
+            <h6>Select a user to view their rights.</h6>
           </div>
         </div>
       </section>`;
@@ -107,14 +104,11 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
 
     let te_scope: Scope | null = null;
     let te_rows: Prg[] = [];
-    let te_busy = false;
     let te_version = 0;
 
     // Toggle form loading state
     function busy(value: boolean): void {
-        te_busy = value;
-        control<HTMLSelectElement>('usrusdsno').disabled = value;
-        control<HTMLButtonElement>('ok').disabled = value || users.length === 0;
+        control<HTMLSelectElement>('usrusdsno').disabled = value || users.length === 0;
         form.setAttribute('aria-busy', String(value));
     }
 
@@ -125,8 +119,8 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         te_rows = [];
         notice.innerHTML = '';
         qs(el, '#usr-admin-note').innerHTML = '';
-        qs(el, '#usr-summary').textContent = 'Press CHECK to load this selection';
-        matrix.innerHTML = '<div class="usr-empty"><h6>Press CHECK to view the selected user\'s rights.</h6></div>';
+        qs(el, '#usr-summary').textContent = 'No user selected';
+        matrix.innerHTML = '<div class="usr-empty"><h6>Select a user to view their rights.</h6></div>';
     }
 
     // Build scope for all modules and submodules of the selected user
@@ -197,25 +191,19 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         paint();
     }
 
-    // Reset the inquiry when a different user is selected
-    form.addEventListener('change', () => {
+    form.onsubmit = (event) => event.preventDefault();
+    busy(false);
+
+    // Load rights immediately when a user is selected.
+    control<HTMLSelectElement>('usrusdsno').addEventListener('change', async () => {
         invalidate();
-    });
-
-    // Handle form submit (CHECK action)
-    form.onsubmit = async (event) => {
-        event.preventDefault();
-        if (te_busy) {
-            return;
-        }
-
         const scope = selectedScope();
         if (!scope.usrusdsno) {
-            notice.innerHTML = alertBox('Select a user first.');
             return;
         }
 
-        notice.innerHTML = '';
+        qs(el, '#usr-summary').textContent = 'Loading user rights...';
+        matrix.innerHTML = loading('Loading user rights...');
         busy(true);
 
         try {
@@ -223,6 +211,8 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         } catch (error) {
             if (ctx.alive()) {
                 invalidate();
+                qs(el, '#usr-summary').textContent = 'Unable to load user rights';
+                matrix.innerHTML = '<div class="usr-empty"><h6>Select a user to try again.</h6></div>';
                 notice.innerHTML = alertBox(errMsg(error));
             }
         } finally {
@@ -230,5 +220,5 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
                 busy(false);
             }
         }
-    };
+    });
 }
