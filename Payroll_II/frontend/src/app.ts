@@ -16,6 +16,7 @@ import * as usrenter from './pages/usrenter.ts';
 import * as inqurgr from './pages/inqurgr.ts';
 import * as account from './pages/account.ts';
 import * as inqurgr2 from './pages/inqurgr2.ts'
+import * as blank from './pages/blank.ts';
 
 const root = qs(document, '#root');
 
@@ -39,6 +40,8 @@ const MENU: MenuItem[] = [
     { href: '/administration/users', label: 'Users', icon: 'bi-person-gear', title: 'User Master', sub: 'User profiles and accounts', screen: 'users' },
     { href: '/usrenter', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions', screen: 'rights' },
     { href: '/account', label: 'My Account', icon: 'bi-person-lock', title: 'My Account', sub: 'Password and sign-in settings' },
+
+    { href: '/blank', label: 'Blank  Page', icon: 'bi-person-lock', title: 'Blank  Page', sub: 'Blank  Page' ,screen:blank},
 ];
 
 // Route definition
@@ -76,6 +79,9 @@ const ROUTES: Route[] = [
     { path: '/usrenter', page: usrenter, screen: 'rights' },
     { path: '/inqurgr', page: inqurgr, screen: 'rights' },
     {path: '/inqurgr2', page: inqurgr2, screen: 'rights' },
+
+    //Blank Page
+    {path:'/blank',page:blank,screen:'blank'},
 ];
 
 // Check if current URL matches a route and extract parameters like :id
