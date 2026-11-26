@@ -1,10 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../services/api.ts';
 import { currentUser, canEmployee } from '../services/auth.ts';
-import { esc, money, errMsg, qs, CATEGORY, GENDER, loading, alertBox, emptyState } from '../utils/ui.ts';
-import type { DashboardData, PageContext } from '../types.ts';
+import { esc, money, errMsg, CATEGORY, GENDER, loading, alertBox, emptyState, markup, useAlive } from '../utils/ui.tsx';
+import type { DashboardData } from '../types.ts';
 import { donutChart, barList, columnChart, PALETTE } from '../utils/charts.ts';
 
-// Stat card markup helper
 const stat = (icon: string, tone: string, label: string, value: string | number): string => `
   <div class="col">
     <div class="card-soft stat-card">
@@ -23,21 +23,30 @@ const chartCard = (title: string, icon: string, body: string): string => `
     <div class="card-body-pad">${body}</div>
   </div>`;
 
-// Render main dashboard page
-export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+
+export default function Dashboard() {
     const user = currentUser();
-    if (!user) {
-        return;
+    const alive = useAlive();
+    const version = useRef(0);
+    const [data, setData] = useState<DashboardData | null>(null);
+    const [error, setError] = useState('');
+    const [busy, setBusy] = useState(true);
+    async function load(): Promise<void> {
+        const current = ++version.current;
+        setBusy(true); setError('');
+        try {
+            const result = await api.dashboard();
+            if (alive.current && current === version.current) setData(result);
+        } catch (error) {
+            if (alive.current && current === version.current) setError(errMsg(error));
+        } finally {
+            if (alive.current && current === version.current) setBusy(false);
+        }
     }
-
-    const today = new Date().toLocaleDateString('en-GB', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-    });
-
-    el.innerHTML = `
+    useEffect(() => { void load(); }, []);
+    if (!user) return null;
+    const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return <>{markup(`
       <div class="hero-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 fade-in">
         <div>
           <div class="sub small mb-1"><i class="bi bi-calendar3 me-1"></i>${esc(today)}</div>
@@ -49,38 +58,11 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
           ${canEmployee('add') ? '<a href="/employees/new" data-link class="btn btn-light"><i class="bi bi-plus-lg me-1"></i>Add Employee</a>' : ''}
         </div>
       </div>
-      <div id="dash-body"></div>`;
-
-    const body = qs(el, '#dash-body');
-    const icon = qs(el, '#refresh i');
-
-    // Fetch and display dashboard stats and charts
-    let requestNumber = 0;
-    async function load(): Promise<void> {
-        const currentRequest = ++requestNumber;
-        icon.classList.add('spin');
-        body.innerHTML = loading('Loading dashboard...');
-        try {
-            const data = await api.dashboard();
-            if (!ctx.alive() || currentRequest !== requestNumber) {
-                return;
-            }
-            body.innerHTML = view(data);
-        } catch (e) {
-            if (ctx.alive() && currentRequest === requestNumber) {
-                body.innerHTML = alertBox(errMsg(e));
-            }
-        } finally {
-            if (currentRequest === requestNumber) {
-                icon.classList.remove('spin');
-            }
-        }
-    }
-
-    qs(el, '#refresh').onclick = load;
-    await load();
+      <div id="dash-body"></div>`, {
+        refresh: { onClick: load, children: <><i className={'bi bi-arrow-clockwise me-1' + (busy ? ' spin' : '')} />Refresh</> },
+        'dash-body': { children: markup(busy ? loading('Loading dashboard...') : error ? alertBox(error) : data ? view(data) : '') }
+    })}</>;
 }
-
 // Generate HTML view for dashboard data
 function view(d: DashboardData): string {
     const t = d.totals;

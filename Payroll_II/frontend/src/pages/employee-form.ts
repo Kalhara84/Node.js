@@ -1,5 +1,7 @@
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { api, getLookups } from '../services/api.ts';
-import { esc, errMsg, qs, loading, alertBox } from '../utils/ui.ts';
+import { esc, errMsg, loading, alertBox, markup, useLoad, useAlive } from '../utils/ui.tsx';
 import type { EmployeeBody, Lookups, PageContext } from '../types.ts';
 
 interface Option {
@@ -272,53 +274,42 @@ function toPayload(form: HTMLFormElement): EmployeeBody {
     return body as EmployeeBody;
 }
 
-// Render Add/Edit employee form page
-export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+
+export default function EmployeeForm({ ctx }: { ctx: PageContext }) {
     const id = ctx.params[0] ? Number(ctx.params[0]) : null;
-    el.innerHTML = loading();
-
-    let values: Values = { ...DEFAULTS };
-    let lookups: Lookups | null = null;
-
-    try {
-        const lookupRequest = getLookups().catch(() => null);
-        const employeeRequest = id !== null ? api.get(id) : Promise.resolve(null);
-        const nextNumberRequest = id === null ? api.nextEmployeeNumber() : Promise.resolve(null);
-
-        const [lk, emp, next] = await Promise.all([
-            lookupRequest,
-            employeeRequest,
-            nextNumberRequest
-        ]);
-
-        lookups = lk;
-        if (next) {
-            values.empeno = String(next.empeno);
-        }
-
+    const alive = useAlive();
+    const [busy, setBusy] = useState(false);
+    const [message, setMessage] = useState('');
+    const { data, error } = useLoad(async () => {
+        const [lookups, emp, next] = await Promise.all([getLookups().catch(() => null), id !== null ? api.get(id) : Promise.resolve(null), id === null ? api.nextEmployeeNumber() : Promise.resolve(null)]);
+        const values: Values = { ...DEFAULTS };
+        if (next) values.empeno = String(next.empeno);
         if (emp) {
-            values = {};
-            for (const { key } of FIELDS) {
-                const raw = emp[key];
-                values[key] = raw !== null && raw !== undefined ? String(raw).trim() : '';
-            }
+            for (const { key } of FIELDS) values[key] = emp[key] !== null && emp[key] !== undefined ? String(emp[key]).trim() : '';
         }
-    } catch (e) {
-        if (ctx.alive()) {
-            el.innerHTML = alertBox(errMsg(e));
+        return { values, lookups };
+    });
+    async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
+        event.preventDefault();
+        if (busy) return;
+        const body = toPayload(event.currentTarget);
+        setMessage('');
+        if (!body.empnam) { setMessage('Employee Name is required'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+        setBusy(true);
+        try {
+            if (id !== null) await api.update(id, body); else await api.create(body);
+            if (alive.current) ctx.navigate('/employees');
+        } catch (error) {
+            if (alive.current) { setMessage(errMsg(error)); setBusy(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }
         }
-        return;
     }
-
-    if (!ctx.alive()) {
-        return;
-    }
-
+    if (error) return <>{markup(alertBox(error))}</>;
+    if (!data) return <>{markup(loading())}</>;
+    const { values, lookups } = data;
     const pageTitle = id !== null ? 'Edit Employee' : 'Add Employee';
     const saveLabel = id !== null ? 'Update' : 'Save';
-
-    el.innerHTML = `
-      <form id="emp-form" novalidate>
+    return <>{markup(`
+      <formid="emp-form" novalidate>
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
           <div>
             <h4 class="page-title">${pageTitle}</h4>
@@ -338,43 +329,11 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
           <a href="/employees" data-link class="btn btn-light">Cancel</a>
           <button class="btn btn-primary" data-save><i class="bi bi-check-lg me-1"></i>${saveLabel}</button>
         </div>
-      </form>`;
-
-    const form = qs<HTMLFormElement>(el, '#emp-form');
-    const errBox = qs(el, '#form-error');
-    const buttons = form.querySelectorAll<HTMLButtonElement>('[data-save]');
-
-    // Handle form submit (create or update employee)
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        errBox.innerHTML = '';
-        const body = toPayload(form);
-
-        const fail = (m: string): void => {
-            errBox.innerHTML = alertBox(m);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        if (!body.empnam) {
-            return fail('Employee Name is required');
-        }
-
-        buttons.forEach((btn) => {
-            btn.disabled = true;
-        });
-
-        try {
-            if (id !== null) {
-                await api.update(id, body);
-            } else {
-                await api.create(body);
-            }
-            ctx.navigate('/employees');
-        } catch (err) {
-            fail(errMsg(err));
-            buttons.forEach((btn) => {
-                btn.disabled = false;
-            });
-        }
-    };
+      </form>`, (element) => {
+        if (element.attribs.id === 'emp-form') return { onSubmit: submit };
+        if (element.attribs.id === 'form-error') return { children: markup(message ? alertBox(message) : '') };
+        if (element.attribs['data-save'] !== undefined) return { disabled: busy };
+        if (element.attribs.type === 'radio') return { checked: undefined, onChange: undefined, defaultChecked: element.attribs.checked !== undefined };
+        return {};
+    })}</>;
 }

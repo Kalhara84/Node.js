@@ -1,3 +1,9 @@
+import { createElement, useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { createRoot } from 'react-dom/client';
+import parse, { attributesToProps, domToReact, Element } from 'html-react-parser';
+import type { DOMNode, HTMLReactParserOptions } from 'html-react-parser';
+import { Select } from './select2.tsx';
 import { empty } from '../assets/index.ts';
 
 // Escape HTML special characters to prevent XSS
@@ -75,42 +81,82 @@ export function qs<T extends HTMLElement = HTMLElement>(root: ParentNode, select
     return el;
 }
 
-// Simple confirmation modal dialog
-export function confirmModal(opts: {
-    title: string;
-    message: string;
-    confirmText?: string;
-}): Promise<boolean> {
-    const { title, message, confirmText = 'Delete' } = opts;
-
-    return new Promise((resolve) => {
-        const el = document.createElement('div');
-        el.className = 'modal-backdrop-lite';
-        el.innerHTML = `
-          <div class="modal-box">
-            <div class="modal-icon"><i class="bi bi-trash3-fill"></i></div>
-            <h5 class="mb-2">${esc(title)}</h5>
-            <p class="text-muted mb-4">${esc(message)}</p>
-            <div class="d-flex justify-content-end gap-2">
-              <button class="btn btn-light" data-no>Cancel</button>
-              <button class="btn btn-danger" data-yes>${esc(confirmText)}</button>
-            </div>
-          </div>`;
-
-        const done = (v: boolean): void => {
-            el.remove();
-            resolve(v);
-        };
-
-        el.addEventListener('click', (e) => {
-            const t = e.target as HTMLElement;
-            if (t === el || t.closest('[data-no]')) {
-                done(false);
-            } else if (t.closest('[data-yes]')) {
-                done(true);
+// Convert the existing escaped templates into React elements.
+// Bindings supply React event handlers and state without writing to the DOM.
+export function markup(html: string, bindings: Record<string, Record<string, unknown>> | ((element: Element) => Record<string, unknown>) = {}): ReactNode {
+    const options: HTMLReactParserOptions = {
+        replace(node) {
+            if (!(node instanceof Element)) {
+                return;
             }
-        });
+            const props = attributesToProps(node.attribs);
+            const bound = typeof bindings === 'function' ? bindings(node) : bindings[node.attribs.id] ?? bindings[node.attribs.name] ?? {};
+            if (node.name === 'option') {
+                delete props.selected;
+            }
+            if (node.name === 'select') {
+                const selected = node.children.find((child) => child instanceof Element && child.attribs.selected !== undefined) as Element | undefined;
+                if (selected) props.defaultValue = selected.attribs.value;
+            }
+            if (node.name === 'input' && ['checkbox', 'radio'].includes(node.attribs.type)) {
+                props.checked = node.attribs.checked !== undefined;
+                props.onChange = () => {};
+                delete props.defaultChecked;
+            }
+            const children = Object.hasOwn(bound, 'children') ? bound.children as ReactNode : domToReact(node.children as DOMNode[], options);
+            const attributes = { ...props, ...bound };
+            if (['input', 'img', 'br', 'hr', 'meta', 'link', 'area', 'base', 'col', 'embed', 'param', 'source', 'track', 'wbr'].includes(node.name)) {
+                return createElement(node.name, attributes);
+            }
+            return createElement(node.name === 'select' && node.attribs.class?.includes('form-select') ? Select : node.name, attributes, children);
+        }
+    };
+    return parse(html, options);
+}
 
-        document.body.appendChild(el);
+// Guard async updates after a page has unmounted.
+export function useAlive() {
+    const alive = useRef(true);
+    useEffect(() => {
+        alive.current = true;
+        return () => { alive.current = false; };
+    }, []);
+    return alive;
+}
+
+// Load initial page data and discard late responses after navigation.
+export function useLoad<T>(load: () => Promise<T>) {
+    const [data, setData] = useState<T | null>(null);
+    const [error, setError] = useState('');
+    useEffect(() => {
+        let active = true;
+        void load().then((result) => { if (active) setData(result); }).catch((reason: unknown) => { if (active) setError(errMsg(reason)); });
+        return () => { active = false; };
+    }, []);
+    return { data, setData, error };
+}
+
+// Simple confirmation modal dialog rendered by React.
+export function confirmModal(opts: { title: string; message: string; confirmText?: string }): Promise<boolean> {
+    return new Promise((resolve) => {
+        const host = document.createElement('div');
+        document.body.appendChild(host);
+        const root = createRoot(host);
+        function done(value: boolean): void {
+            root.unmount();
+            host.remove();
+            resolve(value);
+        }
+        root.render(<div className="modal-backdrop-lite" onClick={(event) => { if (event.target === event.currentTarget) done(false); }}>
+            <div className="modal-box">
+                <div className="modal-icon"><i className="bi bi-trash3-fill" /></div>
+                <h5 className="mb-2">{opts.title}</h5>
+                <p className="text-muted mb-4">{opts.message}</p>
+                <div className="d-flex justify-content-end gap-2">
+                    <button className="btn btn-light" data-no onClick={() => done(false)}>Cancel</button>
+                    <button className="btn btn-danger" data-yes onClick={() => done(true)}>{opts.confirmText ?? 'Delete'}</button>
+                </div>
+            </div>
+        </div>);
     });
 }

@@ -1,13 +1,31 @@
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { request } from '../services/api.ts';
 import { currentUser } from '../services/auth.ts';
-import { esc, qs, alertBox, errMsg } from '../utils/ui.ts';
-import type { PageContext } from '../types.ts';
-
-// Render user account password change page
-export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+import { esc, markup, errMsg, useAlive } from '../utils/ui.tsx';
+export default function Account() {
     const user = currentUser();
-
-    el.innerHTML = `
+    const alive = useAlive();
+    const [busy, setBusy] = useState(false);
+    const [message, setMessage] = useState('');
+    const [success, setSuccess] = useState(false);
+    async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
+        event.preventDefault();
+        if (busy) return;
+        const form = event.currentTarget;
+        const data = Object.fromEntries(new FormData(form));
+        if (data.newPassword !== data.confirmPassword) { setSuccess(false); setMessage('New passwords do not match'); return; }
+        setBusy(true);
+        try {
+            await request('/auth/password', { method: 'POST', body: JSON.stringify(data) });
+            if (alive.current) { form.reset(); setSuccess(true); setMessage('Password updated successfully.'); }
+        } catch (error) {
+            if (alive.current) { setSuccess(false); setMessage(errMsg(error)); }
+        } finally {
+            if (alive.current) setBusy(false);
+        }
+    }
+    return <>{markup(`
       <div class="admin-banner mb-4">
         <div class="admin-eyebrow">My account</div>
         <h4 class="page-title">Change password</h4>
@@ -34,38 +52,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             <button type="reset" class="btn btn-light">Reset</button>
           </div>
         </form>
-      </div>`;
-
-    // Handle password change form submission
-    qs<HTMLFormElement>(el, '#password-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const form = e.currentTarget as HTMLFormElement;
-        const button = form.querySelector('button')!;
-        const data = Object.fromEntries(new FormData(form));
-
-        if (data.newPassword !== data.confirmPassword) {
-            qs(el, '#message').innerHTML = alertBox('New passwords do not match');
-            return;
-        }
-
-        button.disabled = true;
-
-        try {
-            await request('/auth/password', {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-
-            if (ctx.alive()) {
-                form.reset();
-                qs(el, '#message').innerHTML = '<div class="alert alert-success">Password updated successfully.</div>';
-            }
-        } catch (err) {
-            if (ctx.alive()) {
-                qs(el, '#message').innerHTML = alertBox(errMsg(err));
-            }
-        } finally {
-            button.disabled = false;
-        }
-    };
+      </div>`, (element) => {
+        if (element.attribs.id === 'password-form') return { onSubmit: submit };
+        if (element.attribs.id === 'message') return { children: message ? <div className={success ? 'alert alert-success' : 'alert alert-danger py-2'}>{message}</div> : null };
+        if (element.name === 'button' && element.attribs.type === 'submit') return { disabled: busy };
+        return {};
+    })}</>;
 }

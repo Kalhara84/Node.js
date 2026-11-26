@@ -1,11 +1,32 @@
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { loginHero, logo, shield } from '../assets/index.ts';
 import { login, homeFor } from '../services/auth.ts';
-import { esc, errMsg, qs } from '../utils/ui.ts';
+import { markup, errMsg, useAlive } from '../utils/ui.tsx';
 import type { PageContext } from '../types.ts';
 
-// Render user login page
-export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
-    el.innerHTML = `
+export default function Login({ ctx }: { ctx: PageContext }) {
+    const [error, setError] = useState('');
+    const [busy, setBusy] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const alive = useAlive();
+    async function submit(event: FormEvent<HTMLFormElement>): Promise<void> {
+        event.preventDefault();
+        if (busy) return;
+        const form = event.currentTarget;
+        const username = (form.elements.namedItem('username') as HTMLInputElement).value.trim();
+        const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+        setError('');
+        if (!username || !password) { setError('Please enter your user name and password'); return; }
+        setBusy(true);
+        try {
+            const user = await login(username, password);
+            if (alive.current) ctx.navigate(homeFor(user), true);
+        } catch (error) {
+            if (alive.current) { setError(errMsg(error)); setBusy(false); }
+        }
+    }
+    return <>{markup(`
       <div class="login-page">
         <section class="login-hero">
           <div class="hero-inner">
@@ -49,46 +70,12 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             </div>
           </form>
         </section>
-      </div>`;
-
-    const $ = <T extends HTMLElement = HTMLElement>(s: string): T => qs<T>(el, s);
-    const errBox = $('#login-error');
-    const btn = $<HTMLButtonElement>('#login-btn');
-
-    // Toggle password visibility (show/hide)
-    $('#toggle-pw').onclick = () => {
-        const pw = $<HTMLInputElement>('#password');
-        const show = pw.type === 'password';
-        pw.type = show ? 'text' : 'password';
-        $('#toggle-pw i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
-    };
-
-    // Handle sign-in submission
-    $<HTMLFormElement>('#login-form').onsubmit = async (e) => {
-        e.preventDefault();
-        errBox.innerHTML = '';
-
-        const username = $<HTMLInputElement>('#username').value.trim();
-        const password = $<HTMLInputElement>('#password').value;
-
-        const showError = (m: string): void => {
-            errBox.innerHTML = `<div class="alert alert-danger py-2 d-flex align-items-center gap-2"><i class="bi bi-exclamation-circle"></i> ${esc(m)}</div>`;
-        };
-
-        if (!username || !password) {
-            return showError('Please enter your user name and password');
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
-
-        try {
-            const user = await login(username, password);
-            ctx.navigate(homeFor(user), true);
-        } catch (err) {
-            showError(errMsg(err));
-            btn.disabled = false;
-            btn.innerHTML = 'Sign in <i class="bi bi-arrow-right ms-1"></i>';
-        }
-    };
+      </div>`, {
+        'login-form': { onSubmit: submit },
+        'username': { name: 'username', autoFocus: true },
+        'password': { name: 'password', type: showPassword ? 'text' : 'password' },
+        'toggle-pw': { onClick: () => setShowPassword(!showPassword), children: <i className={showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'} /> },
+        'login-error': { children: error ? <div className="alert alert-danger py-2 d-flex align-items-center gap-2"><i className="bi bi-exclamation-circle" /> {error}</div> : null },
+        'login-btn': { disabled: busy, children: busy ? <><span className="spinner-border spinner-border-sm me-2" />Signing in...</> : <>Sign in <i className="bi bi-arrow-right ms-1" /></> }
+    })}</>;
 }

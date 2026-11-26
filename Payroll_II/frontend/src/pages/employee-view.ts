@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { canEmployee } from '../services/auth.ts';
 import { api, getLookups } from '../services/api.ts';
-import { esc, errMsg, qs, CATEGORY, yn, loading, alertBox, confirmModal } from '../utils/ui.ts';
-import type { Employee, Lookups, PageContext, SysItem } from '../types.ts';
+import { esc, errMsg, CATEGORY, yn, loading, alertBox, confirmModal, markup, useLoad, useAlive } from '../utils/ui.tsx';
+import type { PageContext, SysItem } from '../types.ts';
 
 // Detail field display helper
 const item = (label: string, value: string | number | null | undefined): string => {
@@ -23,31 +24,25 @@ const section = (icon: string, title: string, items: string[]): string => `
     <div class="card-body-pad"><div class="row g-3">${items.join('')}</div></div>
   </div>`;
 
-// Render single employee details view page
-export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+
+export default function EmployeeView({ ctx }: { ctx: PageContext }) {
     const id = Number(ctx.params[0]);
-    el.innerHTML = loading();
-
-    let emp: Employee;
-    let lookups: Lookups | null;
-
-    try {
-        [emp, lookups] = await Promise.all([
-            api.get(id),
-            getLookups().catch(() => null)
-        ]);
-    } catch (e) {
-        if (ctx.alive()) {
-            el.innerHTML = alertBox(errMsg(e));
-        }
-        return;
+    const alive = useAlive();
+    const [message, setMessage] = useState('');
+    const [busy, setBusy] = useState(false);
+    const { data, error } = useLoad(() => Promise.all([api.get(id), getLookups().catch(() => null)]));
+    async function remove(): Promise<void> {
+        if (!data || busy) return;
+        const emp = data[0];
+        if (!await confirmModal({ title: 'Delete employee', message: `Delete ${emp.empnam} (Emp No ${emp.empeno})? This cannot be undone.` }) || !alive.current) return;
+        setBusy(true);
+        try { await api.remove(emp.empsno); if (alive.current) ctx.navigate('/employees'); }
+        catch (error) { if (alive.current) { setMessage(errMsg(error)); setBusy(false); } }
     }
+    if (error) return <>{markup(alertBox(error))}</>;
+    if (!data) return <>{markup(loading())}</>;
+    const [emp, lookups] = data;
 
-    if (!ctx.alive()) {
-        return;
-    }
-
-    // Lookup description helper
     const name = (list: SysItem[] | undefined, key: number | null, field: 'sysdes' | 'sysrno' = 'sysdes'): string | undefined => {
         return list?.find((x) => x.syssno === key)?.[field];
     };
@@ -56,7 +51,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     const departmentBadge = emp.department_name ? `<span class="badge">${esc(emp.department_name)}</span>` : '';
     const gender = emp.empmof === 'M' ? 'Male' : emp.empmof === 'F' ? 'Female' : emp.empmof;
 
-    el.innerHTML = `
+    const html = `
       <div class="profile-hero d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 fade-in">
         <div class="d-flex align-items-center gap-3">
           <span class="avatar">${esc((emp.empnam || '?').charAt(0).toUpperCase())}</span>
@@ -148,24 +143,6 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
         item('Sat Leave', yn(emp.empnsatlflg)),
     ])}`;
 
-    // Handle delete button click
-    const deleteButton = el.querySelector<HTMLButtonElement>('#del');
-    if (deleteButton) {
-        deleteButton.onclick = async () => {
-            const confirmed = await confirmModal({
-                title: 'Delete employee',
-                message: `Delete ${emp.empnam} (Emp No ${emp.empeno})? This cannot be undone.`
-            });
-            if (!confirmed) {
-                return;
-            }
 
-            try {
-                await api.remove(emp.empsno);
-                ctx.navigate('/employees');
-            } catch (e) {
-                qs(el, '#msg').innerHTML = alertBox(errMsg(e));
-            }
-        };
-    }
+    return <>{markup(html, { del: { onClick: remove, disabled: busy }, msg: { children: markup(message ? alertBox(message) : '') } })}</>;
 }

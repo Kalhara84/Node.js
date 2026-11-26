@@ -1,12 +1,16 @@
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { currentUser } from '../services/auth.ts';
-import { alertBox, errMsg, esc, qs } from '../utils/ui.ts';
+import { esc, markup } from '../utils/ui.tsx';
 import type { PageContext } from '../types.ts';
-
-// Render example blank starter page following the project's page module pattern
-export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
+export default function Blank({ ctx }: { ctx: PageContext }) {
     const user = currentUser();
-
-    el.innerHTML = `
+    const [message, setMessage] = useState<string | null>(null);
+    function submit(event: FormEvent<HTMLFormElement>): void {
+        event.preventDefault();
+        setMessage(String(new FormData(event.currentTarget).get('sampleInput') ?? ''));
+    }
+    return <>{markup(`
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div class="admin-banner flex-grow-1 mb-0">
           <div class="admin-eyebrow">Starter Template</div>
@@ -40,50 +44,10 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
             <button type="reset" class="btn btn-light btn-sm">Reset</button>
           </div>
         </form>
-      </div>`;
-
-    const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => qs<T>(el, selector);
-
-    // Navigation button handlers
-    $('#btn-back').addEventListener('click', () => {
-        if (window.history.length > 1) {
-            window.history.back();
-        } else {
-            ctx.navigate('/dashboard');
-        }
-    });
-
-    $('#btn-menu').addEventListener('click', () => {
-        ctx.navigate('/dashboard');
-    });
-
-    // Example form submit handler showing ctx.alive() and error handling pattern
-    $<HTMLFormElement>('#example-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const form = e.currentTarget as HTMLFormElement;
-        const submitBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
-        const data = Object.fromEntries(new FormData(form));
-
-        $('#err').innerHTML = '';
-        $('#message').innerHTML = '';
-        submitBtn.disabled = true;
-
-        try {
-            // Replace with your API call, e.g.:
-            // await request('/your-endpoint', { method: 'POST', body: JSON.stringify(data) });
-            if (!ctx.alive()) {
-                return;
-            }
-            $('#message').innerHTML = `<div class="alert alert-success py-2 mb-0">Submitted: <strong>${esc(String(data.sampleInput ?? ''))}</strong></div>`;
-        } catch (err) {
-            if (ctx.alive()) {
-                $('#err').innerHTML = alertBox(errMsg(err));
-            }
-        } finally {
-            if (ctx.alive()) {
-                submitBtn.disabled = false;
-            }
-        }
-    };
+      </div>`, {
+        'btn-back': { onClick: () => window.history.length > 1 ? window.history.back() : ctx.navigate('/dashboard') },
+        'btn-menu': { onClick: () => ctx.navigate('/dashboard') },
+        'example-form': { onSubmit: submit },
+        'message': { children: message !== null ? <div className="alert alert-success py-2 mb-0">Submitted: <strong>{message}</strong></div> : null }
+    })}</>;
 }
-

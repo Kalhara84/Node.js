@@ -24,9 +24,7 @@ Payroll_II/
     public/                  served as-is: favicon.svg, assets/ (logo + SVG art)
     src/
       main.ts                imports styles and mounts the React root
-      App.tsx                React router, sidebar / topbar, page lifecycle
-      navigation.ts          menu definitions, routes, route matching
-      app.ts                 compatibility export for navigate()
+      app.tsx                React app, menu, routes, sidebar / topbar, page lifecycle
       api.ts                 fetch wrapper for every API call
       auth.ts                login / logout / current user
       ui.ts  charts.ts       helpers, modal, SVG charts

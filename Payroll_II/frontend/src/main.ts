@@ -5,7 +5,7 @@ import 'select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css';
 import './style.css';
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+import App from './app.tsx';
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Application root is missing');
