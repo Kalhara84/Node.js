@@ -12,6 +12,7 @@ import * as employeeForm from './pages/employee-form.ts';
 import * as administration from './pages/administration.ts';
 import * as attendance from './pages/attendance.ts';
 import * as holidays from './pages/holidays.ts';
+import * as holentergri from './pages/holentergri.ts';
 import * as usrenter from './pages/usrenter.ts';
 import * as inqurgr from './pages/inqurgr.ts';
 import * as account from './pages/account.ts';
@@ -57,6 +58,7 @@ interface Route {
 const ROUTES: Route[] = [
     { path: '/a_holm', page: holidays, screen: 'a_holm' },
     { path: '/a_holenter', page: holidays, screen: 'a_holm' },
+    { path: '/a_holentergrid', page: holentergri, screen: 'a_holm', action: 'add' },
     { path: '/a_inqempatt', page: attendance, screen: 'a_inqempatt' },
     // Public routes (no login required)
     { path: '/login', page: login, public: true },
@@ -270,7 +272,7 @@ async function show(): Promise<void> {
     }
 
     // Update topbar breadcrumbs and active menu state
-    const menuPath = path === '/a_holenter' ? '/a_holm' : path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
+    const menuPath = path === '/a_holenter' || path === '/a_holentergrid' ? '/a_holm' : path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
     const current = MENU.find((m) => menuPath.startsWith(m.href));
 
     qs(document, '#crumb-title').textContent = current ? current.title : 'Payroll System';

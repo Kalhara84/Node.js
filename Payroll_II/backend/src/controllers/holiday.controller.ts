@@ -72,6 +72,91 @@ export const HolidayController = {
         res.json(result.rows);
     },
 
+    // Load existing holidays within a date range for the bulk grid
+    async range(req: Request, res: Response): Promise<void> {
+        const from = holidayDate(req.query.from);
+        const to = holidayDate(req.query.to);
+
+        if (from > to) {
+            fail('To date must be on or after From date');
+        }
+
+        const result = await pool.query(
+            `SELECT h.holsno, to_char(h.holddt, 'YYYY-MM-DD') AS holddt, h.holtypsno, h.holotrate, s.sysdes
+             FROM a_holmast h
+             LEFT JOIN a_sysmast s ON s.syssno = h.holtypsno AND s.sysrtp = 3
+             WHERE h.holddt >= $1::date AND h.holddt <= $2::date
+             ORDER BY h.holddt ASC, h.holsno ASC`,
+            [from, to]
+        );
+        res.json(result.rows);
+    },
+
+    // Bulk insert or update holidays from the date-range grid
+    async bulkSave(req: Request, res: Response): Promise<void> {
+        const items = Array.isArray(req.body?.items) ? req.body.items : null;
+        if (!items || !items.length) {
+            fail('Select at least one holiday row to save');
+        }
+
+        const parsed: Array<{ holddt: string; holtypsno: number; holotrate: number }> = [];
+        for (const raw of items) {
+            const item = (raw ?? {}) as Record<string, unknown>;
+            const date = holidayDate(item.holddt);
+            const [type, rate] = await details(item);
+            parsed.push({ holddt: date, holtypsno: type, holotrate: rate });
+        }
+
+        const client = await pool.connect();
+        let inserted = 0;
+        let updated = 0;
+
+        try {
+            await client.query('BEGIN');
+
+            for (const row of parsed) {
+                const existing = await client.query(
+                    'SELECT holsno FROM a_holmast WHERE holddt = $1 ORDER BY holsno ASC LIMIT 1',
+                    [row.holddt]
+                );
+
+                if (existing.rowCount) {
+                    await client.query(
+                        `UPDATE a_holmast
+                         SET holtypsno = $1,
+                             holotrate = $2,
+                             holucdame = $3,
+                             holameddt = CURRENT_DATE,
+                             holametime = LOCALTIME
+                         WHERE holddt = $4`,
+                        [row.holtypsno, row.holotrate, req.user!.usr, row.holddt]
+                    );
+                    updated += 1;
+                } else {
+                    await client.query(
+                        `INSERT INTO a_holmast (holddt, holtypsno, holotrate, holucdnew, holentddt, holenttime)
+                         VALUES ($1, $2, $3, $4, CURRENT_DATE, LOCALTIME)`,
+                        [row.holddt, row.holtypsno, row.holotrate, req.user!.usr]
+                    );
+                    inserted += 1;
+                }
+            }
+
+            await client.query('COMMIT');
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+
+        res.json({
+            inserted,
+            updated,
+            message: `Saved ${parsed.length} holidays (${inserted} added, ${updated} updated).`,
+        });
+    },
+
     // Create a new holiday record
     async create(req: Request, res: Response): Promise<void> {
         const body = req.body ?? {};

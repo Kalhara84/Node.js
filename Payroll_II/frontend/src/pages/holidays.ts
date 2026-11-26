@@ -284,6 +284,7 @@ export async function render(el: HTMLElement, ctx: PageContext): Promise<void> {
     }
 
     el.querySelector<HTMLButtonElement>('#add')?.addEventListener('click', () => editor(null));
+    el.querySelector<HTMLButtonElement>('#add-all')?.addEventListener('click', () => ctx.navigate('/a_holentergrid'));
     $('#search').oninput = draw;
     $('#year').onchange = draw;
 
