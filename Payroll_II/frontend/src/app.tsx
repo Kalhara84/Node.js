@@ -19,6 +19,8 @@ import Inqurgr from './pages/inqurgr.tsx';
 import Account from './pages/account.tsx';
 import Inqurgr2 from './pages/inqurgr2.tsx';
 import Blank from './pages/blank.tsx';
+import { SIDEBAR_MENU, filterMenuByAccess, findActiveTrail } from './config/sidebar.ts';
+import type { MenuItem } from './config/sidebar.ts';
 
 // Same idea as the old ctx.alive(): false once the page was left (ignore late API answers)
 export function useAlive(): () => boolean {
@@ -31,30 +33,6 @@ export function useAlive(): () => boolean {
     }, []);
     return useCallback(() => ref.current, []);
 }
-
-// Sidebar menu item structure
-interface MenuItem {
-    href: string;
-    label: string;
-    icon: string;
-    title: string;
-    sub: string;
-    screen?: Screen;
-}
-
-// Navigation menu items
-const MENU: MenuItem[] = [
-    { href: '/dashboard', label: 'Dashboard', icon: 'bi-grid-1x2-fill', title: 'Dashboard', sub: 'Overview of your workforce', screen: 'dashboard' },
-    { href: '/employees', label: 'Employees', icon: 'bi-people-fill', title: 'Employee Master', sub: 'Manage employee records', screen: 'employees' },
-    { href: '/a_inqempatt', label: 'Attendance', icon: 'bi-calendar-check', title: 'Attendance Correction', sub: 'Employee attendance, overtime and late minutes', screen: 'a_inqempatt' },
-    { href: '/a_holm', label: 'Holidays', icon: 'bi-calendar-event', title: 'Holiday Master', sub: 'Holiday dates, types and overtime rates', screen: 'a_holm' },
-    { href: '/program/programs', label: 'Programs', icon: 'bi-grid', title: 'Program Master', sub: 'Modules and program definitions', screen: 'programs' },
-    { href: '/program/users', label: 'Users', icon: 'bi-person-gear', title: 'User Master', sub: 'User profiles and accounts', screen: 'users' },
-    { href: '/usrenter', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions', screen: 'rights' },
-    { href: '/account', label: 'My Account', icon: 'bi-person-lock', title: 'My Account', sub: 'Password and sign-in settings' },
-
-    { href: '/blank', label: 'Blank Page', icon: 'bi-file-earmark', title: 'Blank  Page', sub: 'Blank  Page', screen: 'blank' },
-];
 
 // Route definition
 interface Route {
@@ -71,6 +49,7 @@ const ROUTES: Route[] = [
     { path: '/a_holenter', page: Holidays, screen: 'a_holm' },
     { path: '/a_holentergrid', page: Holentergri, screen: 'a_holm', requiredAction: 'add' },
     { path: '/a_inqempatt', page: Attendance, screen: 'a_inqempatt' },
+    
     // Public routes (no login required)
     { path: '/login', page: Login, public: true },
 
@@ -88,6 +67,9 @@ const ROUTES: Route[] = [
     // Program pages
     { path: '/program/programs', page: Program, screen: 'programs' },
     { path: '/program/users', page: Program, screen: 'users' },
+
+    // Department placeholder page
+    { path: '/departments', page: Blank },
 
     { path: '/program/rights', page: Usrenter, screen: 'rights' },
     { path: '/usrenter', page: Usrenter, screen: 'rights' },
@@ -107,12 +89,79 @@ interface View {
     user: AuthUser | null;
 }
 
-// Check menu item access permission for user
-function canShowMenuItem(item: MenuItem, user: AuthUser): boolean {
-    if (!item.screen) {
-        return true;
+// Recursive sidebar item (supports direct links, logout action, and collapsible nested groups)
+function SidebarNode({
+    item,
+    menuPath,
+    openIds,
+    ancestorSet,
+    onToggle,
+    onLogout,
+}: {
+    item: MenuItem;
+    menuPath: string;
+    openIds: Record<string, boolean>;
+    ancestorSet: Set<string>;
+    onToggle: (id: string) => void;
+    onLogout: () => void;
+}) {
+    const icon = item.icon ? <i className={`bi ${item.icon}`}></i> : null;
+
+    if (item.children) {
+        const isOpen = !!openIds[item.id];
+        const hasActive = ancestorSet.has(item.id);
+        return (
+            <div className="side-group">
+                <button
+                    type="button"
+                    className={`side-link side-group-btn${hasActive ? ' has-active' : ''}`}
+                    aria-expanded={isOpen}
+                    onClick={() => onToggle(item.id)}
+                >
+                    <span className="side-link-main">
+                        {icon}
+                        <span>{item.label}</span>
+                    </span>
+                    <i className={`bi bi-chevron-${isOpen ? 'down' : 'right'} side-chevron`}></i>
+                </button>
+                {isOpen ? (
+                    <div className="side-children">
+                        {item.children.map((child) => (
+                            <SidebarNode
+                                key={child.id}
+                                item={child}
+                                menuPath={menuPath}
+                                openIds={openIds}
+                                ancestorSet={ancestorSet}
+                                onToggle={onToggle}
+                                onLogout={onLogout}
+                            />
+                        ))}
+                    </div>
+                ) : null}
+            </div>
+        );
     }
-    return !!user.access?.[item.screen]?.view;
+
+    if (item.action === 'logout') {
+        return (
+            <button type="button" className="side-link side-group-btn" onClick={onLogout}>
+                <span className="side-link-main">
+                    {icon}
+                    <span>{item.label}</span>
+                </span>
+            </button>
+        );
+    }
+
+    const href = item.href ?? '#';
+    const isActive = menuPath.startsWith(href);
+    return (
+        <Link to={href} data-menu={href} className={`side-link${isActive ? ' active' : ''}`}>
+            {icon}
+            <span>{item.label}</span>
+        </Link>
+    );
 }
 
 // Main shell layout (Sidebar + Header + Page content)
@@ -121,23 +170,58 @@ function Shell({ user, path, children }: { user: AuthUser; path: string; childre
 
     // Update topbar breadcrumbs and active menu state
     const menuPath = path === '/a_holenter' || path === '/a_holentergrid' ? '/a_holm' : path === '/program/rights' || path === '/inqurgr' ? '/usrenter' : path;
-    const current = MENU.find((m) => menuPath.startsWith(m.href));
+    const visibleMenu = filterMenuByAccess(SIDEBAR_MENU, user);
+    const { activeItem: current, ancestorIds } = findActiveTrail(visibleMenu, menuPath);
+    const ancestorKey = ancestorIds.join(',');
+
+    const [openIds, setOpenIds] = useState<Record<string, boolean>>(() => {
+        const initial: Record<string, boolean> = {};
+        for (const id of ancestorIds) {
+            initial[id] = true;
+        }
+        return initial;
+    });
+
+    useEffect(() => {
+        if (!ancestorKey) return;
+        setOpenIds((prev) => {
+            const next = { ...prev };
+            for (const id of ancestorKey.split(',')) {
+                next[id] = true;
+            }
+            return next;
+        });
+    }, [ancestorKey]);
+
+    const toggleGroup = useCallback((id: string) => {
+        setOpenIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    }, []);
+
+    const handleLogout = useCallback(() => {
+        logout();
+        navigate('/login', { replace: true });
+    }, [navigate]);
+
+    const ancestorSet = new Set(ancestorIds);
 
     return (
         <div className="app-shell">
             <aside className="sidebar">
                 <div className="brand"><img src={logo} alt="Mike Flora" /></div>
                 <div className="nav-label">Menu</div>
-                {MENU.filter((m) => canShowMenuItem(m, user)).map((m) => (
-                    <Link
-                        key={m.href}
-                        to={m.href}
-                        data-menu={m.href}
-                        className={`side-link${menuPath.startsWith(m.href) ? ' active' : ''}`}
-                    >
-                        <i className={`bi ${m.icon}`}></i> {m.label}
-                    </Link>
-                ))}
+                <nav className="side-nav">
+                    {visibleMenu.map((item) => (
+                        <SidebarNode
+                            key={item.id}
+                            item={item}
+                            menuPath={menuPath}
+                            openIds={openIds}
+                            ancestorSet={ancestorSet}
+                            onToggle={toggleGroup}
+                            onLogout={handleLogout}
+                        />
+                    ))}
+                </nav>
                 {user.access?.employees?.add ? (
                     <div className="sidebar-card">
                         <div className="t">Need to add someone?</div>

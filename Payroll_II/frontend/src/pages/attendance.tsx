@@ -305,7 +305,10 @@ export default function Attendance() {
                     <p className="text-muted mb-0">Review monthly attendance and correct recorded times, overtime and late minutes.</p>
                 </div>
                 {can('a_inqempatt', 'add') ? (
-                    <button className="btn btn-primary text-nowrap" id="add" disabled={!selection || busy} onClick={() => openEditor(null)}><i className="bi bi-plus-lg me-1"></i>Add record</button>
+                    <button className="btn btn-primary text-nowrap" id="add" disabled={!selection || busy} onClick={() => openEditor(null)}>
+                        <i className="bi bi-plus-lg me-1"></i>
+                            Add record
+                    </button>
                 ) : null}
             </div>
             <div id="notice" role="status">
