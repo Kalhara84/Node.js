@@ -5,6 +5,7 @@ import { can } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading, confirmModal } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
+import DateInput from '../components/DateInput.tsx';
 import { useAlive } from '../App.tsx';
 import { useNavigate } from 'react-router-dom';
 
@@ -81,7 +82,7 @@ function Editor({ row, view, rows, types, busy, onSubmit, onCancel }: {
                     <div className="row g-3">
                         <div className="col-md-4">
                             <label className="form-label" htmlFor="holddt">Date</label>
-                            <input className="form-control" id="holddt" name="holddt" type="date" defaultValue={date} min="1900-01-01" max="9999-12-31" required readOnly={!!row} />
+                            <DateInput id="holddt" name="holddt" defaultValue={date} min="1900-01-01" max="9999-12-31" required readOnly={!!row} />
                             {row ? <div className="form-text">The holiday date stays fixed when editing.</div> : null}
                         </div>
                         <div className="col-md-4">

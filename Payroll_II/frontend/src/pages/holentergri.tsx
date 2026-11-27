@@ -4,6 +4,7 @@ import { request } from '../services/api.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
+import DateInput from '../components/DateInput.tsx';
 import { useAlive } from '../App.tsx';
 import { useNavigate } from 'react-router-dom';
 
@@ -272,11 +273,11 @@ export default function Holentergri() {
                 <div className="row g-3 align-items-end">
                     <div className="col-sm-4">
                         <label className="form-label" htmlFor="frddt">From Date</label>
-                        <input id="frddt" name="frddt" type="date" className="form-control" value={from} min="1900-01-01" max="9999-12-31" required onChange={(e) => setFrom(e.target.value)} />
+                        <DateInput id="frddt" name="frddt" value={from} min="1900-01-01" max="9999-12-31" required onChange={(e) => setFrom(e.target.value)} />
                     </div>
                     <div className="col-sm-4">
                         <label className="form-label" htmlFor="toddt">To Date</label>
-                        <input id="toddt" name="toddt" type="date" className="form-control" value={to} min="1900-01-01" max="9999-12-31" required onChange={(e) => setTo(e.target.value)} />
+                        <DateInput id="toddt" name="toddt" value={to} min="1900-01-01" max="9999-12-31" required onChange={(e) => setTo(e.target.value)} />
                     </div>
                     <div className="col-sm-4">
                         <button type="submit" className="btn btn-primary w-100" id="btn-display" disabled={busy}>

@@ -4,6 +4,7 @@ import { api, getLookups } from '../services/api.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
+import DateInput from '../components/DateInput.tsx';
 import { Link, useNavigate } from 'react-router-dom';
 import type { EmployeeBody, Lookups, PageProps } from '../types.ts';
 
@@ -228,8 +229,17 @@ function FieldInput({ fd, value, lookups, onChange }: {
                 ))}
             </Select>
         );
+    } else if (type === 'date') {
+        input = (
+            <DateInput
+                name={key}
+                aria-label={label}
+                value={value}
+                onChange={(e) => onChange(key, e.target.value)}
+            />
+        );
     } else {
-        const inputType = type === 'date' ? 'date' : (type === 'int' || type === 'float') ? 'number' : (opt.inputType || 'text');
+        const inputType = (type === 'int' || type === 'float') ? 'number' : (opt.inputType || 'text');
         const step = type === 'float' ? '0.01' : type === 'int' ? '1' : undefined;
         const readOnly = key === 'empeno';
 
@@ -294,6 +304,9 @@ function EmployeeFormView({ id, initial, lookups }: { id: number | null; initial
     // Handle form submit (create or update employee)
     async function onSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
         e.preventDefault();
+        if (!e.currentTarget.reportValidity()) {
+            return;
+        }
         setError('');
         const body = toPayload(values);
 

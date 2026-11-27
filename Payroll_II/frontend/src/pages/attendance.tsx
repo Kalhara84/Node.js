@@ -5,6 +5,7 @@ import { can } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading, confirmModal } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
+import DateInput from '../components/DateInput.tsx';
 import { useAlive } from '../App.tsx';
 
 type Row = Record<string, string | number | null>;
@@ -39,7 +40,11 @@ function Field({ name, label, type, value, ...attrs }: {
     return (
         <div className="col-sm-6 col-lg-3">
             <label className="form-label" htmlFor={`att-${name}`}>{label}</label>
-            <input className="form-control" id={`att-${name}`} name={name} type={type} defaultValue={t(value)} {...attrs} required />
+            {type === 'date' ? (
+                <DateInput id={`att-${name}`} name={name} defaultValue={t(value)} {...attrs} required />
+            ) : (
+                <input className="form-control" id={`att-${name}`} name={name} type={type} defaultValue={t(value)} {...attrs} required />
+            )}
         </div>
     );
 }

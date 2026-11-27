@@ -1384,3 +1384,11 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 .attendance-table tfoot td {
   background: var(--bs-tertiary-bg, #f8f9fa);
 }
+
+/* ISO date text stays visible while the native calendar handles selection. */
+.iso-date-input { position: relative; width: 100%; }
+.iso-date-input > .form-control { padding-right: 2.75rem; }
+.iso-date-picker { position: absolute; inset: 0 0 0 auto; width: 2.5rem; display: grid; place-items: center; border-radius: inherit; }
+.iso-date-picker > input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.iso-date-picker > input:disabled { cursor: default; }
+.iso-date-picker:focus-within { outline: 2px solid var(--brand-600); outline-offset: -3px; border-radius: 8px; }
