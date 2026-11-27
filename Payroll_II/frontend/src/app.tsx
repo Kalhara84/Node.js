@@ -20,6 +20,7 @@ import Account from './pages/account.tsx';
 import Inqurgr2 from './pages/inqurgr2.tsx';
 import Blank from './pages/blank.tsx';
 import Depm from './pages/depm.tsx';
+import Noptrn from './pages/noptrn.tsx';
 import sidebarMenuData from './sidebar.json';
 
 // Same idea as the old ctx.alive(): false once the page was left (ignore late API answers)
@@ -136,6 +137,9 @@ const ROUTES: Route[] = [
     // Department master page
     { path: '/departments', page: Depm },
     { path: '/depm', page: Depm },
+
+    // Direct transaction entry page
+    { path: '/noptrn', page: Noptrn },
 
     { path: '/program/rights', page: Usrenter, screen: 'rights' },
     { path: '/usrenter', page: Usrenter, screen: 'rights' },

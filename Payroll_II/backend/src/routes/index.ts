@@ -3,6 +3,7 @@ import program from './program';
 import attendance from './attendance';
 import holidays from './holidays';
 import depm from './depm';
+import noptrn from './noptrn';
 import { requireActiveAccount, requireEmployee, requireScreen } from '../lib/permissions';
 import { requireAuth, wrap } from '../middleware';
 import { AuthController } from '../controllers/auth.controller';
@@ -29,6 +30,7 @@ router.use('/program', program);
 router.use('/attendance', attendance);
 router.use('/holidays', holidays);
 router.use('/depm', depm);
+router.use('/noptrn', noptrn);
 
 // --- 5. Dashboard & Master Lookups ---
 router.get('/dashboard', requireScreen('dashboard'), wrap(DashboardController.summary));

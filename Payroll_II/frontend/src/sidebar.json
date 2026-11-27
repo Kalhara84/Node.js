@@ -68,6 +68,21 @@
                         "sub": "Manage department records"
                     }
                 ]
+            },
+            {
+                "id": "payroll-data-entry",
+                "label": "Data Entry",
+                "icon": "bi-pencil-square",
+                "children": [
+                    {
+                        "id": "payroll-direct-transaction",
+                        "label": "Entry Direct Transaction",
+                        "icon": "bi-cash-coin",
+                        "href": "/noptrn",
+                        "title": "Enter Direct Transaction",
+                        "sub": "Enter direct payroll transactions"
+                    }
+                ]
             }
         ]
     },

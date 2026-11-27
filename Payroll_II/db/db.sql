@@ -5,6 +5,8 @@ SET standard_conforming_strings = on;
 SELECT pg_advisory_xact_lock(740219852);
 
 -- Drop application tables if they exist (reverse dependency order)
+DROP TABLE IF EXISTS "p_trnmast" CASCADE;
+DROP TABLE IF EXISTS "p_ptrmast" CASCADE;
 DROP TABLE IF EXISTS "usrmast" CASCADE;
 DROP TABLE IF EXISTS "usdmast" CASCADE;
 DROP TABLE IF EXISTS "prgmast" CASCADE;
@@ -646,3 +648,159 @@ FROM a_sysmast m CROSS JOIN a_sysmast s
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 AND NOT EXISTS (SELECT 1 FROM prgmast WHERE prgapp='payroll-web' AND prgnam='a_holm');
 COMMIT;
+
+-- Direct transaction & permanent transaction tables (p_ptrmast, p_trnmast).
+CREATE TABLE IF NOT EXISTS "p_ptrmast" (
+  "ptrsno" SERIAL,
+  "ptrempsno" INTEGER NOT NULL default '0',
+  "ptrtyp" varchar(4) NOT NULL default '',
+  "ptramt" DOUBLE PRECISION NOT NULL default '0.00',
+  "ptrucdnew" varchar(30) NOT NULL default '',
+  "ptrentddt" date  default NULL,
+  "ptrenttime" time NOT NULL default '00:00:00',
+  "ptrucdame" varchar(30) NOT NULL default '',
+  "ptrameddt" date  default NULL,
+  "ptrametime" time NOT NULL default '00:00:00',
+  PRIMARY KEY  ("ptrempsno","ptrtyp"),
+  UNIQUE ("ptrsno")
+);
+
+-- p_ptrmast: 50 original source rows.
+INSERT INTO "p_ptrmast" ("ptrsno","ptrempsno","ptrtyp","ptramt","ptrucdnew","ptrentddt","ptrenttime","ptrucdame","ptrameddt","ptrametime") VALUES
+(4050,401,E'3333',3000.00,E'hrd',E'2013-05-09',E'23:15:47',E'',NULL,E'00:00:00'),
+(413,405,E'3333',3000.00,E'HRE',E'2012-06-07',E'11:57:25',E'',NULL,E'00:00:00'),
+(870,422,E'3333',3000.00,E'hrd',E'2012-09-01',E'11:20:23',E'',NULL,E'00:00:00'),
+(421,423,E'3333',3000.00,E'HRE',E'2012-06-07',E'11:57:25',E'',NULL,E'00:00:00'),
+(613,603,E'3333',780.00,E'hrd',E'2012-08-09',E'10:08:32',E'',NULL,E'00:00:00'),
+(543,9,E'3333',3000.00,E'HRE',E'2012-06-11',E'10:47:44',E'',NULL,E'00:00:00'),
+(5080,1320,E'016',0.00,E'rajika',E'2015-05-05',E'16:33:28',E'',NULL,E'00:00:00'),
+(546,94,E'3333',3000.00,E'HRE',E'2012-06-11',E'10:47:44',E'',NULL,E'00:00:00'),
+(3572,100,E'3333',3000.00,E'hrd',E'2013-05-09',E'16:53:56',E'',NULL,E'00:00:00'),
+(910,101,E'3333',3000.00,E'hrd',E'2012-09-01',E'12:55:36',E'',NULL,E'00:00:00'),
+(12,683,E'3333',3000.00,E'hrd',E'2012-05-10',E'10:34:51',E'',NULL,E'00:00:00'),
+(3584,690,E'3333',3000.00,E'hrd',E'2013-05-09',E'16:53:56',E'',NULL,E'00:00:00'),
+(5103,117,E'3333',3000.00,E'rajika',E'2015-05-05',E'16:35:26',E'',NULL,E'00:00:00'),
+(927,967,E'3333',3000.00,E'hrd',E'2012-09-01',E'13:02:35',E'',NULL,E'00:00:00'),
+(5246,466,E'3333',1000.00,E'rajika',E'2015-05-05',E'17:23:52',E'',NULL,E'00:00:00'),
+(61,1018,E'3333',3000.00,E'hrd',E'2012-05-22',E'13:19:10',E'',NULL,E'00:00:00'),
+(5587,1660,E'002',1000.00,E'nathasha',E'2015-08-04',E'09:07:07',E'',NULL,E'00:00:00'),
+(5586,1659,E'002',1000.00,E'nathasha',E'2015-08-04',E'09:07:00',E'',NULL,E'00:00:00'),
+(5585,1658,E'002',1000.00,E'nathasha',E'2015-08-04',E'09:06:55',E'',NULL,E'00:00:00'),
+(5564,1632,E'002',1000.00,E'nathasha',E'2015-07-03',E'09:15:13',E'',NULL,E'00:00:00'),
+(5583,1656,E'002',1000.00,E'nathasha',E'2015-08-04',E'09:06:40',E'',NULL,E'00:00:00'),
+(5581,1654,E'002',1000.00,E'nathasha',E'2015-08-04',E'09:06:23',E'',NULL,E'00:00:00'),
+(7739,432,E'002',2500.00,E'nathasha',E'2018-06-11',E'09:31:20',E'',NULL,E'00:00:00'),
+(5580,1653,E'002',1000.00,E'nathasha',E'2015-08-04',E'09:05:57',E'',NULL,E'00:00:00'),
+(7288,1652,E'002',3500.00,E'nathasha',E'2018-05-09',E'13:45:11',E'',NULL,E'00:00:00'),
+(3902,179,E'002',1000.00,E'hrd',E'2013-05-09',E'23:15:47',E'',NULL,E'00:00:00'),
+(6334,1768,E'002',3500.00,E'nathasha',E'2016-07-01',E'14:10:02',E'',NULL,E'00:00:00'),
+(6119,1651,E'002',3500.00,E'nathasha',E'2016-06-08',E'21:02:40',E'',NULL,E'00:00:00'),
+(747,193,E'002',1000.00,E'hrd',E'2012-09-01',E'10:38:03',E'',NULL,E'00:00:00'),
+(6134,1650,E'002',3500.00,E'nathasha',E'2016-06-08',E'21:16:48',E'',NULL,E'00:00:00'),
+(4527,198,E'002',1000.00,E'nathasha',E'2014-05-07',E'10:56:16',E'',NULL,E'00:00:00'),
+(4533,271,E'002',1000.00,E'nathasha',E'2014-05-07',E'10:56:59',E'',NULL,E'00:00:00'),
+(6381,1804,E'002',3500.00,E'nathasha',E'2016-08-23',E'09:11:14',E'',NULL,E'00:00:00'),
+(1002,221,E'002',1000.00,E'hrd',E'2012-09-11',E'17:35:14',E'',NULL,E'00:00:00'),
+(6337,1771,E'002',3500.00,E'nathasha',E'2016-07-01',E'14:10:17',E'',NULL,E'00:00:00'),
+(4621,225,E'002',1000.00,E'nathasha',E'2014-05-07',E'11:20:18',E'',NULL,E'00:00:00'),
+(4737,269,E'002',1000.00,E'nathasha',E'2014-05-07',E'14:26:15',E'',NULL,E'00:00:00'),
+(767,232,E'002',1000.00,E'hrd',E'2012-09-01',E'10:45:46',E'',NULL,E'00:00:00'),
+(6118,1649,E'002',3500.00,E'nathasha',E'2016-06-08',E'21:02:28',E'',NULL,E'00:00:00'),
+(5575,1648,E'002',1000.00,E'nathasha',E'2015-08-04',E'09:05:13',E'',NULL,E'00:00:00'),
+(5507,324,E'3333',1000.00,E'nathasha',E'2015-05-07',E'10:44:33',E'',NULL,E'00:00:00'),
+(5147,1164,E'016',0.00,E'rajika',E'2015-05-05',E'16:41:40',E'',NULL,E'00:00:00'),
+(5470,208,E'016',0.00,E'rajika',E'2015-05-05',E'18:56:32',E'',NULL,E'00:00:00'),
+(6403,1815,E'002',3500.00,E'nathasha',E'2016-10-04',E'16:06:55',E'',NULL,E'00:00:00'),
+(6991,1631,E'002',3500.00,E'nathasha',E'2017-07-08',E'12:18:35',E'',NULL,E'00:00:00'),
+(8920,466,E'002',2500.00,E'inokahr',E'2021-05-10',E'14:10:54',E'',NULL,E'00:00:00'),
+(8184,2116,E'016',0.00,E'nathasha',E'2019-05-08',E'21:18:14',E'',NULL,E'00:00:00'),
+(3941,262,E'002',1000.00,E'hrd',E'2013-05-09',E'23:15:47',E'',NULL,E'00:00:00'),
+(12163,1791,E'002',0.00,E'nathasha',E'2025-06-09',E'14:49:16',E'',NULL,E'00:00:00'),
+(6369,1792,E'002',3500.00,E'nathasha',E'2016-08-03',E'15:02:48',E'',NULL,E'00:00:00')
+ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_ptrmast', 'ptrsno'),
+  GREATEST(COALESCE(MAX("ptrsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_ptrmast_ptrsno_seq'), 1)),
+  MAX("ptrsno") IS NOT NULL) FROM "p_ptrmast";
+
+CREATE TABLE IF NOT EXISTS "p_sysmast" (
+
+CREATE TABLE IF NOT EXISTS "p_trnmast" (
+  "trnsno" SERIAL,
+  "trnempsno" INTEGER NOT NULL default '0',
+  "trntyp" varchar(4) NOT NULL default '',
+  "trnamt" DOUBLE PRECISION NOT NULL default '0.00',
+  "trndes" text NOT NULL DEFAULT '',
+  "trnucdnew" varchar(30) NOT NULL default '',
+  "trnentddt" date  default NULL,
+  "trnenttime" time NOT NULL default '00:00:00',
+  "trnucdame" varchar(30) NOT NULL default '',
+  "trnameddt" date  default NULL,
+  "trnametime" time NOT NULL default '00:00:00',
+  PRIMARY KEY  ("trnempsno","trntyp"),
+  UNIQUE ("trnsno")
+);
+
+-- p_trnmast: 50 original source rows.
+INSERT INTO "p_trnmast" ("trnsno","trnempsno","trntyp","trnamt","trndes","trnucdnew","trnentddt","trnenttime","trnucdame","trnameddt","trnametime") VALUES
+(1,365,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(2,1123,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(3,1231,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(4,1247,E'055',10000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(5,1349,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(6,1397,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(7,151,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(8,182,E'055',7000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(9,305,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(10,311,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(11,284,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(12,336,E'055',10000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(13,338,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(14,347,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(15,414,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(16,1025,E'055',10000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(17,1445,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(18,1587,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(19,2146,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(20,2181,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(21,2229,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(22,2330,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(23,2331,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(24,2332,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(25,2334,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(26,2337,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(27,2346,E'055',3000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(28,2431,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(29,2557,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(30,2565,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(31,2608,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(32,2620,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(33,2660,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(34,2692,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(35,2694,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(36,2732,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(37,2745,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(38,2747,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(39,2787,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(40,2790,E'055',10000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(41,2828,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(42,2845,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(43,2864,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(44,2867,E'055',5000.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(45,2941,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(46,2942,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(47,2943,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(48,2945,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(49,2963,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00'),
+(50,2964,E'055',0.00,E'',E'inokahr',E'2026-08-21',E'08:07:04',E'',NULL,E'00:00:00')
+ON CONFLICT DO NOTHING;
+
+-- Keep generated IDs above imported IDs without rewinding existing sequences.
+SELECT setval(pg_get_serial_sequence('p_trnmast', 'trnsno'),
+  GREATEST(COALESCE(MAX("trnsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
+    WHERE schemaname = current_schema() AND sequencename = 'p_trnmast_trnsno_seq'), 1)),
+  MAX("trnsno") IS NOT NULL) FROM "p_trnmast";
+
+CREATE TABLE IF NOT EXISTS "prgmast" (
