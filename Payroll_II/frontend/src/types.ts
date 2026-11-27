@@ -128,14 +128,8 @@ export interface DashboardData {
     }[];
 }
 /** what the router gives every page */
-export interface PageContext {
+export interface PageProps {
     params: string[];
-    navigate: (path: string, replace?: boolean) => void;
-    /** false when the user already moved to another page (ignore late API answers) */
-    alive: () => boolean;
-}
-export interface PageModule {
-    render: (el: HTMLElement, ctx: PageContext) => Promise<void>;
 }
 /** form values / API body for an employee (all fields optional) */
 export type EmployeeBody = Partial<Omit<Employee, 'empsno' | 'department_name' | 'location_name'>>;

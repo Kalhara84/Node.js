@@ -23,10 +23,8 @@ $(document).on('select2:open', () => {
     setTimeout(focusSearch, 0);
 });
 
-const observedSelects = new WeakMap<HTMLSelectElement, MutationObserver>();
-
 /**
- * Enhance a single <select> element with Select2 and synchronization watchers.
+ * Enhance a single <select> element with Select2.
  */
 export function enhanceSelect(select: HTMLSelectElement): void {
     if (select.dataset.noSelect2 !== undefined) {
@@ -47,110 +45,34 @@ export function enhanceSelect(select: HTMLSelectElement): void {
             allowClear: false
         });
 
-        // Bubble change and input events to native DOM
+        // Bubble change and input events to native DOM (React listens to these)
         $select.on('select2:select.payroll select2:unselect.payroll select2:clear.payroll', () => {
             select.dispatchEvent(new Event('change', { bubbles: true }));
             select.dispatchEvent(new Event('input', { bubbles: true }));
         });
     }
+}
 
-    // Select2 observes disabled attributes itself; only synchronize values and options here.
-    if (!observedSelects.has(select)) {
-
-        // Wrap 'value' setter to keep Select2 display in sync with programmatic value changes
-        const valueDescriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
-        if (valueDescriptor && valueDescriptor.set) {
-            Object.defineProperty(select, 'value', {
-                get() {
-                    return valueDescriptor.get!.call(this);
-                },
-                set(val: string) {
-                    valueDescriptor.set!.call(this, val);
-                    $select.trigger('change.select2');
-                },
-                configurable: true
-            });
-        }
-
-        // Refresh the selected label when options change without rewriting the select.
-        const observer = new MutationObserver(() => {
-            $select.trigger('change.select2');
-        });
-
-        observer.observe(select, {
-            childList: true
-        });
-        observedSelects.set(select, observer);
+/**
+ * Refresh the Select2 display after React changed the value or the options.
+ */
+export function refreshSelect2(select: HTMLSelectElement): void {
+    if ($(select).hasClass('select2-hidden-accessible')) {
+        $(select).trigger('change.select2');
     }
 }
 
 /**
- * Initializes Select2 on all matching select elements inside the container.
+ * Safely closes any open Select2 dropdown and removes the Select2 instance of one select.
  */
-export function initSelect2(root: HTMLElement | Document = document): void {
-    const selects = root.querySelectorAll<HTMLSelectElement>('select.form-select:not([data-no-select2])');
-    selects.forEach((select) => enhanceSelect(select));
-}
-
-/**
- * Safely closes any open Select2 dropdowns and cleans up instances in root.
- */
-export function destroySelect2(root: HTMLElement | Document = document): void {
-    const selects = root.querySelectorAll<HTMLSelectElement>('select.select2-hidden-accessible');
-    selects.forEach((select) => {
-        observedSelects.get(select)?.disconnect();
-        observedSelects.delete(select);
-        Reflect.deleteProperty(select, 'value');
-        $(select).off('.payroll');
-        try {
-            $(select).select2('destroy');
-        } catch {
-            // Ignore if already destroyed
-        }
-    });
+export function destroySelect2(select: HTMLSelectElement): void {
+    $(select).off('.payroll');
+    try {
+        $(select).select2('destroy');
+    } catch {
+        // Ignore if already destroyed
+    }
 
     // Close any orphaned open dropdowns
     $('.select2-container--open').remove();
-}
-
-let pageObserver: MutationObserver | null = null;
-
-/** Release observers and widgets when React unmounts the page. */
-export function stopAutoSelect2(container: HTMLElement): void {
-    pageObserver?.disconnect();
-    pageObserver = null;
-    destroySelect2(container);
-}
-
-/**
- * Start observing DOM changes inside a container to automatically enhance new selects.
- */
-export function startAutoSelect2(container: HTMLElement): void {
-    if (pageObserver) {
-        pageObserver.disconnect();
-    }
-
-    // Initial enhancement
-    initSelect2(container);
-
-    pageObserver = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-            for (const node of mutation.addedNodes) {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                    const el = node as HTMLElement;
-                    if (el.tagName === 'SELECT' && el.classList.contains('form-select')) {
-                        enhanceSelect(el as HTMLSelectElement);
-                    } else if (el.querySelectorAll) {
-                        const selects = el.querySelectorAll<HTMLSelectElement>('select.form-select:not([data-no-select2])');
-                        selects.forEach((sel) => enhanceSelect(sel));
-                    }
-                }
-            }
-        }
-    });
-
-    pageObserver.observe(container, {
-        childList: true,
-        subtree: true
-    });
 }

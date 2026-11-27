@@ -1,26 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { logo } from './assets/index.ts';
-import { currentUser, homeFor, logout, refreshUser } from './services/auth.ts';
-import type { AuthUser, PageContext, PageModule, Rights, Screen } from './types.ts';
-import { alertBox, errMsg } from './utils/ui.ts';
-import { startAutoSelect2, stopAutoSelect2 } from './utils/select2.ts';
-
-import * as login from './pages/login.ts';
-import * as dashboard from './pages/dashboard.ts';
-import * as employees from './pages/employees.ts';
-import * as employeesTable from './pages/employees-table.ts';
-import * as employeeView from './pages/employee-view.ts';
-import * as employeeForm from './pages/employee-form.ts';
-import * as administration from './pages/administration.ts';
-import * as attendance from './pages/attendance.ts';
-import * as holidays from './pages/holidays.ts';
-import * as holentergri from './pages/holentergri.ts';
-import * as usrenter from './pages/usrenter.ts';
-import * as inqurgr from './pages/inqurgr.ts';
-import * as account from './pages/account.ts';
-import * as inqurgr2 from './pages/inqurgr2.ts'
-import * as blank from './pages/blank.ts';
+import { currentUser, logout, refreshUser, homeFor } from './services/auth.ts';
+import { Link, matchRoute, navigate, useNavigation } from './router.tsx';
+import type { AuthUser, PageProps, Rights, Screen } from './types.ts';
+import Login from './pages/login.tsx';
+import Dashboard from './pages/dashboard.tsx';
+import Employees from './pages/employees.tsx';
+import EmployeesTable from './pages/employees-table.tsx';
+import EmployeeView from './pages/employee-view.tsx';
+import EmployeeForm from './pages/employee-form.tsx';
+import Administration from './pages/administration.tsx';
+import Attendance from './pages/attendance.tsx';
+import Holidays from './pages/holidays.tsx';
+import Holentergri from './pages/holentergri.tsx';
+import Usrenter from './pages/usrenter.tsx';
+import Inqurgr from './pages/inqurgr.tsx';
+import Account from './pages/account.tsx';
+import Inqurgr2 from './pages/inqurgr2.tsx';
+import Blank from './pages/blank.tsx';
 
 // Sidebar menu item structure
 interface MenuItem {
@@ -43,13 +41,13 @@ const MENU: MenuItem[] = [
     { href: '/usrenter', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions', screen: 'rights' },
     { href: '/account', label: 'My Account', icon: 'bi-person-lock', title: 'My Account', sub: 'Password and sign-in settings' },
 
-    { href: '/blank', label: 'Blank Page', icon: 'bi-file-earmark', title: 'Blank  Page', sub: 'Blank  Page' , screen:'blank'},
+    { href: '/blank', label: 'Blank Page', icon: 'bi-file-earmark', title: 'Blank  Page', sub: 'Blank  Page', screen: 'blank' },
 ];
 
 // Route definition
 interface Route {
     path: string;
-    page: PageModule;
+    page: ComponentType<PageProps>;
     public?: boolean;
     screen?: Screen;
     action?: keyof Rights;
@@ -57,106 +55,44 @@ interface Route {
 
 // Application routes
 const ROUTES: Route[] = [
-    { path: '/a_holm', page: holidays, screen: 'a_holm' },
-    { path: '/a_holenter', page: holidays, screen: 'a_holm' },
-    { path: '/a_holentergrid', page: holentergri, screen: 'a_holm', action: 'add' },
-    { path: '/a_inqempatt', page: attendance, screen: 'a_inqempatt' },
+    { path: '/a_holm', page: Holidays, screen: 'a_holm' },
+    { path: '/a_holenter', page: Holidays, screen: 'a_holm' },
+    { path: '/a_holentergrid', page: Holentergri, screen: 'a_holm', action: 'add' },
+    { path: '/a_inqempatt', page: Attendance, screen: 'a_inqempatt' },
     // Public routes (no login required)
-    { path: '/login', page: login, public: true },
+    { path: '/login', page: Login, public: true },
 
     // Main pages
-    { path: '/dashboard', page: dashboard, screen: 'dashboard' },
-    { path: '/account', page: account },
+    { path: '/dashboard', page: Dashboard, screen: 'dashboard' },
+    { path: '/account', page: Account },
 
     // Employee pages
-    { path: '/employees', page: employees, screen: 'employees' },
-    { path: '/employees/new', page: employeeForm, screen: 'employees', action: 'add' },
-    { path: '/employees/view', page: employeesTable, screen: 'employees' },
-    { path: '/employees/:id', page: employeeView, screen: 'employees' },
-    { path: '/employees/:id/edit', page: employeeForm, screen: 'employees', action: 'amend' },
+    { path: '/employees', page: Employees, screen: 'employees' },
+    { path: '/employees/new', page: EmployeeForm, screen: 'employees', action: 'add' },
+    { path: '/employees/view', page: EmployeesTable, screen: 'employees' },
+    { path: '/employees/:id', page: EmployeeView, screen: 'employees' },
+    { path: '/employees/:id/edit', page: EmployeeForm, screen: 'employees', action: 'amend' },
 
     // Administration pages
-    { path: '/administration/programs', page: administration, screen: 'programs' },
-    { path: '/administration/users', page: administration, screen: 'users' },
+    { path: '/administration/programs', page: Administration, screen: 'programs' },
+    { path: '/administration/users', page: Administration, screen: 'users' },
 
-    { path: '/administration/rights', page: usrenter, screen: 'rights' },
-    { path: '/usrenter', page: usrenter, screen: 'rights' },
-    { path: '/inqurgr', page: inqurgr, screen: 'rights' },
-    {path: '/inqurgr2', page: inqurgr2, screen: 'rights' },
+    { path: '/administration/rights', page: Usrenter, screen: 'rights' },
+    { path: '/usrenter', page: Usrenter, screen: 'rights' },
+    { path: '/inqurgr', page: Inqurgr, screen: 'rights' },
+    { path: '/inqurgr2', page: Inqurgr2, screen: 'rights' },
 
     //Blank Page
-    {path:'/blank',page:blank},
+    { path: '/blank', page: Blank },
 ];
 
-// Check if current URL matches a route and extract parameters like :id
-function matchRoute(routePath: string, currentPath: string): { matched: boolean; params: string[] } {
-    const routeParts = routePath.split('/').filter(Boolean);
-    const currentParts = currentPath.split('/').filter(Boolean);
-
-    if (routeParts.length !== currentParts.length) {
-        return { matched: false, params: [] };
-    }
-
-    const params: string[] = [];
-
-    for (let i = 0; i < routeParts.length; i++) {
-        const rPart = routeParts[i];
-        const cPart = currentParts[i];
-
-        // Dynamic parameter like :id
-        if (rPart.startsWith(':')) {
-            params.push(cPart);
-        } else if (rPart !== cPart) {
-            return { matched: false, params: [] };
-        }
-    }
-
-    return { matched: true, params };
-}
-
-// SPA navigation function
-export function navigate(path: string, replace = false): void {
-    if (replace) {
-        history.replaceState({}, '', path);
-    } else {
-        history.pushState({}, '', path);
-    }
-    window.dispatchEvent(new PopStateEvent('popstate'));
-}
-
-interface ResolvedPage {
-    route: Route;
-    user: AuthUser | null;
+// What is currently shown (set after the route, login and rights checks pass)
+interface View {
+    key: number;
     path: string;
+    route: Route;
     params: string[];
-    revision: number;
-}
-
-// Render the current page and clean up its dropdowns when navigating away
-function PageContent({ page }: { page: ResolvedPage }) {
-    const container = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        const host = container.current!;
-        let active = true;
-        const ctx: PageContext = { params: page.params, navigate, alive: () => active };
-        window.scrollTo(0, 0);
-        void page.route.page.render(host, ctx).then(() => {
-            if (active) {
-                startAutoSelect2(host);
-            }
-        }).catch((error: unknown) => {
-            if (active) {
-                host.innerHTML = alertBox(errMsg(error));
-            }
-        });
-        return () => {
-            active = false;
-            stopAutoSelect2(host);
-        };
-    }, [page]);
-    // display:contents preserves the original layout while giving each page
-    // a fresh event-listener boundary when the route changes.
-    return <div ref={container} style={{ display: 'contents' }} />;
+    user: AuthUser | null;
 }
 
 // Check menu item access permission for user
@@ -169,131 +105,173 @@ function canShowMenuItem(item: MenuItem, user: AuthUser): boolean {
 
 // Main shell layout (Sidebar + Header + Page content)
 function Shell({ user, path, children }: { user: AuthUser; path: string; children: ReactNode }) {
-    const menuPath = path === '/a_holenter' || path === '/a_holentergrid' ? '/a_holm'
-        : path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
-    const current = MENU.find((item) => menuPath.startsWith(item.href));
-    return <div className="app-shell">
-        <aside className="sidebar">
-            <div className="brand"><img src={logo} alt="Mike Flora" /></div>
-            <div className="nav-label">Menu</div>
-            {MENU.filter((item) => canShowMenuItem(item, user)).map((item) =>
-                <a key={item.href} href={item.href} data-link data-menu={item.href}
-                    className={`side-link${menuPath.startsWith(item.href) ? ' active' : ''}`}>
-                    <i className={`bi ${item.icon}`} /> {item.label}
-                </a>)}
-            {user.access?.employees?.add && <div className="sidebar-card">
-                <div className="t">Need to add someone?</div>
-                <div className="s">Create a new employee record in a minute.</div>
-                <a href="/employees/new" data-link className="btn btn-sm"><i className="bi bi-plus-lg me-1" />Add employee</a>
-            </div>}
-            <div className="sidebar-foot">Attendance &amp; Payroll System</div>
-        </aside>
-        <div className="main">
-            <header className="topbar">
-                <div className="crumb"><span id="crumb-title">{current?.title ?? 'Payroll System'}</span><small id="crumb-sub">{current?.sub ?? ''}</small></div>
-                <div className="d-flex align-items-center gap-2">
-                    <div className="user-chip">
-                        <span className="avatar round" style={{ width: 34, height: 34, fontSize: '.8rem' }}>{user.name.charAt(0).toUpperCase()}</span>
-                        <div className="lh-sm d-none d-sm-block">
-                            <div className="small fw-semibold" style={{ color: 'var(--ink)' }}>{user.name}</div>
-                            <div className="text-muted" style={{ fontSize: '.7rem' }}>{user.role || user.username}</div>
-                        </div>
+    // Update topbar breadcrumbs and active menu state
+    const menuPath = path === '/a_holenter' || path === '/a_holentergrid' ? '/a_holm' : path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
+    const current = MENU.find((m) => menuPath.startsWith(m.href));
+
+    return (
+        <div className="app-shell">
+            <aside className="sidebar">
+                <div className="brand"><img src={logo} alt="Mike Flora" /></div>
+                <div className="nav-label">Menu</div>
+                {MENU.filter((m) => canShowMenuItem(m, user)).map((m) => (
+                    <Link
+                        key={m.href}
+                        href={m.href}
+                        data-menu={m.href}
+                        className={`side-link${menuPath.startsWith(m.href) ? ' active' : ''}`}
+                    >
+                        <i className={`bi ${m.icon}`}></i> {m.label}
+                    </Link>
+                ))}
+                {user.access?.employees?.add ? (
+                    <div className="sidebar-card">
+                        <div className="t">Need to add someone?</div>
+                        <div className="s">Create a new employee record in a minute.</div>
+                        <Link href="/employees/new" className="btn btn-sm"><i className="bi bi-plus-lg me-1"></i>Add employee</Link>
                     </div>
-                    <button className="btn btn-outline-secondary icon-btn" id="logout" title="Logout" aria-label="Logout"
-                        onClick={() => { logout(); navigate('/login', true); }}><i className="bi bi-box-arrow-right" /></button>
-                </div>
-            </header>
-            <main className="content" id="page">{children}</main>
+                ) : null}
+                <div className="sidebar-foot">Attendance &amp; Payroll System</div>
+            </aside>
+            <div className="main">
+                <header className="topbar">
+                    <div className="crumb">
+                        <span id="crumb-title">{current ? current.title : 'Payroll System'}</span>
+                        <small id="crumb-sub">{current ? current.sub : ''}</small>
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                        <div className="user-chip">
+                            <span className="avatar round" style={{ width: '34px', height: '34px', fontSize: '.8rem' }}>{user.name.charAt(0).toUpperCase()}</span>
+                            <div className="lh-sm d-none d-sm-block">
+                                <div className="small fw-semibold" style={{ color: 'var(--ink)' }}>{user.name}</div>
+                                <div className="text-muted" style={{ fontSize: '.7rem' }}>{user.role || user.username}</div>
+                            </div>
+                        </div>
+                        <button
+                            className="btn btn-outline-secondary icon-btn"
+                            id="logout"
+                            title="Logout"
+                            aria-label="Logout"
+                            onClick={() => {
+                                logout();
+                                navigate('/login', true);
+                            }}
+                        >
+                            <i className="bi bi-box-arrow-right"></i>
+                        </button>
+                    </div>
+                </header>
+                <main className="content" id="page">{children}</main>
+            </div>
         </div>
-    </div>;
+    );
 }
 
-// Main application rendering and client-side navigation
-export default function App() {
-    const [revision, setRevision] = useState(0);
-    const [page, setPage] = useState<ResolvedPage | null>(null);
-    const [error, setError] = useState(false);
-
+// Scroll to the top every time a page is shown
+function PageHost({ view }: { view: View }) {
     useEffect(() => {
-        const onPopState = () => setRevision((value) => value + 1);
-        const onClick = (event: MouseEvent) => {
-            const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>('a[data-link]') : null;
-            if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) {
-                return;
-            }
-            event.preventDefault();
-            navigate(link.getAttribute('href') ?? '/');
-        };
-        window.addEventListener('popstate', onPopState);
-        document.addEventListener('click', onClick);
-        return () => {
-            window.removeEventListener('popstate', onPopState);
-            document.removeEventListener('click', onClick);
-        };
+        window.scrollTo(0, 0);
     }, []);
 
+    const Page = view.route.page;
+    return <Page params={view.params} />;
+}
+
+export default function App() {
+    const nav = useNavigation();
+    const [view, setView] = useState<View | null>(null);
+    const [failed, setFailed] = useState(false);
+
+    // Same checks as the old show(): session, route, login and rights
     useEffect(() => {
-        let active = true;
-        async function show(): Promise<void> {
+        let cancelled = false;
+
+        void (async () => {
             const path = location.pathname.replace(/\/+$/, '') || '/';
             let user = currentUser();
+
+            // Verify session when logged in
             if (user) {
                 try {
                     user = await refreshUser();
                 } catch {
-                    if (active) {
-                        setError(true);
+                    if (!cancelled) {
+                        setFailed(true);
                     }
                     return;
                 }
+                if (cancelled) {
+                    return;
+                }
             }
-            if (!active) {
-                return;
+
+            // Determine default home page
+            let homePath = '/login';
+            if (user) {
+                homePath = homeFor(user);
             }
-            setError(false);
-            const home = homeFor(user);
             if (path === '/') {
-                return navigate(home, true);
+                return navigate(homePath, true);
             }
-            let matched: Route | undefined;
+
+            // Find route matching the current path
+            let route: Route | undefined;
             let params: string[] = [];
-            for (const route of ROUTES) {
-                const match = matchRoute(route.path, path);
+
+            for (const r of ROUTES) {
+                const match = matchRoute(r.path, path);
                 if (match.matched) {
-                    matched = route;
+                    route = r;
                     params = match.params;
                     break;
                 }
             }
-            if (!matched) {
-                return navigate(home, true);
+
+            // If route not found, redirect to home
+            if (!route) {
+                return navigate(homePath, true);
             }
-            if (!matched.public && !user) {
+
+            // Redirect to login if unauthenticated on private route
+            if (!route.public && !user) {
                 return navigate('/login', true);
             }
-            if (matched.public && user) {
-                return navigate(home, true);
-            }
-            if (matched.screen && user && !user.access?.[matched.screen]?.[matched.action ?? 'view']) {
-                return navigate(home, true);
-            }
-            setPage({ route: matched, user, path, params, revision });
-        }
-        void show();
-        return () => {
-            active = false;
-        };
-    }, [revision]);
 
-    if (error) {
+            // Redirect to home if logged in user visits login page
+            if (route.public && user) {
+                return navigate(homePath, true);
+            }
+
+            // The user must have the right on the screen (rights come from the database)
+            if (route.screen && user && !user.access?.[route.screen]?.[route.action ?? 'view']) {
+                return navigate(homePath, true);
+            }
+
+            setFailed(false);
+            setView({ key: nav.tick, path, route, params, user });
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [nav]);
+
+    if (failed) {
         return <div className="alert alert-danger m-4">Unable to load your account. Check the server connection and reload.</div>;
     }
-    if (!page) {
+
+    if (!view) {
         return null;
     }
-    const content = <PageContent key={page.revision} page={page} />;
-    if (page.route.public || !page.user) {
-        return content;
+
+    // Public pages have no app shell
+    if (view.route.public || !view.user) {
+        return <PageHost key={view.key} view={view} />;
     }
-    return <Shell user={page.user} path={page.path}>{content}</Shell>;
+
+    return (
+        <Shell user={view.user} path={view.path}>
+            <PageHost key={view.key} view={view} />
+        </Shell>
+    );
 }

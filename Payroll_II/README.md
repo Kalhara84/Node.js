@@ -3,13 +3,10 @@
 | Part     | Technology                                                        | Port |
 |----------|-------------------------------------------------------------------|------|
 | Backend  | Node.js + Express + TypeScript + `pg`                             | 3001 |
-| Frontend | React + Vite + TypeScript + Bootstrap 5 (violet/orange)           | 3000 |
+| Frontend | Vite + TypeScript (single page app) + Bootstrap 5 (violet/orange) | 3000 |
 | Database | PostgreSQL                                                        | 5432 |
 
-Everything is TypeScript. React owns the application shell and routing lifecycle.
-Existing page modules run inside a React-managed DOM boundary to preserve forms,
-tables, exports, and Select2 behavior. Their internals still use imperative DOM
-rendering; they have not been rewritten as JSX components. There is no Next.js.
+Everything is TypeScript. There is no React and no Next.js.
 
 ## Project structure
 
@@ -23,8 +20,8 @@ Payroll_II/
     .env                     VITE_API_URL (backend address)
     public/                  served as-is: favicon.svg, assets/ (logo + SVG art)
     src/
-      main.ts                imports styles and mounts the React root
-      app.tsx                React app, menu, routes, sidebar / topbar, page lifecycle
+      main.ts                imports Bootstrap + style.css, starts app.ts
+      app.ts                 router + app shell (sidebar / topbar)
       api.ts                 fetch wrapper for every API call
       auth.ts                login / logout / current user
       ui.ts  charts.ts       helpers, modal, SVG charts
@@ -34,27 +31,6 @@ Payroll_II/
 ```
 
 ## Requirements
-
-Holiday Master (`a_holm.php` + `a_holenter.php`) is available from **Holidays** at
-`/a_holm`; `/a_holenter` opens the same screen. It includes the holiday list,
-year/search filters, view, add, edit and confirmed delete. Holiday types come from
-`a_sysmast` category 3. The date stays fixed during amendment, and entry/amendment
-audit fields follow the existing pattern. One holiday per date is enforced by a
-database unique index. SQL is in `holiday.controller.ts`, without a model file.
-For existing installations run `node --env-file=.env scripts/migrate-holidays.cjs`
-from `backend`. Both setup SQL files include the migration for new databases.
-Assign `a_holm` View/Add/Amend/Delete rights through User Rights. The two legacy PHP
-files form one module, so they share this single program registration.
-
-Attendance Correction is available at `/a_inqempatt` from the Attendance sidebar item.
-It converts the legacy `a_inqempatt.php` inquiry and adds record creation, editing,
-viewing and deletion. SQL lives in the attendance controller; no attendance model is used.
-For an existing database, run `node --env-file=.env scripts/migrate-attendance.cjs`
-from `backend` once. Both database setup files include the same migration for new installs.
-Assign `a_inqempatt` View/Add/Amend/Delete permissions through User Rights for non-admin users.
-The inquiry uses active employees, mapping codes and calendar months, with OT1/OT2/late totals.
-Corrections affect `a_denmast` only; payroll transfer/recalculation is not performed by this screen.
-Entry audit fields are retained on edit; amendment user/date/time are recorded separately.
 
 - Node.js 20 or newer (npm included)
 - PostgreSQL 13 or newer
