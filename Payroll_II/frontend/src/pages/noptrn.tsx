@@ -268,7 +268,7 @@ export default function Noptrn() {
                     </div>
 
                     <div className="row g-3">
-                        <div className="col-md-6 col-xl-3">
+                        <div className="col-md-6">
                             <div className="p-3 rounded-3 border h-100" style={{ background: '#fbfaff' }}>
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span className="form-label mb-0">Location</span>
@@ -324,7 +324,7 @@ export default function Noptrn() {
                             </div>
                         </div>
 
-                        <div className="col-md-6 col-xl-3">
+                        <div className="col-md-6">
                             <div className="p-3 rounded-3 border h-100" style={{ background: '#fbfaff' }}>
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span className="form-label mb-0">Department</span>
@@ -380,7 +380,7 @@ export default function Noptrn() {
                             </div>
                         </div>
 
-                        <div className="col-md-6 col-xl-3">
+                        <div className="col-md-6">
                             <div className="p-3 rounded-3 border h-100" style={{ background: '#fbfaff' }}>
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span className="form-label mb-0">Section</span>
@@ -436,7 +436,7 @@ export default function Noptrn() {
                             </div>
                         </div>
 
-                        <div className="col-md-6 col-xl-3">
+                        <div className="col-md-6">
                             <div className="p-3 rounded-3 border h-100" style={{ background: '#fbfaff' }}>
                                 <div className="d-flex justify-content-between align-items-center mb-2">
                                     <span className="form-label mb-0">Area</span>

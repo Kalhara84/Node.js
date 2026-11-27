@@ -222,14 +222,18 @@ export const NoptrnController = {
             client.release();
         }
 
-        res.status(200).json({ count, message: `${count} Records Inserted` });
+        res.status(200).json(
+            { count, message: `${count} Records Inserted` }
+        );
     },
 
     // Map validation errors to HTTP 400
     handleError(error: unknown, _req: Request, res: Response, next: NextFunction): void {
         const e = error as { status?: number; message?: string };
         if (e.status === 400) {
-            res.status(400).json({ message: e.message });
+            res.status(400).json(
+                { message: e.message }
+            );
             return;
         }
         next(error);

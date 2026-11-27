@@ -290,7 +290,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 
 .sidebar {
-  width: 235px;
+  width: 260px;
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -329,6 +329,8 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   color: var(--text);
   text-decoration: none;
   font-weight: 500;
+  line-height: 1.25;
+  white-space: normal;
   transition: all 0.15s ease;
   position: relative;
 }
@@ -391,8 +393,8 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   color: var(--brand);
 }
 .side-children {
-  margin: 2px 0 4px 15px;
-  padding-left: 8px;
+  margin: 2px 0 4px 10px;
+  padding-left: 6px;
   border-left: 1.5px solid #e6e2f5;
   display: flex;
   flex-direction: column;
@@ -1270,7 +1272,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 @media (min-width: 992px) {
   .sidebar {
-    width: 235px;
+    width: 260px;
   }
   .content {
     padding-left: 20px;

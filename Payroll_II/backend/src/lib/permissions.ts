@@ -78,7 +78,9 @@ export const requireActiveAccount: RequestHandler = wrap(async (req, res, next) 
     const access = await accountAccess(req.user!.sub);
     
     if (!access) {
-        res.status(401).json({ message: 'Account is inactive or no longer exists' });
+        res.status(401).json(
+            { message: 'Account is inactive or no longer exists' }
+        );
         return;
     }
 
