@@ -19,8 +19,7 @@ import Inqurgr from './pages/inqurgr.tsx';
 import Account from './pages/account.tsx';
 import Inqurgr2 from './pages/inqurgr2.tsx';
 import Blank from './pages/blank.tsx';
-import { SIDEBAR_MENU, filterMenuByAccess, findActiveTrail } from './config/sidebar.ts';
-import type { MenuItem } from './config/sidebar.ts';
+import sidebarMenuData from './sidebar.json';
 
 // Same idea as the old ctx.alive(): false once the page was left (ignore late API answers)
 export function useAlive(): () => boolean {
@@ -32,6 +31,71 @@ export function useAlive(): () => boolean {
         };
     }, []);
     return useCallback(() => ref.current, []);
+}
+
+/**
+ * Sidebar menu item definition.
+ * - Add `href` for a clickable page link.
+ * - Add `children` for a collapsible group (supports any nesting depth).
+ * - Add `screen` to restrict visibility by user rights, or omit to always show.
+ * - Add `action: 'logout'` for items that sign out and open the Login page.
+ */
+interface MenuItem {
+    id: string;
+    label: string;
+    icon?: string;
+    href?: string;
+    title?: string;
+    sub?: string;
+    screen?: Screen;
+    action?: 'logout';
+    children?: MenuItem[];
+}
+
+// Loaded from sidebar-menu.json (edit that file to add, remove, or reorder sidebar items)
+const SIDEBAR_MENU: MenuItem[] = sidebarMenuData as MenuItem[];
+
+// Filter menu tree recursively based on the signed-in user's view rights
+function filterMenuByAccess(items: MenuItem[], user: AuthUser): MenuItem[] {
+    const result: MenuItem[] = [];
+
+    for (const item of items) {
+        if (item.screen && !user.access?.[item.screen]?.view) {
+            continue;
+        }
+
+        if (item.children) {
+            const visibleChildren = filterMenuByAccess(item.children, user);
+            if (visibleChildren.length === 0) {
+                continue;
+            }
+            result.push({ ...item, children: visibleChildren });
+        } else {
+            result.push(item);
+        }
+    }
+
+    return result;
+}
+
+// Find the active leaf item and all of its ancestor group IDs for a given path
+function findActiveTrail(
+    items: MenuItem[],
+    menuPath: string,
+    ancestors: string[] = []
+): { activeItem: MenuItem | null; ancestorIds: string[] } {
+    for (const item of items) {
+        if (item.href && item.action !== 'logout' && menuPath.startsWith(item.href)) {
+            return { activeItem: item, ancestorIds: ancestors };
+        }
+        if (item.children) {
+            const found = findActiveTrail(item.children, menuPath, [...ancestors, item.id]);
+            if (found.activeItem) {
+                return found;
+            }
+        }
+    }
+    return { activeItem: null, ancestorIds: [] };
 }
 
 // Route definition
