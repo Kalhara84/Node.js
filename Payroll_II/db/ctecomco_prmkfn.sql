@@ -559,13 +559,22 @@ INSERT INTO a_sysmast(sysrtp, sysrno, sysdes) VALUES
     (33, 'WEBPAGES', 'Application Pages')
 ON CONFLICT DO NOTHING;
 
--- Register the actual Employee and User pages with all four permission choices.
+-- Register every business screen under Program Master / User Rights.
+-- Route aliases share the same program key. Dashboard only needs View access.
+-- Department and direct-transaction routes must enforce depm/noptrn in application code.
 INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgapp, prgucdnew, prgentddt, prgenttime)
-SELECT m.syssno, s.syssno, page.display_order, 'M', page.name, page.description, 'payroll-web', 'web-setup', CURRENT_DATE, LOCALTIME
+SELECT m.syssno, s.syssno, page.display_order, page.level, page.name, page.description, 'payroll-web', 'web-setup', CURRENT_DATE, LOCALTIME
 FROM a_sysmast m CROSS JOIN a_sysmast s CROSS JOIN (VALUES
-    ('employees', 'Employee Master', '001'),
-    ('users', 'User Master', '002')
-) AS page(name, description, display_order)
+    ('employees', 'Employee Master', '001', 'M'),
+    ('users', 'User Master', '002', 'M'),
+    ('a_inqempatt', 'Attendance Correction', '003', 'M'),
+    ('a_holm', 'Holiday Master', '004', 'M'),
+    ('dashboard', 'Dashboard', '005', 'S'),
+    ('programs', 'Program Master', '006', 'M'),
+    ('rights', 'User Rights', '007', 'M'),
+    ('depm', 'Department Master', '008', 'M'),
+    ('noptrn', 'Direct Transactions', '009', 'M')
+) AS page(name, description, display_order, level)
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 ON CONFLICT DO NOTHING;
 -- END WEB APP PROGRAM REGISTRATION
@@ -802,5 +811,3 @@ SELECT setval(pg_get_serial_sequence('p_trnmast', 'trnsno'),
   GREATEST(COALESCE(MAX("trnsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_trnmast_trnsno_seq'), 1)),
   MAX("trnsno") IS NOT NULL) FROM "p_trnmast";
-
-CREATE TABLE IF NOT EXISTS "prgmast" (
