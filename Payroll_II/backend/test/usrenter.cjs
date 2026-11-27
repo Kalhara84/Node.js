@@ -57,6 +57,33 @@ test('ordinary users cannot check or change user rights through direct API calls
     assert.equal((await api.send(null, '?usrusdsno=7&modopt=A&smodopt=A')).status, 403);
     assert.equal(api.calls.some(call => call.sql === 'BEGIN'), false);
 });
+
+test('delegated non-admin can list all targets and assign rights to an ordinary user', async context => {
+    const api = await fixture(context, { admin: false, targetAdmin: false, rights: [
+        { prgnam: 'rights', prglvl: 'M', usryn: 'y', usraddyn: 'n', usrameyn: 'y', usrdelyn: 'n' }
+    ] });
+    assert.equal((await api.get('/usrenter/users')).status, 200);
+    assert.equal((await api.get('/lookups')).status, 200);
+    assert.equal((await api.send(null, '?usrusdsno=7&modopt=A&smodopt=A')).status, 200);
+    assert.equal((await api.send(body())).status, 200);
+    const inserts = api.calls.filter(call => call.sql.startsWith('INSERT'));
+    assert.equal(inserts.length, 2);
+    assert(inserts.every(call => call.values[0] === 7));
+    assert(!api.calls.some(call => /UPDATE usdmast/.test(call.sql)));
+    // Delegation does not grant clearing rights or access to full user profiles.
+    assert.equal((await api.send({ ...body(), save: false, delete: true })).status, 403);
+    assert.equal((await api.get('/users')).status, 403);
+});
+
+test('ordinary target with no existing rights still receives the entire program catalog', async context => {
+    const api = await fixture(context, { targetAdmin: false });
+    const result = await api.send(null, '?usrusdsno=7&modopt=A&smodopt=A');
+    assert.equal(result.status, 200);
+    assert.deepEqual(result.data.rows, programs);
+    const query = api.calls.find(call => call.sql.startsWith('SELECT p.*'));
+    assert.match(query.sql, /LEFT JOIN usrmast/);
+    assert.doesNotMatch(query.sql, /WHERE[^]*usdadmin/);
+});
 test('CHECK retains original field names and selected module/submodule scope', async context => {
     const api = await fixture(context);
     const result = await api.send(null, '?usrusdsno=7&modopt=S&smodopt=S&modsno=32&submodsno=33');

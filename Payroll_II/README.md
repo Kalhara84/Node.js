@@ -42,6 +42,9 @@ Payroll_II/
 ```bash
 psql -U postgres -c "CREATE DATABASE payrollDB_Test;"
 psql -U postgres -d payrolldb_test -v ON_ERROR_STOP=1 -f db/payroll_db.sql
+
+# Alternative: reset only the 12 application tables. Run ONE of these imports.
+# psql -U postgres -d payrolldb_test -v ON_ERROR_STOP=1 -f db/ctecomco_prmkfn.sql
 ```
 
 ### 2. Backend (terminal 1)
@@ -203,26 +206,25 @@ Administrator accounts retain full access independently of ordinary program righ
 
 ## Complete PostgreSQL database
 
-`db/payroll_db.sql` remains the **only** database setup file. It creates all 38
-original tables and all 566 original fields, plus the application's account flags.
-It contains all 5,205,838 PRMKFN source records, with no demo records mixed into them.
-This includes 3,415 employees, 11 users and 66 program definitions.
-There are no migration scripts or follow-up SQL files.
+`db/payroll_db.sql` creates all 38 legacy tables with up to 50 source rows per
+seeded table, application account flags, and all nine web program registrations.
+`db/ctecomco_prmkfn.sql` is the smaller alternative for the 12 application tables;
+its attendance and holiday tables start empty. Run only the import you need.
 
-The loose `prmkfn.sql` produced a Windows cyclic-redundancy read error. The adjacent
-`Database/Databse.zip` contains the same-named 630,032,001-byte SQL dump; its SQL was
-extracted with ZIP CRC verification and used for conversion.
+Both files are **reset imports**: existing tables defined by the selected file are
+dropped with `CASCADE` and recreated, replacing their data with the bundled seeds.
+Dependent objects are also removed. Back up any data you need before rerunning.
+Each import uses one transaction, so an error rolls back the entire reset.
 
-Import into a new, empty database:
+Create the database only if it does not exist, then import:
 
 ```powershell
 psql -U postgres -c "CREATE DATABASE payroll_db;"
 psql -U postgres -d payroll_db -v ON_ERROR_STOP=1 -f db/payroll_db.sql
 ```
 
-If `payroll_db` already exists, use a new name and set `DB_NAME` in `backend/.env`.
-The script is transactional and fails on existing tables; it does not reset a live
-database. The existing configured database is not replaced automatically.
+For an existing database, skip `CREATE DATABASE` and run only the import command.
+Set `DB_NAME` in `backend/.env` to the selected database name.
 
 MySQL integer display widths are removed; auto-increment fields become PostgreSQL
 sequences; double fields remain double precision; enums become checked text.

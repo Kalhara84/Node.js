@@ -92,7 +92,7 @@ function ColumnCheck({ flag, index, rows, onChange }: { flag: UsrFlag; index: nu
                     type="checkbox"
                     data-column={flag}
                     aria-label={`Select all ${labels[index]} rights`}
-                    disabled={applicable.length === 0}
+                    disabled={!can('rights', 'amend') || applicable.length === 0}
                     checked={applicable.length > 0 && checkedCount === applicable.length}
                     ref={(el) => {
                         if (el) {
@@ -252,11 +252,13 @@ export default function Usrenter() {
 
     // Check or uncheck an entire column
     function checkCol(checkyn: boolean, colnam: UsrFlag): void {
+        if (!can('rights', 'amend')) return;
         putRows(rows.map((row) => (editable(row, colnam) ? { ...row, [colnam]: checkyn ? 'y' : 'n' } : row)));
     }
 
     // Check or uncheck all applicable flags
     function checkAll(checkyn: boolean): void {
+        if (!can('rights', 'amend')) return;
         putRows(rows.map((row) => {
             const next = { ...row };
             for (const flag of flags) {
@@ -406,7 +408,7 @@ export default function Usrenter() {
                                             className="form-check-input"
                                             id={`${flag}[${index}]`}
                                             name={`${flag}[${index}]`}
-                                            disabled={!editable(row, flag)}
+                                            disabled={!can('rights', 'amend') || !editable(row, flag)}
                                             checked={editable(row, flag) && row[flag] === 'y'}
                                             aria-label={`${labels[flagIndex]}: ${row.prgdes || row.prgnam}`}
                                             onChange={(e) => setFlag(index, flag, e.target.checked)}
@@ -429,7 +431,7 @@ export default function Usrenter() {
                     <div>
                         <div className="program-eyebrow">Program</div>
                         <h4 className="page-title">User Rights</h4>
-                        <div className="page-sub">Choose a user, check programs and assign access.</div>
+                        <div className="page-sub">Assign program access to any user, regardless of their account role.</div>
                     </div>
                 </div>
                 <div className="d-flex flex-wrap align-items-center gap-2">
@@ -491,7 +493,10 @@ export default function Usrenter() {
                             <span className="text-muted small align-self-center ms-md-auto">Single: View only · Multi: View / Add / Amend / Delete</span>
                         </div>
                         <div id="usr-program-note">
-                            {admin ? <div className="alert alert-info py-2 small">Administrator account: saved rights below override default access. Untick a page or action to block it for this administrator.</div> : null}
+                            <div className="alert alert-info py-2 small">
+                                {admin ? 'Administrator account: saved rights override default access. ' : 'User account: tick the programs and actions this user can access. '}
+                                To let this user assign access to others, enable View and Amend on User Rights. Enable Delete only if they may clear assigned rights.
+                            </div>
                         </div>
                         <div id="usr-matrix">{body}</div>
 

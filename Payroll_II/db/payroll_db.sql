@@ -1,10 +1,50 @@
--- PostgreSQL schema with up to 50 ORIGINAL source rows per table.
--- Tables with fewer than 50 source rows retain all their available rows.
--- Re-import preserves existing rows; missing tables/rows are added without drops.
--- Existing schema changes require separate, targeted migrations.
+-- Complete legacy schema and source seed data (38 tables).
+-- RESET IMPORT: existing table data is replaced by the seed rows in this file.
+-- All changes commit together; an error rolls back the entire import.
 BEGIN;
 SET standard_conforming_strings = on;
 SELECT pg_advisory_xact_lock(740219852);
+
+-- Reset only tables defined by this file, including their dependent objects.
+DROP TABLE IF EXISTS "usrmast" CASCADE;
+DROP TABLE IF EXISTS "usdmast" CASCADE;
+DROP TABLE IF EXISTS "temp" CASCADE;
+DROP TABLE IF EXISTS "s_locmast" CASCADE;
+DROP TABLE IF EXISTS "prgmast" CASCADE;
+DROP TABLE IF EXISTS "p_trnmast" CASCADE;
+DROP TABLE IF EXISTS "p_telmast" CASCADE;
+DROP TABLE IF EXISTS "p_taxmast" CASCADE;
+DROP TABLE IF EXISTS "p_sysmast" CASCADE;
+DROP TABLE IF EXISTS "p_ptrmast" CASCADE;
+DROP TABLE IF EXISTS "p_mblmast" CASCADE;
+DROP TABLE IF EXISTS "p_lonmast" CASCADE;
+DROP TABLE IF EXISTS "p_logmast" CASCADE;
+DROP TABLE IF EXISTS "p_hstmast" CASCADE;
+DROP TABLE IF EXISTS "p_empmast" CASCADE;
+DROP TABLE IF EXISTS "p_btxmast" CASCADE;
+DROP TABLE IF EXISTS "p_depmast" CASCADE;
+DROP TABLE IF EXISTS "bookings_states" CASCADE;
+DROP TABLE IF EXISTS "bookings_last_update" CASCADE;
+DROP TABLE IF EXISTS "bookings_items" CASCADE;
+DROP TABLE IF EXISTS "bookings_config" CASCADE;
+DROP TABLE IF EXISTS "bookings_admin_users" CASCADE;
+DROP TABLE IF EXISTS "bookings" CASCADE;
+DROP TABLE IF EXISTS "a_wosmast" CASCADE;
+DROP TABLE IF EXISTS "a_wormast" CASCADE;
+DROP TABLE IF EXISTS "a_sysmast" CASCADE;
+DROP TABLE IF EXISTS "a_nigtran" CASCADE;
+DROP TABLE IF EXISTS "a_logmast" CASCADE;
+DROP TABLE IF EXISTS "a_levtran" CASCADE;
+DROP TABLE IF EXISTS "a_incwormast" CASCADE;
+DROP TABLE IF EXISTS "a_holmast" CASCADE;
+DROP TABLE IF EXISTS "a_dlymast" CASCADE;
+DROP TABLE IF EXISTS "a_deprate" CASCADE;
+DROP TABLE IF EXISTS "a_denmast_tmp" CASCADE;
+DROP TABLE IF EXISTS "a_denmast" CASCADE;
+DROP TABLE IF EXISTS "a_atttran_test" CASCADE;
+DROP TABLE IF EXISTS "a_atttran" CASCADE;
+DROP TABLE IF EXISTS "a_absmast" CASCADE;
+
 
 CREATE TABLE IF NOT EXISTS "a_absmast" (
   "abssno" SERIAL,
@@ -2382,20 +2422,27 @@ INSERT INTO a_sysmast(sysrtp, sysrno, sysdes) VALUES
     (33, 'WEBPAGES', 'Application Pages')
 ON CONFLICT DO NOTHING;
 
--- Register the actual Employee and User pages with all four permission choices.
+-- Register every business screen under Program Master / User Rights.
+-- Route aliases share the same program key. Dashboard only needs View access.
+-- Department and direct-transaction routes must enforce depm/noptrn in application code.
 INSERT INTO prgmast(prgmodsno, prgsmdsno, prgorder, prglvl, prgnam, prgdes, prgapp, prgucdnew, prgentddt, prgenttime)
-SELECT m.syssno, s.syssno, page.display_order, 'M', page.name, page.description, 'payroll-web', 'web-setup', CURRENT_DATE, LOCALTIME
+SELECT m.syssno, s.syssno, page.display_order, page.level, page.name, page.description, 'payroll-web', 'web-setup', CURRENT_DATE, LOCALTIME
 FROM a_sysmast m CROSS JOIN a_sysmast s CROSS JOIN (VALUES
-    ('employees', 'Employee Master', '001'),
-    ('users', 'User Master', '002')
-) AS page(name, description, display_order)
+    ('employees', 'Employee Master', '001', 'M'),
+    ('users', 'User Master', '002', 'M'),
+    ('a_inqempatt', 'Attendance Correction', '003', 'M'),
+    ('a_holm', 'Holiday Master', '004', 'M'),
+    ('dashboard', 'Dashboard', '005', 'S'),
+    ('programs', 'Program Master', '006', 'M'),
+    ('rights', 'User Rights', '007', 'M'),
+    ('depm', 'Department Master', '008', 'M'),
+    ('noptrn', 'Direct Transactions', '009', 'M')
+) AS page(name, description, display_order, level)
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 ON CONFLICT DO NOTHING;
 -- END WEB APP PROGRAM REGISTRATION
-COMMIT;
 
 -- Attendance correction setup (also available as db/migrations/001_attendance.sql).
-BEGIN;
 CREATE TABLE IF NOT EXISTS "a_denmast" (
   "densno" SERIAL,
   "denddt" date  default NULL,
@@ -2442,10 +2489,8 @@ SELECT m.syssno, s.syssno, '003', 'M', 'a_inqempatt', 'Attendance Correction', '
 FROM a_sysmast m CROSS JOIN a_sysmast s
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 AND NOT EXISTS (SELECT 1 FROM prgmast WHERE prgapp='payroll-web' AND prgnam='a_inqempatt');
-COMMIT;
 
 -- Holiday Master setup (also available as db/migrations/002_holidays.sql).
-BEGIN;
 CREATE TABLE IF NOT EXISTS "a_holmast" (
   "holsno" SERIAL,
   "holddt" date  default NULL,
@@ -2470,4 +2515,5 @@ SELECT m.syssno, s.syssno, '004', 'M', 'a_holm', 'Holiday Master', 'payroll-web'
 FROM a_sysmast m CROSS JOIN a_sysmast s
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 AND NOT EXISTS (SELECT 1 FROM prgmast WHERE prgapp='payroll-web' AND prgnam='a_holm');
+
 COMMIT;

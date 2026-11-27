@@ -1,12 +1,15 @@
--- PostgreSQL schema and data for Payroll_II application tables only.
--- Drops and recreates only the 8 tables required by the backend.
+-- Application tables and source seed data (12 tables).
+-- RESET IMPORT: existing table data is replaced by the seed rows in this file.
+-- All changes commit together; an error rolls back the entire import.
 BEGIN;
 SET standard_conforming_strings = on;
 SELECT pg_advisory_xact_lock(740219852);
 
--- Drop application tables if they exist (reverse dependency order)
+-- Reset only tables defined by this file, including their dependent objects.
 DROP TABLE IF EXISTS "p_trnmast" CASCADE;
 DROP TABLE IF EXISTS "p_ptrmast" CASCADE;
+DROP TABLE IF EXISTS "a_holmast" CASCADE;
+DROP TABLE IF EXISTS "a_denmast" CASCADE;
 DROP TABLE IF EXISTS "usrmast" CASCADE;
 DROP TABLE IF EXISTS "usdmast" CASCADE;
 DROP TABLE IF EXISTS "prgmast" CASCADE;
@@ -15,6 +18,8 @@ DROP TABLE IF EXISTS "s_locmast" CASCADE;
 DROP TABLE IF EXISTS "p_depmast" CASCADE;
 DROP TABLE IF EXISTS "p_sysmast" CASCADE;
 DROP TABLE IF EXISTS "a_sysmast" CASCADE;
+
+
 
 CREATE TABLE IF NOT EXISTS "a_sysmast" (
   "syssno" SERIAL,
@@ -578,10 +583,8 @@ FROM a_sysmast m CROSS JOIN a_sysmast s CROSS JOIN (VALUES
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 ON CONFLICT DO NOTHING;
 -- END WEB APP PROGRAM REGISTRATION
-COMMIT;
 
 -- Attendance correction setup (also available as db/migrations/001_attendance.sql).
-BEGIN;
 CREATE TABLE IF NOT EXISTS "a_denmast" (
   "densno" SERIAL,
   "denddt" date  default NULL,
@@ -628,10 +631,8 @@ SELECT m.syssno, s.syssno, '003', 'M', 'a_inqempatt', 'Attendance Correction', '
 FROM a_sysmast m CROSS JOIN a_sysmast s
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 AND NOT EXISTS (SELECT 1 FROM prgmast WHERE prgapp='payroll-web' AND prgnam='a_inqempatt');
-COMMIT;
 
 -- Holiday Master setup (also available as db/migrations/002_holidays.sql).
-BEGIN;
 CREATE TABLE IF NOT EXISTS "a_holmast" (
   "holsno" SERIAL,
   "holddt" date  default NULL,
@@ -656,7 +657,6 @@ SELECT m.syssno, s.syssno, '004', 'M', 'a_holm', 'Holiday Master', 'payroll-web'
 FROM a_sysmast m CROSS JOIN a_sysmast s
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 AND NOT EXISTS (SELECT 1 FROM prgmast WHERE prgapp='payroll-web' AND prgnam='a_holm');
-COMMIT;
 
 -- Direct transaction & permanent transaction tables (p_ptrmast, p_trnmast).
 CREATE TABLE IF NOT EXISTS "p_ptrmast" (
@@ -734,8 +734,6 @@ SELECT setval(pg_get_serial_sequence('p_ptrmast', 'ptrsno'),
     WHERE schemaname = current_schema() AND sequencename = 'p_ptrmast_ptrsno_seq'), 1)),
   MAX("ptrsno") IS NOT NULL) FROM "p_ptrmast";
 
-CREATE TABLE IF NOT EXISTS "p_sysmast" (
-
 CREATE TABLE IF NOT EXISTS "p_trnmast" (
   "trnsno" SERIAL,
   "trnempsno" INTEGER NOT NULL default '0',
@@ -811,3 +809,5 @@ SELECT setval(pg_get_serial_sequence('p_trnmast', 'trnsno'),
   GREATEST(COALESCE(MAX("trnsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
     WHERE schemaname = current_schema() AND sequencename = 'p_trnmast_trnsno_seq'), 1)),
   MAX("trnsno") IS NOT NULL) FROM "p_trnmast";
+
+COMMIT;
