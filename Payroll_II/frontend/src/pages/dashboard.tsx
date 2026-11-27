@@ -5,8 +5,8 @@ import { currentUser, canEmployee } from '../services/auth.ts';
 import { money, errMsg, CATEGORY, GENDER } from '../utils/ui.ts';
 import { AlertBox, EmptyState, Loading } from '../components/ui.tsx';
 import { BarList, ColumnChart, DonutChart, PALETTE } from '../components/charts.tsx';
-import { useAlive } from '../hooks.ts';
-import { Link } from '../router.tsx';
+import { useAlive } from '../App.tsx';
+import { Link } from 'react-router-dom';
 import type { DashboardData } from '../types.ts';
 
 // Stat card helper
@@ -97,7 +97,7 @@ function DashboardView({ d }: { d: DashboardData }) {
             <div className="card-soft">
                 <div className="card-head justify-content-between">
                     <span className="d-flex align-items-center gap-2"><i className="bi bi-clock-history"></i>Recently added employees</span>
-                    <Link href="/employees" className="small text-decoration-none">View all</Link>
+                    <Link to="/employees" className="small text-decoration-none">View all</Link>
                 </div>
                 <div className="table-responsive">
                     <table className="table table-clean">
@@ -115,7 +115,7 @@ function DashboardView({ d }: { d: DashboardData }) {
                                 <tr key={r.empsno}>
                                     <td className="fw-semibold">{r.empeno}</td>
                                     <td>
-                                        <Link href={`/employees/${r.empsno}`} className="text-decoration-none d-flex align-items-center gap-2 fw-semibold">
+                                        <Link to={`/employees/${r.empsno}`} className="text-decoration-none d-flex align-items-center gap-2 fw-semibold">
                                             <span className={`avatar av${r.empsno % 5}`} style={{ width: '32px', height: '32px', fontSize: '.78rem' }}>
                                                 {(r.empnam || '?').charAt(0).toUpperCase()}
                                             </span>
@@ -197,7 +197,7 @@ export default function Dashboard() {
                         <i className={`bi bi-arrow-clockwise me-1${spin ? ' spin' : ''}`}></i>Refresh
                     </button>
                     {canEmployee('add') ? (
-                        <Link href="/employees/new" className="btn btn-light"><i className="bi bi-plus-lg me-1"></i>Add Employee</Link>
+                        <Link to="/employees/new" className="btn btn-light"><i className="bi bi-plus-lg me-1"></i>Add Employee</Link>
                     ) : null}
                 </div>
             </div>

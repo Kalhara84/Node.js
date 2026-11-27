@@ -4,7 +4,7 @@ import { canEmployee } from '../services/auth.ts';
 import { api, getLookups } from '../services/api.ts';
 import { errMsg, CATEGORY, yn } from '../utils/ui.ts';
 import { AlertBox, Loading, confirmModal } from '../components/ui.tsx';
-import { Link, navigate } from '../router.tsx';
+import { Link, useNavigate } from 'react-router-dom';
 import type { Employee, Lookups, PageProps, SysItem } from '../types.ts';
 
 // Detail field display helper
@@ -40,6 +40,7 @@ type Loaded = { emp: Employee; lookups: Lookups | null };
 
 // Render single employee details view page
 export default function EmployeeView({ params }: PageProps) {
+    const navigate = useNavigate();
     const id = Number(params[0]);
     const [loaded, setLoaded] = useState<Loaded | null>(null);
     const [loadError, setLoadError] = useState('');
@@ -113,9 +114,9 @@ export default function EmployeeView({ params }: PageProps) {
                     </div>
                 </div>
                 <div className="d-flex gap-2 flex-wrap">
-                    <Link href="/employees" className="btn btn-ghost"><i className="bi bi-arrow-left me-1"></i>Back</Link>
+                    <Link to="/employees" className="btn btn-ghost"><i className="bi bi-arrow-left me-1"></i>Back</Link>
                     {canEmployee('amend') ? (
-                        <Link href={`/employees/${emp.empsno}/edit`} className="btn btn-light"><i className="bi bi-pencil me-1"></i>Edit</Link>
+                        <Link to={`/employees/${emp.empsno}/edit`} className="btn btn-light"><i className="bi bi-pencil me-1"></i>Edit</Link>
                     ) : null}
                     {canEmployee('delete') ? (
                         <button className="btn btn-ghost" id="del" onClick={() => void onDelete()}><i className="bi bi-trash me-1"></i>Delete</button>

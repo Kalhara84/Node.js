@@ -4,7 +4,7 @@ import { api, getLookups } from '../services/api.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
-import { Link, navigate } from '../router.tsx';
+import { Link, useNavigate } from 'react-router-dom';
 import type { EmployeeBody, Lookups, PageProps } from '../types.ts';
 
 interface Option {
@@ -279,6 +279,7 @@ function toPayload(values: Values): EmployeeBody {
 
 // The form itself (shown after the data has loaded)
 function EmployeeFormView({ id, initial, lookups }: { id: number | null; initial: Values; lookups: Lookups | null }) {
+    const navigate = useNavigate();
     const [values, setValues] = useState<Values>(initial);
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
@@ -328,7 +329,7 @@ function EmployeeFormView({ id, initial, lookups }: { id: number | null; initial
                     <div className="page-sub">Fields marked * are required</div>
                 </div>
                 <div className="d-flex gap-2">
-                    <Link href="/employees" className="btn btn-light">Cancel</Link>
+                    <Link to="/employees" className="btn btn-light">Cancel</Link>
                     <button className="btn btn-primary" disabled={saving}><i className="bi bi-check-lg me-1"></i>{saveLabel}</button>
                 </div>
             </div>
@@ -352,7 +353,7 @@ function EmployeeFormView({ id, initial, lookups }: { id: number | null; initial
             ))}
 
             <div className="action-bar d-flex justify-content-end gap-2">
-                <Link href="/employees" className="btn btn-light">Cancel</Link>
+                <Link to="/employees" className="btn btn-light">Cancel</Link>
                 <button className="btn btn-primary" disabled={saving}><i className="bi bi-check-lg me-1"></i>{saveLabel}</button>
             </div>
         </form>

@@ -5,7 +5,7 @@ import { can, currentUser } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading, confirmModal } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
-import { useAlive } from '../hooks.ts';
+import { useAlive } from '../App.tsx';
 
 type Row = Record<string, string | number | boolean | null>;
 type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[] };

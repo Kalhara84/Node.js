@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import { logo } from './assets/index.ts';
 import { currentUser, logout, refreshUser, homeFor } from './services/auth.ts';
-import { Link, matchRoute, navigate, useNavigation } from './router.tsx';
+import { BrowserRouter, Link, matchRoutes, useLocation, useNavigate } from 'react-router-dom';
 import type { AuthUser, PageProps, Rights, Screen } from './types.ts';
 import Login from './pages/login.tsx';
 import Dashboard from './pages/dashboard.tsx';
@@ -19,6 +19,18 @@ import Inqurgr from './pages/inqurgr.tsx';
 import Account from './pages/account.tsx';
 import Inqurgr2 from './pages/inqurgr2.tsx';
 import Blank from './pages/blank.tsx';
+
+// Same idea as the old ctx.alive(): false once the page was left (ignore late API answers)
+export function useAlive(): () => boolean {
+    const ref = useRef(true);
+    useEffect(() => {
+        ref.current = true;
+        return () => {
+            ref.current = false;
+        };
+    }, []);
+    return useCallback(() => ref.current, []);
+}
 
 // Sidebar menu item structure
 interface MenuItem {
@@ -50,14 +62,14 @@ interface Route {
     page: ComponentType<PageProps>;
     public?: boolean;
     screen?: Screen;
-    action?: keyof Rights;
+    requiredAction?: keyof Rights;
 }
 
 // Application routes
 const ROUTES: Route[] = [
     { path: '/a_holm', page: Holidays, screen: 'a_holm' },
     { path: '/a_holenter', page: Holidays, screen: 'a_holm' },
-    { path: '/a_holentergrid', page: Holentergri, screen: 'a_holm', action: 'add' },
+    { path: '/a_holentergrid', page: Holentergri, screen: 'a_holm', requiredAction: 'add' },
     { path: '/a_inqempatt', page: Attendance, screen: 'a_inqempatt' },
     // Public routes (no login required)
     { path: '/login', page: Login, public: true },
@@ -68,10 +80,10 @@ const ROUTES: Route[] = [
 
     // Employee pages
     { path: '/employees', page: Employees, screen: 'employees' },
-    { path: '/employees/new', page: EmployeeForm, screen: 'employees', action: 'add' },
+    { path: '/employees/new', page: EmployeeForm, screen: 'employees', requiredAction: 'add' },
     { path: '/employees/view', page: EmployeesTable, screen: 'employees' },
     { path: '/employees/:id', page: EmployeeView, screen: 'employees' },
-    { path: '/employees/:id/edit', page: EmployeeForm, screen: 'employees', action: 'amend' },
+    { path: '/employees/:id/edit', page: EmployeeForm, screen: 'employees', requiredAction: 'amend' },
 
     // Administration pages
     { path: '/administration/programs', page: Administration, screen: 'programs' },
@@ -88,7 +100,7 @@ const ROUTES: Route[] = [
 
 // What is currently shown (set after the route, login and rights checks pass)
 interface View {
-    key: number;
+    key: string;
     path: string;
     route: Route;
     params: string[];
@@ -105,6 +117,8 @@ function canShowMenuItem(item: MenuItem, user: AuthUser): boolean {
 
 // Main shell layout (Sidebar + Header + Page content)
 function Shell({ user, path, children }: { user: AuthUser; path: string; children: ReactNode }) {
+    const navigate = useNavigate();
+
     // Update topbar breadcrumbs and active menu state
     const menuPath = path === '/a_holenter' || path === '/a_holentergrid' ? '/a_holm' : path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
     const current = MENU.find((m) => menuPath.startsWith(m.href));
@@ -117,7 +131,7 @@ function Shell({ user, path, children }: { user: AuthUser; path: string; childre
                 {MENU.filter((m) => canShowMenuItem(m, user)).map((m) => (
                     <Link
                         key={m.href}
-                        href={m.href}
+                        to={m.href}
                         data-menu={m.href}
                         className={`side-link${menuPath.startsWith(m.href) ? ' active' : ''}`}
                     >
@@ -128,7 +142,7 @@ function Shell({ user, path, children }: { user: AuthUser; path: string; childre
                     <div className="sidebar-card">
                         <div className="t">Need to add someone?</div>
                         <div className="s">Create a new employee record in a minute.</div>
-                        <Link href="/employees/new" className="btn btn-sm"><i className="bi bi-plus-lg me-1"></i>Add employee</Link>
+                        <Link to="/employees/new" className="btn btn-sm"><i className="bi bi-plus-lg me-1"></i>Add employee</Link>
                     </div>
                 ) : null}
                 <div className="sidebar-foot">Attendance &amp; Payroll System</div>
@@ -154,7 +168,7 @@ function Shell({ user, path, children }: { user: AuthUser; path: string; childre
                             aria-label="Logout"
                             onClick={() => {
                                 logout();
-                                navigate('/login', true);
+                                navigate('/login', { replace: true });
                             }}
                         >
                             <i className="bi bi-box-arrow-right"></i>
@@ -177,8 +191,9 @@ function PageHost({ view }: { view: View }) {
     return <Page params={view.params} />;
 }
 
-export default function App() {
-    const nav = useNavigation();
+function AppRoutes() {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [view, setView] = useState<View | null>(null);
     const [failed, setFailed] = useState(false);
 
@@ -211,50 +226,44 @@ export default function App() {
                 homePath = homeFor(user);
             }
             if (path === '/') {
-                return navigate(homePath, true);
+                return navigate(homePath, { replace: true });
             }
 
             // Find route matching the current path
-            let route: Route | undefined;
-            let params: string[] = [];
-
-            for (const r of ROUTES) {
-                const match = matchRoute(r.path, path);
-                if (match.matched) {
-                    route = r;
-                    params = match.params;
-                    break;
-                }
-            }
+            const match = matchRoutes(ROUTES, path)?.[0];
+            const route = match?.route;
+            const params = route
+                ? route.path.split('/').filter((part) => part.startsWith(':')).map((part) => match?.params[part.slice(1)] ?? '')
+                : [];
 
             // If route not found, redirect to home
             if (!route) {
-                return navigate(homePath, true);
+                return navigate(homePath, { replace: true });
             }
 
             // Redirect to login if unauthenticated on private route
             if (!route.public && !user) {
-                return navigate('/login', true);
+                return navigate('/login', { replace: true });
             }
 
             // Redirect to home if logged in user visits login page
             if (route.public && user) {
-                return navigate(homePath, true);
+                return navigate(homePath, { replace: true });
             }
 
             // The user must have the right on the screen (rights come from the database)
-            if (route.screen && user && !user.access?.[route.screen]?.[route.action ?? 'view']) {
-                return navigate(homePath, true);
+            if (route.screen && user && !user.access?.[route.screen]?.[route.requiredAction ?? 'view']) {
+                return navigate(homePath, { replace: true });
             }
 
             setFailed(false);
-            setView({ key: nav.tick, path, route, params, user });
+            setView({ key: location.key, path, route, params, user });
         })();
 
         return () => {
             cancelled = true;
         };
-    }, [nav]);
+    }, [location, navigate]);
 
     if (failed) {
         return <div className="alert alert-danger m-4">Unable to load your account. Check the server connection and reload.</div>;
@@ -273,5 +282,13 @@ export default function App() {
         <Shell user={view.user} path={view.path}>
             <PageHost key={view.key} view={view} />
         </Shell>
+    );
+}
+
+export default function App() {
+    return (
+        <BrowserRouter>
+            <AppRoutes />
+        </BrowserRouter>
     );
 }

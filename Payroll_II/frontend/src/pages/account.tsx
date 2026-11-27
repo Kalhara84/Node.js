@@ -4,7 +4,7 @@ import { request } from '../services/api.ts';
 import { currentUser } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox } from '../components/ui.tsx';
-import { useAlive } from '../hooks.ts';
+import { useAlive } from '../App.tsx';
 
 // Render user account password change page
 export default function Account() {

@@ -5,8 +5,8 @@ import * as XLSX from 'xlsx';
 import { api } from '../services/api.ts';
 import { CATEGORY, errMsg, esc, GENDER, money, yn } from '../utils/ui.ts';
 import { AlertBox, EmptyState } from '../components/ui.tsx';
-import { useAlive } from '../hooks.ts';
-import { navigate } from '../router.tsx';
+import { useAlive } from '../App.tsx';
+import { useNavigate } from 'react-router-dom';
 import type { Employee, Paged } from '../types.ts';
 
 // Employee table column headings
@@ -225,6 +225,7 @@ tr { page-break-inside: avoid; }
 
 // Render all employee details without row actions
 export default function EmployeesTable() {
+    const navigate = useNavigate();
     const alive = useAlive();
     const limit = 25;
     const [result, setResult] = useState<Paged<Employee> | null>(null);

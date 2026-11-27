@@ -4,8 +4,8 @@ import { request } from '../services/api.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
-import { useAlive } from '../hooks.ts';
-import { navigate } from '../router.tsx';
+import { useAlive } from '../App.tsx';
+import { useNavigate } from 'react-router-dom';
 
 type HolidayType = {
     syssno: number;
@@ -53,6 +53,7 @@ function dateRange(from: string, to: string): string[] {
 
 // Render bulk holiday entry grid page (a_holentergrid)
 export default function Holentergri() {
+    const navigate = useNavigate();
     const alive = useAlive();
     const [types, setTypes] = useState<HolidayType[] | null>(null);
     const [loadError, setLoadError] = useState('');
@@ -134,7 +135,7 @@ export default function Holentergri() {
         }
 
         if (!from || !to || from > to || !grid) {
-            navigate('/a_holentergrid', true);
+            navigate('/a_holentergrid', { replace: true });
             return;
         }
 

@@ -3,8 +3,8 @@ import { request } from '../services/api.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
-import { useAlive } from '../hooks.ts';
-import { Link } from '../router.tsx';
+import { useAlive } from '../App.tsx';
+import { Link } from 'react-router-dom';
 
 type Usd = {
     usdsno: number;
@@ -208,7 +208,7 @@ export default function Inqurgr2() {
                         <h4 className="page-title">inquire User Rights-Given User</h4>
                     </div>
                 </div>
-                <Link href="/usrenter" className="btn btn-outline-primary">
+                <Link to="/usrenter" className="btn btn-outline-primary">
                     <i className="bi bi-arrow-left me-2" aria-hidden="true"></i>Back
                 </Link>
             </div>

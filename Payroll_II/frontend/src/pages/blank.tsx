@@ -3,11 +3,12 @@ import type { FormEvent } from 'react';
 import { currentUser } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox } from '../components/ui.tsx';
-import { useAlive } from '../hooks.ts';
-import { navigate } from '../router.tsx';
+import { useAlive } from '../App.tsx';
+import { useNavigate } from 'react-router-dom';
 
 // Example blank starter page following the project's page pattern
 export default function Blank() {
+    const navigate = useNavigate();
     const alive = useAlive();
     const user = currentUser();
     const [err, setErr] = useState('');

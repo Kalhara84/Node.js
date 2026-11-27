@@ -3,10 +3,11 @@ import type { FormEvent } from 'react';
 import { loginHero, logo, shield } from '../assets/index.ts';
 import { login, homeFor } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
-import { navigate } from '../router.tsx';
+import { useNavigate } from 'react-router-dom';
 
 // Render user login page
 export default function Login() {
+    const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +30,7 @@ export default function Login() {
 
         try {
             const user = await login(name, password);
-            navigate(homeFor(user), true);
+            navigate(homeFor(user), { replace: true });
         } catch (err) {
             setError(errMsg(err));
             setBusy(false);

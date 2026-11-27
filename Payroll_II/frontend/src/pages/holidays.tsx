@@ -5,8 +5,8 @@ import { can } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading, confirmModal } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
-import { useAlive } from '../hooks.ts';
-import { navigate } from '../router.tsx';
+import { useAlive } from '../App.tsx';
+import { useNavigate } from 'react-router-dom';
 
 type Holiday = {
     holsno: number;
@@ -126,6 +126,7 @@ function Editor({ row, view, rows, types, busy, onSubmit, onCancel }: {
 
 // Render holiday master management page
 export default function Holidays() {
+    const navigate = useNavigate();
     const alive = useAlive();
     const [rows, setRows] = useState<Holiday[]>([]);
     const [types, setTypes] = useState<HolidayType[]>([]);

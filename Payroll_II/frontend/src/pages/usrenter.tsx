@@ -5,8 +5,8 @@ import { can } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading, confirmModal } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
-import { useAlive } from '../hooks.ts';
-import { Link } from '../router.tsx';
+import { useAlive } from '../App.tsx';
+import { Link } from 'react-router-dom';
 
 type Lookup = { syssno: number; sysdes: string };
 type Usd = { usdsno: number; usdusd: string; usdnam: string };
@@ -433,10 +433,10 @@ export default function Usrenter() {
                     </div>
                 </div>
                 <div className="d-flex flex-wrap align-items-center gap-2">
-                    <Link href="/inqurgr" id="inquire-user-rights" className="btn btn-primary">
+                    <Link to="/inqurgr" id="inquire-user-rights" className="btn btn-primary">
                         <i className="bi bi-search me-2" aria-hidden="true"></i>inquire User Rights-Given User
                     </Link>
-                    <Link href="/inqurgr2" id="inquire-user-rights" className="btn btn-primary">
+                    <Link to="/inqurgr2" id="inquire-user-rights" className="btn btn-primary">
                         <i className="bi bi-search me-2" aria-hidden="true"></i>inquire User Rights-Given User2
                     </Link>
                 </div>

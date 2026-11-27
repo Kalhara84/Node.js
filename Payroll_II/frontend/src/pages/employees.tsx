@@ -3,7 +3,7 @@ import { canEmployee } from '../services/auth.ts';
 import { api } from '../services/api.ts';
 import { money, errMsg, CATEGORY } from '../utils/ui.ts';
 import { AlertBox, EmptyState, confirmModal } from '../components/ui.tsx';
-import { Link } from '../router.tsx';
+import { Link } from 'react-router-dom';
 import type { Employee, Paged } from '../types.ts';
 
 // Generate single employee table row
@@ -33,9 +33,9 @@ function EmployeeRow({ e, onDelete }: { e: Employee; onDelete: (e: Employee) => 
             <td className="text-end">{money(e.empsal, 2)}</td>
             <td><span className={`badge ${statusClass}`}><i className="dot"></i>{statusText}</span></td>
             <td className="text-end text-nowrap">
-                <Link href={`/employees/${e.empsno}`} className="btn btn-outline-secondary btn-sm icon-btn me-1" title="View"><i className="bi bi-eye"></i></Link>
+                <Link to={`/employees/${e.empsno}`} className="btn btn-outline-secondary btn-sm icon-btn me-1" title="View"><i className="bi bi-eye"></i></Link>
                 {canEmployee('amend') ? (
-                    <Link href={`/employees/${e.empsno}/edit`} className="btn btn-outline-primary btn-sm icon-btn me-1" title="Edit"><i className="bi bi-pencil"></i></Link>
+                    <Link to={`/employees/${e.empsno}/edit`} className="btn btn-outline-primary btn-sm icon-btn me-1" title="Edit"><i className="bi bi-pencil"></i></Link>
                 ) : null}
                 {canEmployee('delete') ? (
                     <button className="btn btn-outline-danger btn-sm icon-btn" title="Delete" onClick={() => onDelete(e)}><i className="bi bi-trash"></i></button>
@@ -136,9 +136,9 @@ export default function Employees() {
                     <div className="page-sub" id="count">{result ? `${result.total} employees in total` : '\u00a0'}</div>
                 </div>
                 <div className="d-flex align-items-center gap-2">
-                    <Link href="/employees/view" className="btn btn-outline-primary" title="View all employees"><i className="bi bi-eye me-1"></i> View</Link>
+                    <Link to="/employees/view" className="btn btn-outline-primary" title="View all employees"><i className="bi bi-eye me-1"></i> View</Link>
                     {canEmployee('add') ? (
-                        <Link href="/employees/new" className="btn btn-primary"><i className="bi bi-plus-lg me-1"></i> Add Employee</Link>
+                        <Link to="/employees/new" className="btn btn-primary"><i className="bi bi-plus-lg me-1"></i> Add Employee</Link>
                     ) : null}
                 </div>
             </div>
