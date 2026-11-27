@@ -13,9 +13,9 @@ type Lookups = { modules: Row[]; submodules: Row[]; locations: Row[] };
 const flags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
 const flagLabels = ['View', 'Add', 'Amend', 'Delete'];
 
-// API helper for administration endpoints
+// API helper for program endpoints
 const call = <T,>(path: string, method = 'GET', body?: unknown) =>
-    request<T>('/administration' + path, {
+    request<T>('/program' + path, {
         method,
         ...(body ? { body: JSON.stringify(body) } : {})
     });
@@ -147,8 +147,8 @@ function Editor({ row, users, mode, lookups, onLookups, onSaved, onCancel, notic
     }
 
     return (
-        <div className="card-soft p-4 mb-4 admin-editor" ref={cardRef}>
-            <div className="admin-records-heading">
+        <div className="card-soft p-4 mb-4 program-editor" ref={cardRef}>
+            <div className="program-records-heading">
                 <h5>{row ? 'Edit' : 'Add'} {users ? 'user' : 'program'} {row ? t(users ? r.usdusd : r.prgsno) : ''}</h5>
                 <span>{users ? 'Profile, contact details and sign-in settings' : 'Module, display order and program details'}</span>
             </div>
@@ -231,8 +231,8 @@ function Editor({ row, users, mode, lookups, onLookups, onSaved, onCancel, notic
     );
 }
 
-// Render administration page (Programs, Users, Rights)
-export default function Administration() {
+// Render program page (Programs, Users, Rights)
+export default function Program() {
     const alive = useAlive();
     const mode = useRef(location.pathname.split('/').pop()!).current;
     const rights = mode === 'rights';
@@ -441,17 +441,17 @@ export default function Administration() {
 
     return (
         <>
-            <div className="admin-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div className="program-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div className="d-flex align-items-center gap-3">
-                    <span className="admin-banner-icon"><i className={`bi ${rights ? 'bi-shield-lock' : users ? 'bi-people' : 'bi-grid'}`} aria-hidden="true"></i></span>
+                    <span className="program-banner-icon"><i className={`bi ${rights ? 'bi-shield-lock' : users ? 'bi-people' : 'bi-grid'}`} aria-hidden="true"></i></span>
                     <div>
-                        <div className="admin-eyebrow">Administration</div>
+                        <div className="program-eyebrow">Program</div>
                         <h4 className="page-title">{title}</h4>
                         <div className="page-sub">{rights ? 'Manage access by user, module and program' : users ? 'Manage user profiles and sign-in details' : 'Register app pages here, then assign each user View, Add, Amend and Delete rights in User Rights'}</div>
                     </div>
                 </div>
                 {rights ? (
-                    <span className="admin-banner-note">Choose a user to manage permissions</span>
+                    <span className="program-banner-note">Choose a user to manage permissions</span>
                 ) : can(users ? 'users' : 'programs', 'add') ? (
                     <button id="add" className="btn btn-primary" onClick={() => setEditor((prev) => ({ row: null, n: (prev?.n ?? 0) + 1 }))}>
                         <i className="bi bi-plus-lg me-1"></i>Add {users ? 'user' : 'program'}
@@ -482,8 +482,8 @@ export default function Administration() {
                 ) : null}
             </div>
 
-            <div className="card-soft fade-in p-3 admin-records">
-                <div className="admin-records-heading">
+            <div className="card-soft fade-in p-3 program-records">
+                <div className="program-records-heading">
                     <h5>{rights ? 'Permission matrix' : users ? 'User directory' : 'Program directory'}</h5>
                     <span>{rights ? 'Changes apply to the programs shown below' : 'Search records or select Edit to make changes'}</span>
                 </div>

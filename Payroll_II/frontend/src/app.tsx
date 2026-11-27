@@ -10,7 +10,7 @@ import Employees from './pages/employees.tsx';
 import EmployeesTable from './pages/employees-table.tsx';
 import EmployeeView from './pages/employee-view.tsx';
 import EmployeeForm from './pages/employee-form.tsx';
-import Administration from './pages/administration.tsx';
+import Program from './pages/program.tsx';
 import Attendance from './pages/attendance.tsx';
 import Holidays from './pages/holidays.tsx';
 import Holentergri from './pages/holentergri.tsx';
@@ -48,8 +48,8 @@ const MENU: MenuItem[] = [
     { href: '/employees', label: 'Employees', icon: 'bi-people-fill', title: 'Employee Master', sub: 'Manage employee records', screen: 'employees' },
     { href: '/a_inqempatt', label: 'Attendance', icon: 'bi-calendar-check', title: 'Attendance Correction', sub: 'Employee attendance, overtime and late minutes', screen: 'a_inqempatt' },
     { href: '/a_holm', label: 'Holidays', icon: 'bi-calendar-event', title: 'Holiday Master', sub: 'Holiday dates, types and overtime rates', screen: 'a_holm' },
-    { href: '/administration/programs', label: 'Programs', icon: 'bi-grid', title: 'Program Master', sub: 'Modules and program definitions', screen: 'programs' },
-    { href: '/administration/users', label: 'Users', icon: 'bi-person-gear', title: 'User Master', sub: 'User profiles and accounts', screen: 'users' },
+    { href: '/program/programs', label: 'Programs', icon: 'bi-grid', title: 'Program Master', sub: 'Modules and program definitions', screen: 'programs' },
+    { href: '/program/users', label: 'Users', icon: 'bi-person-gear', title: 'User Master', sub: 'User profiles and accounts', screen: 'users' },
     { href: '/usrenter', label: 'User Rights', icon: 'bi-shield-lock', title: 'User Rights', sub: 'Program access permissions', screen: 'rights' },
     { href: '/account', label: 'My Account', icon: 'bi-person-lock', title: 'My Account', sub: 'Password and sign-in settings' },
 
@@ -85,11 +85,11 @@ const ROUTES: Route[] = [
     { path: '/employees/:id', page: EmployeeView, screen: 'employees' },
     { path: '/employees/:id/edit', page: EmployeeForm, screen: 'employees', requiredAction: 'amend' },
 
-    // Administration pages
-    { path: '/administration/programs', page: Administration, screen: 'programs' },
-    { path: '/administration/users', page: Administration, screen: 'users' },
+    // Program pages
+    { path: '/program/programs', page: Program, screen: 'programs' },
+    { path: '/program/users', page: Program, screen: 'users' },
 
-    { path: '/administration/rights', page: Usrenter, screen: 'rights' },
+    { path: '/program/rights', page: Usrenter, screen: 'rights' },
     { path: '/usrenter', page: Usrenter, screen: 'rights' },
     { path: '/inqurgr', page: Inqurgr, screen: 'rights' },
     { path: '/inqurgr2', page: Inqurgr2, screen: 'rights' },
@@ -120,7 +120,7 @@ function Shell({ user, path, children }: { user: AuthUser; path: string; childre
     const navigate = useNavigate();
 
     // Update topbar breadcrumbs and active menu state
-    const menuPath = path === '/a_holenter' || path === '/a_holentergrid' ? '/a_holm' : path === '/administration/rights' || path === '/inqurgr' ? '/usrenter' : path;
+    const menuPath = path === '/a_holenter' || path === '/a_holentergrid' ? '/a_holm' : path === '/program/rights' || path === '/inqurgr' ? '/usrenter' : path;
     const current = MENU.find((m) => menuPath.startsWith(m.href));
 
     return (

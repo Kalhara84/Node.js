@@ -32,7 +32,7 @@ type Checked = {
 
 const flags: UsrFlag[] = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
 const labels = ['View', 'Add', 'Amend', 'Delete'];
-const api = '/administration/usrenter';
+const api = '/program/usrenter';
 
 type MatrixState = 'initial' | 'cleared' | 'loading' | 'error' | 'ready';
 
@@ -193,11 +193,11 @@ export default function Inqurgr() {
 
     return (
         <>
-            <div className="admin-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div className="program-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div className="d-flex align-items-center gap-3">
-                    <span className="admin-banner-icon"><i className="bi bi-search" aria-hidden="true"></i></span>
+                    <span className="program-banner-icon"><i className="bi bi-search" aria-hidden="true"></i></span>
                     <div>
-                        <div className="admin-eyebrow">Administration</div>
+                        <div className="program-eyebrow">Program</div>
                         <h4 className="page-title">inquire User Rights-Given User</h4>
                     </div>
                 </div>
@@ -205,8 +205,8 @@ export default function Inqurgr() {
                     <i className="bi bi-arrow-left me-2" aria-hidden="true"></i>Back
                 </Link>
             </div>
-            <form name="inqurgr" id="inqurgr" className="card-soft p-4 mb-4 admin-records" noValidate aria-busy={busy} onSubmit={(e) => e.preventDefault()}>
-                <div className="admin-records-heading"><h5>1. Select user</h5></div>
+            <form name="inqurgr" id="inqurgr" className="card-soft p-4 mb-4 program-records" noValidate aria-busy={busy} onSubmit={(e) => e.preventDefault()}>
+                <div className="program-records-heading"><h5>1. Select user</h5></div>
                 <div className="row g-3 align-items-end">
                     <div className="col-12">
                         <label className="form-label" htmlFor="usrusdsno">User</label>
@@ -221,13 +221,13 @@ export default function Inqurgr() {
                 {users.length ? null : <p className="text-muted mt-3 mb-0">No users available.</p>}
             </form>
             <div id="notice" role="status" aria-live="polite">{notice ? <AlertBox message={notice} /> : null}</div>
-            <section className="card-soft p-3 admin-records">
-                <div className="admin-records-heading">
+            <section className="card-soft p-3 program-records">
+                <div className="program-records-heading">
                     <h5>2. View program rights</h5>
                     <span id="usr-summary" aria-live="polite">{summary}</span>
                 </div>
                 <p className="text-muted small">Single: View only · Multi: View / Add / Amend / Delete</p>
-                <div id="usr-admin-note">
+                <div id="usr-program-note">
                     {admin ? <div className="alert alert-info py-2 small">Administrator account: saved rights below override default access.</div> : null}
                 </div>
                 <div id="usr-matrix">{body}</div>

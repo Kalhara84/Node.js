@@ -1,5 +1,5 @@
 import { fail } from '../lib/errors';
-// Check IDs locally so this validator does not depend on a removed administration file.
+// Check IDs locally so this validator does not depend on a removed program file.
 function integer(v: unknown, label: string, min = 1): number {
     if ((typeof v !== 'string' && typeof v !== 'number') || String(v).trim() === '') {
         fail(`${label} is required`);

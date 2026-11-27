@@ -2,12 +2,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const express = require('express');
 const { once } = require('node:events');
-const administration = require('../dist/routes/administration').default;
+const programRouter = require('../dist/routes/program').default;
 const { pool } = require('../dist/lib/db');
 
 // Use a valid Program Master form; tests change individual fields as needed.
 const form = () => ({ prgmodsno: '32', prgsmdsno: '33', prgorder: ' 01 ', prglvl: 'M', prgnam: ' employees ', prgdes: ' Example program ' });
-const program = { prgsno: 21, prgnam: 'employees', module: 'Administration', submodule: 'Setup' };
+const program = { prgsno: 21, prgnam: 'employees', module: 'Program', submodule: 'Setup' };
 
 // Exercise the real routes with simulated SQL; do not write to a real database.
 async function fixture(context, options = {}) {
@@ -17,7 +17,7 @@ async function fixture(context, options = {}) {
         const text = sql.trim();
         calls.push({ sql: text, values });
         if (text.startsWith('SELECT syssno FROM a_sysmast')) return { rows: [], rowCount: options.invalidScope ? 1 : 2 };
-        if (text.includes('sysrtp=32')) return { rows: [{ syssno: 32, sysdes: 'Administration' }] };
+        if (text.includes('sysrtp=32')) return { rows: [{ syssno: 32, sysdes: 'Program' }] };
         if (text.includes('sysrtp=33')) return { rows: [{ syssno: 33, sysdes: 'Setup' }] };
         if (text.includes('FROM s_locmast')) return { rows: [{ locsno: 1, locnam: 'Main' }] };
         if (text.startsWith('INSERT') && options.duplicate) throw Object.assign(new Error('duplicate'), { code: '23505' });
@@ -43,7 +43,7 @@ async function fixture(context, options = {}) {
         res.locals.access = { admin: false, programs: options.programAccess ?? allowed, users: allowed, rights: denied };
         next();
     });
-    app.use('/api/administration', administration);
+    app.use('/api/program', programRouter);
     app.use((error, _req, res, _next) => res.status(error.status ?? 500).json({ message: error.message }));
     const server = app.listen(0, '127.0.0.1');
     await once(server, 'listening');
@@ -52,7 +52,7 @@ async function fixture(context, options = {}) {
         calls,
         released: () => released,
         async send(path, method = 'GET', body) {
-            const response = await fetch(`http://127.0.0.1:${server.address().port}/api/administration${path}`, {
+            const response = await fetch(`http://127.0.0.1:${server.address().port}/api/program${path}`, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 ...(body === undefined ? {} : { body: JSON.stringify(body) })
@@ -72,12 +72,12 @@ test('Program Master lists programs at the existing route', async context => {
 });
 
 // Shared dropdown loading must continue working with User Master permission alone.
-test('User Master can still load the shared administration dropdowns', async context => {
+test('User Master can still load the shared program dropdowns', async context => {
     const api = await fixture(context, { programAccess: { view: false, add: false, amend: false, delete: false } });
     const result = await api.send('/lookups');
     assert.equal(result.status, 200);
     assert.deepEqual({ modules: result.data.modules, submodules: result.data.submodules, locations: result.data.locations }, {
-        modules: [{ syssno: 32, sysdes: 'Administration' }],
+        modules: [{ syssno: 32, sysdes: 'Program' }],
         submodules: [{ syssno: 33, sysdes: 'Setup' }],
         locations: [{ locsno: 1, locnam: 'Main' }]
     });

@@ -45,8 +45,8 @@ export default function Blank() {
     return (
         <>
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-                <div className="admin-banner flex-grow-1 mb-0">
-                    <div className="admin-eyebrow">Starter Template</div>
+                <div className="program-banner flex-grow-1 mb-0">
+                    <div className="program-eyebrow">Starter Template</div>
                     <h4 className="page-title">Blank Page</h4>
                     <div className="page-sub">Signed in as {user?.username || 'Guest'} — use this layout as a starting point for new pages.</div>
                 </div>

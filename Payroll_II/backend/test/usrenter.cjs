@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const express = require('express');
 const { once } = require('node:events');
-const administration = require('../dist/routes/administration').default;
+const programRouter = require('../dist/routes/program').default;
 const { pool } = require('../dist/lib/db');
 
 const programs = [{ prgsno: 21, prglvl: 'S' }, { prgsno: 22, prglvl: 'M' }];
@@ -32,7 +32,7 @@ async function fixture(context, options = {}) {
     const app = express();
     app.use(express.json());
     app.use((req, _res, next) => { req.user = { sub: 1, usr: 'ADMIN' }; next(); });
-    app.use('/administration', administration);
+    app.use('/program', programRouter);
     app.use((error, _req, res, _next) => res.status(error.status ?? 500).json({ message: error.message }));
     const server = app.listen(0, '127.0.0.1');
     await once(server, 'listening');
@@ -40,11 +40,11 @@ async function fixture(context, options = {}) {
     return {
         calls, released: () => released,
         async get(path) {
-            const response = await fetch(`http://127.0.0.1:${server.address().port}/administration${path}`);
+            const response = await fetch(`http://127.0.0.1:${server.address().port}/program${path}`);
             return { status: response.status, data: await response.json() };
         },
         async send(payload, query = '') {
-            const response = await fetch(`http://127.0.0.1:${server.address().port}/administration/usrenter${query}`, payload ?
+            const response = await fetch(`http://127.0.0.1:${server.address().port}/program/usrenter${query}`, payload ?
                 { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) } : {});
             return { status: response.status, data: await response.json() };
         },

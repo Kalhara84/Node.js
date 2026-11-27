@@ -66,10 +66,10 @@ export function homeFor(user: AuthUser | null): string {
         return '/a_holm';
     }
     if (user.access?.users?.view) {
-        return '/administration/users';
+        return '/program/users';
     }
     if (user.access?.programs?.view) {
-        return '/administration/programs';
+        return '/program/programs';
     }
     if (user.access?.rights?.view) {
         return '/usrenter';

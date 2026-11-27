@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import administration from './administration';
+import program from './program';
 import attendance from './attendance';
 import holidays from './holidays';
 import { requireActiveAccount, requireEmployee, requireScreen } from '../lib/permissions';
@@ -23,8 +23,8 @@ router.use(requireActiveAccount);
 router.post('/auth/password', wrap(AuthController.changePassword));
 router.get('/auth/me', AuthController.me);
 
-// --- 4. Administration Sub-Router ---
-router.use('/administration', administration);
+// --- 4. Program Sub-Router ---
+router.use('/program', program);
 router.use('/attendance', attendance);
 router.use('/holidays', holidays);
 

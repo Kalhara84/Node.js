@@ -41,7 +41,7 @@ type Checked = {
 
 const flags: UsrFlag[] = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'];
 const labels = ['View', 'Add', 'Amend', 'Delete'];
-const api = '/administration/usrenter';
+const api = '/program/usrenter';
 
 // Check if permission flag is editable based on Single or Multiple program level
 const editable = (row: Prg, flag: UsrFlag): boolean =>
@@ -145,8 +145,8 @@ export default function Usrenter() {
     useEffect(() => {
         let cancelled = false;
         Promise.all([
-            request<{ modules: Lookup[]; submodules: Lookup[] }>('/administration/lookups'),
-            request<Usd[]>('/administration/usrenter/users')
+            request<{ modules: Lookup[]; submodules: Lookup[] }>('/program/lookups'),
+            request<Usd[]>('/program/usrenter/users')
         ]).then(
             ([lookups, users]) => {
                 if (!cancelled) {
@@ -423,11 +423,11 @@ export default function Usrenter() {
 
     return (
         <>
-            <div className="admin-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div className="program-banner d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div className="d-flex align-items-center gap-3">
-                    <span className="admin-banner-icon"><i className="bi bi-shield-lock"></i></span>
+                    <span className="program-banner-icon"><i className="bi bi-shield-lock"></i></span>
                     <div>
-                        <div className="admin-eyebrow">Administration</div>
+                        <div className="program-eyebrow">Program</div>
                         <h4 className="page-title">User Rights</h4>
                         <div className="page-sub">Choose a user, check programs and assign access.</div>
                     </div>
@@ -449,8 +449,8 @@ export default function Usrenter() {
             <form name="usrenter" id="usrenter" aria-busy={busy} onSubmit={(e) => void onSubmit(e)}>
                 <fieldset id="usrenter-controls" disabled={busy}>
                     {/* Step 1: User & Scope filter */}
-                    <section className="card-soft p-4 mb-4 admin-records">
-                        <div className="admin-records-heading">
+                    <section className="card-soft p-4 mb-4 program-records">
+                        <div className="program-records-heading">
                             <h5>1. Select user and programs</h5>
                             <span>All modules or a selected module / submodule</span>
                         </div>
@@ -480,8 +480,8 @@ export default function Usrenter() {
                     </section>
 
                     {/* Step 2: Permission Matrix */}
-                    <section className="card-soft p-3 admin-records">
-                        <div className="admin-records-heading">
+                    <section className="card-soft p-3 program-records">
+                        <div className="program-records-heading">
                             <h5>2. Assign program rights</h5>
                             <span id="usr-summary" aria-live="polite">{summary}</span>
                         </div>
@@ -490,7 +490,7 @@ export default function Usrenter() {
                             <button type="button" className="btn btn-sm btn-outline-secondary" name="clear_all" onClick={() => checkAll(false)}>Clear all</button>
                             <span className="text-muted small align-self-center ms-md-auto">Single: View only · Multi: View / Add / Amend / Delete</span>
                         </div>
-                        <div id="usr-admin-note">
+                        <div id="usr-program-note">
                             {admin ? <div className="alert alert-info py-2 small">Administrator account: saved rights below override default access. Untick a page or action to block it for this administrator.</div> : null}
                         </div>
                         <div id="usr-matrix">{body}</div>

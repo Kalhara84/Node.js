@@ -47,8 +47,8 @@ export default function Account() {
 
     return (
         <>
-            <div className="admin-banner mb-4">
-                <div className="admin-eyebrow">My account</div>
+            <div className="program-banner mb-4">
+                <div className="program-eyebrow">My account</div>
                 <h4 className="page-title">Change password</h4>
                 <div className="page-sub">Manage sign-in details for {user?.username}</div>
             </div>

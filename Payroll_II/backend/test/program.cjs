@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { AdministrationController } = require('../dist/controllers/administration.controller');
+const { ProgramController } = require('../dist/controllers/program.controller');
 const { verifyPassword } = require('../dist/lib/auth');
 const { pool } = require('../dist/lib/db');
 
@@ -25,7 +25,7 @@ test('user creation validates fields, hashes the password and records the editor
         return { rows: [{ usdsno: 7, usdusd: 'newuser' }] };
     });
     const res = response();
-    await AdministrationController.createUser(request({ usdusd: ' newuser ', usdpwd: 'new-password', usdnam: ' New User ' }), res);
+    await ProgramController.createUser(request({ usdusd: ' newuser ', usdpwd: 'new-password', usdnam: ' New User ' }), res);
     assert.equal(res.code, 201);
     assert.deepEqual(res.data, { usdsno: 7, usdusd: 'newuser' });
     const insert = calls[0];
@@ -48,7 +48,7 @@ test('invalid user input and nonexistent locations cannot create accounts', asyn
         { usdusd: 'user', usdpwd: 'secret', usdactive: 'X' },
         { usdusd: 'user', usdpwd: 'secret', usdcomsno: 999 }
     ]) {
-        await assert.rejects(AdministrationController.createUser(request(body), response()), error => error.status === 400);
+        await assert.rejects(ProgramController.createUser(request(body), response()), error => error.status === 400);
     }
     assert.equal(calls.some(sql => sql.includes('INSERT')), false);
 });
@@ -57,7 +57,7 @@ test('invalid user input and nonexistent locations cannot create accounts', asyn
 test('ordinary editors cannot change administrator accounts', async context => {
     context.mock.method(pool, 'query', async () => ({ rows: [{}], rowCount: 1 }));
     const res = response(false);
-    await AdministrationController.updateUser(request({ usdpwd: 'replacement' }), res);
+    await ProgramController.updateUser(request({ usdpwd: 'replacement' }), res);
     assert.equal(res.code, 403);
     assert.equal(res.data.message, 'Only an administrator can change an administrator account');
 });
@@ -70,7 +70,7 @@ test('profile updates preserve username and password and use the URL account ID'
         return { rows: [{ usdsno: 7, usdnam: 'Updated' }], rowCount: 1 };
     });
     const res = response();
-    await AdministrationController.updateUser(request({ usdusd: 'changed', usdnam: ' Updated ', usdpwd: '' }), res);
+    await ProgramController.updateUser(request({ usdusd: 'changed', usdnam: ' Updated ', usdpwd: '' }), res);
     assert.equal(res.code, 200);
     const update = calls[0];
     const assignments = update.sql.split('SET')[1].split('WHERE')[0];
@@ -103,10 +103,10 @@ function rightsDatabase(context, options = {}) {
 const rights = () => ({ rows: [21, 22].map(prgsno => ({ prgsno, usryn: 'y', usraddyn: 'y', usrameyn: 'y', usrdelyn: 'y' })) });
 
 // Both program levels must keep their original permission rules after the move.
-test('administration rights saving normalizes flags and commits all changes together', async context => {
+test('program rights saving normalizes flags and commits all changes together', async context => {
     const db = rightsDatabase(context);
     const res = response();
-    await AdministrationController.saveRights(request(rights()), res);
+    await ProgramController.saveRights(request(rights()), res);
     const inserts = db.calls.filter(call => call.sql.startsWith('INSERT'));
     assert.deepEqual(inserts.map(call => call.values), [
         [7, 21, 'y', 'n', 'n', 'n', 'EDITOR'],
@@ -117,9 +117,9 @@ test('administration rights saving normalizes flags and commits all changes toge
     assert.equal(res.data.message, '2 program rights updated');
 });
 
-test('clearing administration rights deletes only the submitted user/program pairs', async context => {
+test('clearing program rights deletes only the submitted user/program pairs', async context => {
     const db = rightsDatabase(context);
-    await AdministrationController.saveRights(request({ ...rights(), clear: true }), response());
+    await ProgramController.saveRights(request({ ...rights(), clear: true }), response());
     const deletions = db.calls.filter(call => call.sql.startsWith('DELETE'));
     assert.deepEqual(deletions.map(call => call.values), [[7, 21], [7, 22]]);
     assert.equal(db.calls.some(call => call.sql.startsWith('INSERT')), false);
@@ -128,29 +128,29 @@ test('clearing administration rights deletes only the submitted user/program pai
 });
 
 // Invalid rights must not begin a transaction.
-test('invalid administration rights fail before acquiring a connection', async context => {
+test('invalid program rights fail before acquiring a connection', async context => {
     let connected = false;
     context.mock.method(pool, 'connect', async () => { connected = true; throw new Error('Unexpected connection'); });
     for (const rows of [
         [rights().rows[0], rights().rows[0]],
         [{ ...rights().rows[0], usryn: 'yes' }]
     ]) {
-        await assert.rejects(AdministrationController.saveRights(request({ rows }), response()), error => error.status === 400);
+        await assert.rejects(ProgramController.saveRights(request({ rows }), response()), error => error.status === 400);
     }
     assert.equal(connected, false);
 });
 
 // Failed writes and changed program lists must undo the transaction and free the connection.
-test('failed administration rights writes roll back and release the connection', async context => {
+test('failed program rights writes roll back and release the connection', async context => {
     const db = rightsDatabase(context, { failWrite: true });
-    await assert.rejects(AdministrationController.saveRights(request(rights()), response()), /Write failed/);
+    await assert.rejects(ProgramController.saveRights(request(rights()), response()), /Write failed/);
     assert.equal(db.calls.at(-1).sql, 'ROLLBACK');
     assert.equal(db.released(), true);
 });
 
-test('changed administration programs reject rights saving before writes', async context => {
+test('changed program programs reject rights saving before writes', async context => {
     const db = rightsDatabase(context, { changedPrograms: true });
-    await assert.rejects(AdministrationController.saveRights(request(rights()), response()), error => error.status === 400);
+    await assert.rejects(ProgramController.saveRights(request(rights()), response()), error => error.status === 400);
     assert.equal(db.calls.some(call => call.sql.startsWith('INSERT')), false);
     assert.equal(db.calls.at(-1).sql, 'ROLLBACK');
     assert.equal(db.released(), true);
@@ -158,7 +158,7 @@ test('changed administration programs reject rights saving before writes', async
 
 test('clearing administrator rights preserves explicit denial instead of restoring full access', async context => {
     const db = rightsDatabase(context, { targetAdmin: true });
-    await AdministrationController.saveRights(request({ ...rights(), clear: true }), response());
+    await ProgramController.saveRights(request({ ...rights(), clear: true }), response());
     assert.deepEqual(db.calls.filter(call => call.sql.startsWith('INSERT')).map(call => call.values), [
         [7, 21, 'n', 'n', 'n', 'n', 'EDITOR'],
         [7, 22, 'n', 'n', 'n', 'n', 'EDITOR']
@@ -170,7 +170,7 @@ test('ordinary account creators cannot promote a new user to administrator', asy
     let queried = false;
     context.mock.method(pool, 'query', async () => { queried = true; throw new Error('Unexpected write'); });
     const res = response(false);
-    await AdministrationController.createUser(request({ usdusd: 'newuser', usdpwd: 'secret', usdadmin: 'true' }), res);
+    await ProgramController.createUser(request({ usdusd: 'newuser', usdpwd: 'secret', usdadmin: 'true' }), res);
     assert.equal(res.code, 403);
     assert.equal(queried, false);
 });
@@ -179,7 +179,7 @@ test('an administrator can choose another account role and disable another admin
     let values;
     context.mock.method(pool, 'query', async (sql, args) => { values = args; return { rows: [{ usdsno: 7, usdadmin: true, usdactive: 'N' }] }; });
     const res = response();
-    await AdministrationController.updateUser(request({ usdnam: 'Other admin', usdadmin: 'true', usdactive: 'N' }), res);
+    await ProgramController.updateUser(request({ usdnam: 'Other admin', usdadmin: 'true', usdactive: 'N' }), res);
     assert.equal(res.code, 200);
     assert.equal(res.data.usdadmin, true);
     assert.equal(res.data.usdactive, 'N');

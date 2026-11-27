@@ -24,7 +24,7 @@ async function locationExists(id: unknown): Promise<boolean> {
     return !!result.rowCount;
 }
 
-// Administration input checks live here with the request handlers.
+// Program input checks live here with the request handlers.
 const rightFlags = ['usryn', 'usraddyn', 'usrameyn', 'usrdelyn'] as const;
 
 // Field max lengths for user table validation
@@ -191,7 +191,7 @@ async function checkProgramScope(module: number, submodule: number): Promise<voi
 
 }
 
-export const AdministrationController = {
+export const ProgramController = {
     // Route-specific error handler (validation errors and unique constraint violations)
     handleError(err: unknown, _req: Request, res: Response, next: NextFunction): void {
         const e = err as { status?: number; code?: string; message?: string };
@@ -210,7 +210,7 @@ export const AdministrationController = {
 
     // ---------- Lookups ----------
 
-    // Get administration lookup masters (modules, submodules, locations)
+    // Get program lookup masters (modules, submodules, locations)
     async lookups(_req: Request, res: Response): Promise<void> {
         // Load dropdowns together; User Master also uses this existing endpoint.
         const [modules, submodules, locations] = await Promise.all([

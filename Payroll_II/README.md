@@ -178,7 +178,7 @@ To control a new screen: add one line for it in `SCREENS` in `backend/src/lib/pe
 ## User access assignment (`usrenter`)
 
 Open **User Rights** in the sidebar, or `/usrenter`. The previous
-`/administration/rights` address opens the same screen. Select a user, choose
+`/program/rights` address opens the same screen. Select a user, choose
 Module and Submodule **All / Select**, then press **CHECK**. Single (`S`) programs
 use **Y/N**; Multiple (`M`) programs use **Add / Amend / Delete**. Use the column
 checkboxes, **Check all**, or **Clear all**, then **SAVE**. **RESET** restores the
@@ -188,7 +188,7 @@ Changing the selection requires another CHECK before saving.
 The converted source files retain the `usrenter` basename:
 `frontend/src/pages/usrenter.ts` and `backend/src/routes/usrenter.ts`.
 They use TypeScript because this application runs Node.js. The screen address is
-`/usrenter` and the authenticated API is `/api/administration/usrenter`
+`/usrenter` and the authenticated API is `/api/program/usrenter`
 (GET for CHECK, POST for SAVE/DELETE).
 Original names are retained: `usrusdsno`, `usrusdsnoauto`, `modopt`, `smodopt`,
 `modsno`, `modsnoauto`, `submodsno`, `submodsnoauto`, `prgsno`, `hcount`,
