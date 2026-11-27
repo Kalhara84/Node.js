@@ -48,7 +48,7 @@ function DashboardView({ d }: { d: DashboardData }) {
                 <Stat icon="bi-people-fill" tone="blue" label="Total employees" value={t.total} />
                 <Stat icon="bi-person-check-fill" tone="green" label="Active employees" value={t.active} />
                 <Stat icon="bi-person-dash-fill" tone="red" label="Inactive employees" value={t.inactive} />
-                <Stat icon="bi-person-question" tone="amber" label="Status not set" value={t.unknownStatus} />
+                <Stat icon="bi-person-fill-exclamation" tone="amber" label="Status not set" value={t.unknownStatus} />
                 <Stat icon="bi-cash-stack" tone="amber" label="Recorded basic salary total (active)" value={salary(t.payroll)} />
                 <Stat icon="bi-graph-up-arrow" tone="purple" label="Average basic salary (active)" value={salary(t.avgSalary)} />
                 <Stat icon="bi-person-plus-fill" tone="teal" label="Joined this year" value={t.joinedThisYear} />
