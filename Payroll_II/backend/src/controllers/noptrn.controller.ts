@@ -133,7 +133,13 @@ export const NoptrnController = {
         }
 
         const result = await pool.query(
-            `SELECT e.empsno, e.empeno, e.empnam, e.empepfno, t.trnamt
+            `SELECT e.empsno, e.empeno, e.empnam, e.empepfno, t.trnamt,
+                    (t.trnsno IS NULL OR ($1 = '444' AND NOT EXISTS (
+                        SELECT 1 FROM p_trnmast g WHERE g.trnempsno=e.empsno AND g.trntyp='045'
+                    ))) AS needs_add,
+                    (t.trnsno IS NOT NULL OR ($1 = '444' AND EXISTS (
+                        SELECT 1 FROM p_trnmast g WHERE g.trnempsno=e.empsno AND g.trntyp='045'
+                    ))) AS needs_amend
              FROM p_empmast e
              LEFT JOIN s_locmast l ON e.emplocsno = l.locsno
              LEFT JOIN p_trnmast t ON t.trnempsno = e.empsno AND t.trntyp = $1
@@ -149,6 +155,11 @@ export const NoptrnController = {
 
     // Save direct transaction amounts for all displayed employees
     async save(req: Request, res: Response): Promise<void> {
+        const rights = res.locals.access?.noptrn;
+        if (!rights?.add && !rights?.amend) {
+            res.status(403).json({ message: 'You do not have permission to save direct transactions' });
+            return;
+        }
         const body = req.body ?? {};
         const sysrno = trnType(body.sysrno);
         const rows = Array.isArray(body.rows) ? body.rows : null;
@@ -167,12 +178,35 @@ export const NoptrnController = {
             const trnamt = parseAmount(r.trnamt);
             parsed.push({ empsno, trnamt });
         }
+        if (new Set(parsed.map(row => row.empsno)).size !== parsed.length) {
+            fail('Duplicate employee rows are not allowed');
+        }
 
         const client = await pool.connect();
         let count = 0;
 
         try {
             await client.query('BEGIN');
+
+            // Keep existence checks and replacement writes atomic, including missing rows.
+            await client.query('LOCK TABLE p_trnmast IN SHARE ROW EXCLUSIVE MODE');
+            const types = sysrno === '444' ? [sysrno, '045'] : [sysrno];
+            const existing = await client.query(
+                'SELECT trnempsno, trntyp FROM p_trnmast WHERE trnempsno = ANY($1::int[]) AND trntyp = ANY($2::text[])',
+                [parsed.map(row => row.empsno), types]
+            );
+            const keys = new Set(existing.rows.map(row => `${row.trnempsno}:${row.trntyp}`));
+            // Check the complete batch before changing any employee's records.
+            for (const row of parsed) {
+                for (const type of types) {
+                    const action = keys.has(`${row.empsno}:${type}`) ? 'amend' : 'add';
+                    if (!rights[action]) {
+                        await client.query('ROLLBACK');
+                        res.status(403).json({ message: `You do not have permission to ${action} direct transactions` });
+                        return;
+                    }
+                }
+            }
 
             for (const row of parsed) {
                 await client.query(
@@ -239,4 +273,3 @@ export const NoptrnController = {
         next(error);
     },
 };
-

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { request } from '../services/api.ts';
+import { can } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading, confirmModal } from '../components/ui.tsx';
 import { useAlive } from '../App.tsx';
@@ -172,6 +173,7 @@ export default function Depm() {
     }, []);
 
     function openAdd(): void {
+        if (!can('depm', 'add')) return;
         setNotice('');
         setError('');
         setActiveRow(null);
@@ -179,6 +181,7 @@ export default function Depm() {
     }
 
     function openRow(row: DepartmentRow, nextMode: 'edit' | 'view'): void {
+        if (!can('depm', nextMode === 'edit' ? 'amend' : 'view')) return;
         setNotice('');
         setError('');
         setActiveRow(row);
@@ -186,6 +189,7 @@ export default function Depm() {
     }
 
     async function handleSave(body: Record<string, FormDataEntryValue>, setFormError: (m: string) => void): Promise<void> {
+        if (!can('depm', activeRow ? 'amend' : 'add')) return;
         setBusy(true);
         setNotice('');
         try {
@@ -212,6 +216,7 @@ export default function Depm() {
     }
 
     async function handleDelete(row: DepartmentRow): Promise<void> {
+        if (!can('depm', 'delete')) return;
         const ok = await confirmModal({
             title: 'Delete Department',
             message: `Delete department ${row.depdep}${row.depdes ? ` (${row.depdes})` : ''}?`,
@@ -258,9 +263,9 @@ export default function Depm() {
                     <div className="page-sub">Manage department codes and descriptions</div>
                 </div>
                 <div className="d-flex gap-2">
-                    <button type="button" className="btn btn-primary" onClick={openAdd}>
+                    {can('depm', 'add') ? <button type="button" className="btn btn-primary" onClick={openAdd}>
                         <i className="bi bi-plus-lg me-1"></i>Add Department
-                    </button>
+                    </button> : null}
                 </div>
             </div>
 
@@ -271,7 +276,7 @@ export default function Depm() {
                 <Editor
                     key={activeRow ? `${mode}-${activeRow.depsno}` : 'add'}
                     row={activeRow}
-                    view={mode === 'view'}
+                    view={mode === 'view' || !can('depm', activeRow ? 'amend' : 'add')}
                     rows={rows}
                     busy={busy}
                     onSubmit={handleSave}
@@ -333,6 +338,7 @@ export default function Depm() {
                                                     type="button"
                                                     className="btn btn-light"
                                                     title="Edit"
+                                                    hidden={!can('depm', 'amend')}
                                                     onClick={() => openRow(r, 'edit')}
                                                 >
                                                     <i className="bi bi-pencil"></i>
@@ -341,6 +347,7 @@ export default function Depm() {
                                                     type="button"
                                                     className="btn btn-light text-danger"
                                                     title="Delete"
+                                                    hidden={!can('depm', 'delete')}
                                                     disabled={busy}
                                                     onClick={() => void handleDelete(r)}
                                                 >

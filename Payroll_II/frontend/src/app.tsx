@@ -135,11 +135,11 @@ const ROUTES: Route[] = [
     { path: '/program/users', page: Program, screen: 'users' },
 
     // Department master page
-    { path: '/departments', page: Depm },
-    { path: '/depm', page: Depm },
+    { path: '/departments', page: Depm, screen: 'depm' },
+    { path: '/depm', page: Depm, screen: 'depm' },
 
     // Direct transaction entry page
-    { path: '/noptrn', page: Noptrn },
+    { path: '/noptrn', page: Noptrn, screen: 'noptrn' },
 
     { path: '/program/rights', page: Usrenter, screen: 'rights' },
     { path: '/usrenter', page: Usrenter, screen: 'rights' },

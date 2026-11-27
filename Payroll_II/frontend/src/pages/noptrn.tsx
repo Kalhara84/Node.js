@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent, KeyboardEvent } from 'react';
 import { request } from '../services/api.ts';
+import { can } from '../services/auth.ts';
 import { errMsg } from '../utils/ui.ts';
 import { AlertBox, Loading } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
@@ -26,6 +27,8 @@ type GridRow = {
     empnam: string;
     empepfno: number | string | null;
     trnamt: number | string | null;
+    needs_add: boolean;
+    needs_amend: boolean;
 };
 
 // Shared API helper for direct transaction endpoints
@@ -78,6 +81,14 @@ export default function Noptrn() {
     const [amounts, setAmounts] = useState<Record<number, string>>({});
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
     const saveBtnRef = useRef<HTMLButtonElement | null>(null);
+
+    function canSaveRow(row: GridRow): boolean {
+        return (row.needs_add || row.needs_amend)
+            && (!row.needs_add || can('noptrn', 'add'))
+            && (!row.needs_amend || can('noptrn', 'amend'));
+    }
+    const editableRows = rows?.filter(canSaveRow) ?? [];
+    const canSave = editableRows.length > 0;
 
     useEffect(() => {
         void (async () => {
@@ -152,12 +163,13 @@ export default function Noptrn() {
     }
 
     async function handleSave(): Promise<void> {
-        if (!rows || !rows.length || !displayedType || saving) return;
+        if (!rows || !canSave || !displayedType || saving) return;
 
         setError('');
         setNotice('');
 
         for (let i = 0; i < rows.length; i++) {
+            if (!canSaveRow(rows[i])) continue;
             const raw = (amounts[rows[i].empsno] ?? '').replace(/,/g, '').trim();
             if (raw !== '') {
                 const n = Number(raw);
@@ -173,7 +185,7 @@ export default function Noptrn() {
         try {
             const payload = {
                 sysrno: displayedType,
-                rows: rows.map((r) => ({
+                rows: editableRows.map((r) => ({
                     empsno: r.empsno,
                     trnamt: amounts[r.empsno] ?? '',
                 })),
@@ -181,6 +193,10 @@ export default function Noptrn() {
             const res = await call<{ count: number; message: string }>('/save', 'POST', payload);
             if (!alive()) return;
             setNotice(res.message);
+            const saved = new Set(editableRows.map(row => row.empsno));
+            setRows(current => current?.map(row => saved.has(row.empsno)
+                ? { ...row, needs_add: false, needs_amend: true }
+                : row) ?? null);
         } catch (e) {
             if (!alive()) return;
             setError(errMsg(e));
@@ -514,7 +530,8 @@ export default function Noptrn() {
                             ref={saveBtnRef}
                             type="button"
                             className="btn btn-primary btn-sm"
-                            disabled={saving || rows.length === 0}
+                            hidden={!can('noptrn', 'add') && !can('noptrn', 'amend')}
+                            disabled={saving || !canSave}
                             onClick={() => void handleSave()}
                         >
                             <i className="bi bi-check-lg me-1"></i>
@@ -550,6 +567,7 @@ export default function Noptrn() {
                                                     type="text"
                                                     className="form-control form-control-sm text-end"
                                                     value={amounts[r.empsno] ?? ''}
+                                                    readOnly={!canSaveRow(r) || saving}
                                                     onChange={(e) =>
                                                         setAmounts((prev) => ({
                                                             ...prev,
@@ -565,7 +583,7 @@ export default function Noptrn() {
                             </table>
                         )}
                     </div>
-                    {rows.length > 0 ? (
+                    {canSave ? (
                         <div className="p-3 border-top d-flex justify-content-end">
                             <button
                                 type="button"
@@ -583,4 +601,3 @@ export default function Noptrn() {
         </div>
     );
 }
-

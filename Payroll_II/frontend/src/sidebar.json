@@ -65,7 +65,8 @@
                         "icon": "bi-diagram-3",
                         "href": "/departments",
                         "title": "Department Master",
-                        "sub": "Manage department records"
+                        "sub": "Manage department records",
+                        "screen": "depm"
                     }
                 ]
             },
@@ -80,7 +81,8 @@
                         "icon": "bi-cash-coin",
                         "href": "/noptrn",
                         "title": "Enter Direct Transaction",
-                        "sub": "Enter direct payroll transactions"
+                        "sub": "Enter direct payroll transactions",
+                        "screen": "noptrn"
                     }
                 ]
             }
@@ -154,4 +156,3 @@
         "action": "logout"
     }
 ]
-

@@ -1,6 +1,15 @@
 import type { ChartItem } from '../types.ts';
 
-export const PALETTE = ['#6d4aff', '#ff7a3d', '#14b8a6', '#f5a524', '#ec4899', '#3b82f6', '#84cc16', '#a78bfa'];
+export const PALETTE = [
+    '#6d4aff', 
+    '#ff7a3d', 
+    '#14b8a6', 
+    '#f5a524', 
+    '#ec4899', 
+    '#3b82f6', 
+    '#84cc16', 
+    '#a78bfa'
+];
 
 export interface DonutItem {
     label: string;
