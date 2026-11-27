@@ -26,7 +26,7 @@ export const DashboardModel = {
                       WHERE empactflg = 'Y' GROUP BY 1 ORDER BY 1`),
 
                 await client.query(`SELECT COALESCE(NULLIF(BTRIM(d.depdes), ''), 'Unassigned') AS label, COUNT(*)::int AS value
-                      FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
+                      FROM p_empmast e LEFT JOIN p_depmast d ON d.depsno = e.empdepsno
                       WHERE e.empactflg = 'Y' GROUP BY 1 ORDER BY 2 DESC, 1`),
 
                 await client.query(`SELECT COALESCE(NULLIF(BTRIM(l.locnam), ''), 'Unassigned') AS label, COUNT(*)::int AS value
@@ -34,14 +34,14 @@ export const DashboardModel = {
                       WHERE e.empactflg = 'Y' GROUP BY 1 ORDER BY 2 DESC, 1`),
 
                 await client.query(`SELECT COALESCE(NULLIF(BTRIM(d.depdes), ''), 'Unassigned') AS label, COALESCE(SUM(e.empsal::numeric), 0) AS value
-                      FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
+                      FROM p_empmast e LEFT JOIN p_depmast d ON d.depsno = e.empdepsno
                       WHERE e.empactflg = 'Y' GROUP BY 1 ORDER BY 2 DESC, 1`),
 
                 await client.query(`SELECT EXTRACT(YEAR FROM empjoin)::int AS label, COUNT(*)::int AS value
                       FROM p_empmast WHERE empjoin <= CURRENT_DATE GROUP BY 1 ORDER BY 1`),
                   
                 await client.query(`SELECT e.empsno, e.empeno, e.empnam, e.empdesig, COALESCE(NULLIF(BTRIM(d.depdes), ''), 'Unassigned') AS department_name, e.empjoin
-                      FROM p_empmast e LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
+                      FROM p_empmast e LEFT JOIN p_depmast d ON d.depsno = e.empdepsno
                       ORDER BY e.empentddt DESC NULLS LAST, e.empenttime DESC NULLS LAST, e.empsno DESC LIMIT 6`),
             ];
 

@@ -5,7 +5,7 @@ import type { Employee, EmployeeInput, Paged } from '../types';
 const SELECT_JOINED = `
   SELECT e.*, d.depdes AS department_name, l.locnam AS location_name
   FROM p_empmast e
-  LEFT JOIN f_depmast d ON d.depsno = e.empdepsno
+  LEFT JOIN p_depmast d ON d.depsno = e.empdepsno
   LEFT JOIN s_locmast l ON l.locsno = e.emplocsno`;
 
 

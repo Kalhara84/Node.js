@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS "usdmast" CASCADE;
 DROP TABLE IF EXISTS "prgmast" CASCADE;
 DROP TABLE IF EXISTS "p_empmast" CASCADE;
 DROP TABLE IF EXISTS "s_locmast" CASCADE;
-DROP TABLE IF EXISTS "f_depmast" CASCADE;
+DROP TABLE IF EXISTS "p_depmast" CASCADE;
 DROP TABLE IF EXISTS "p_sysmast" CASCADE;
 DROP TABLE IF EXISTS "a_sysmast" CASCADE;
 
@@ -171,7 +171,7 @@ SELECT setval(pg_get_serial_sequence('p_sysmast', 'syssno'),
     WHERE schemaname = current_schema() AND sequencename = 'p_sysmast_syssno_seq'), 1)),
   MAX("syssno") IS NOT NULL) FROM "p_sysmast";
 
-CREATE TABLE IF NOT EXISTS "f_depmast" (
+CREATE TABLE IF NOT EXISTS "p_depmast" (
   "depsno" SERIAL,
   "depdep" varchar(6) NOT NULL default '',
   "depdes" varchar(30) default NULL,
@@ -189,8 +189,8 @@ CREATE TABLE IF NOT EXISTS "f_depmast" (
   UNIQUE ("depsno")
 );
 
--- f_depmast: 47 original source rows.
-INSERT INTO "f_depmast" ("depsno","depdep","depdes","depscgpcn","depvatpcn","deprsvpcn","depoutbilyn","depucdnew","depentddt","depenttime","depucdame","depameddt","depametime") VALUES
+-- p_depmast: 47 original source rows.
+INSERT INTO "p_depmast" ("depsno","depdep","depdes","depscgpcn","depvatpcn","deprsvpcn","depoutbilyn","depucdnew","depentddt","depenttime","depucdame","depameddt","depametime") VALUES
 (1,E'Accoun',E'Accounts',0.00,0.00,0.00,E'',E'2000',E'2012-03-04',E'18:42:00',E'',E'2012-05-08',E'11:18:47'),
 (2,E'NURSER',E'NURSERY STAFF',NULL,NULL,NULL,NULL,E'2000',E'2012-03-19',E'10:15:03',NULL,NULL,NULL),
 (3,E'LABOUR',E'LABOURERS',NULL,NULL,NULL,NULL,E'2000',E'2012-03-19',E'10:15:03',NULL,NULL,NULL),
@@ -241,10 +241,10 @@ INSERT INTO "f_depmast" ("depsno","depdep","depdes","depscgpcn","depvatpcn","dep
 ON CONFLICT DO NOTHING;
 
 -- Keep generated IDs above imported IDs without rewinding existing sequences.
-SELECT setval(pg_get_serial_sequence('f_depmast', 'depsno'),
+SELECT setval(pg_get_serial_sequence('p_depmast', 'depsno'),
   GREATEST(COALESCE(MAX("depsno"), 1), COALESCE((SELECT last_value FROM pg_sequences
-    WHERE schemaname = current_schema() AND sequencename = 'f_depmast_depsno_seq'), 1)),
-  MAX("depsno") IS NOT NULL) FROM "f_depmast";
+    WHERE schemaname = current_schema() AND sequencename = 'p_depmast_depsno_seq'), 1)),
+  MAX("depsno") IS NOT NULL) FROM "p_depmast";
 
 CREATE TABLE IF NOT EXISTS "s_locmast" (
   "locsno" SERIAL,

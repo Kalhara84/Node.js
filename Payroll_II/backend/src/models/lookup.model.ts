@@ -19,7 +19,7 @@ export const LookupModel = {
             ),
 
             pool.query<Department>(
-                'SELECT depsno, depdep, depdes FROM f_depmast ORDER BY depdes'
+                'SELECT depsno, depdep, depdes FROM p_depmast ORDER BY depdes'
             ),
 
             pool.query<SysItem>(

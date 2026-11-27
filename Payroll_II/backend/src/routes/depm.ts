@@ -16,3 +16,4 @@ router.delete('/:id', wrap(controller.remove));
 router.use(controller.handleError);
 
 export default router;
+
