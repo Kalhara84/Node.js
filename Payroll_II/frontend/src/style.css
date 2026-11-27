@@ -7,23 +7,26 @@
   --brand-700: #4a2fd6;
   --brand-soft: #f1edff;
   --accent: #ff6a3d;
-  --ink: #1d1740;
-  --text: #3a3560;
-  --muted: #8681a8;
-  --line: #ebe8f7;
-  --bg: #f6f5fc;
+  --ink: #201738;
+  --text: #332d49;
+  --muted: #625b78;
+  --line: #dcd6ea;
+  --bg: #f3f1f9;
   --card: #ffffff;
-  --ok: #12a05c;
-  --danger: #e5484d;
+  --ok: #087443;
+  --danger: #bd303a;
   --radius: 18px;
   --shadow:
-    0 1px 2px rgba(41, 27, 120, 0.05), 0 8px 24px -12px rgba(41, 27, 120, 0.12);
+    0 1px 3px rgba(41, 27, 120, 0.07), 0 10px 28px -14px rgba(41, 27, 120, 0.2);
 
   --bs-primary: #6d4aff;
   --bs-primary-rgb: 109, 74, 255;
   --bs-body-font-family:
     "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
   --bs-body-color: var(--text);
+  --bs-secondary-color: var(--muted);
+  --bs-secondary-color-rgb: 98, 91, 120;
+  --bs-tertiary-bg: #eeeaf7;
   --bs-link-color: #5b3df5;
   --bs-link-color-rgb: 91, 61, 245;
   --bs-link-hover-color-rgb: 74, 47, 214;
@@ -81,7 +84,7 @@ h5 {
   --bs-btn-active-border-color: var(--brand-700);
   --bs-btn-disabled-bg: var(--brand-600);
   --bs-btn-disabled-border-color: var(--brand-600);
-  background-image: linear-gradient(135deg, #7a58ff, #5b3df5);
+  background-image: linear-gradient(135deg, #6846e8, #5030d8);
   box-shadow: 0 8px 18px -8px rgba(91, 61, 245, 0.7);
 }
 .btn-primary:hover {
@@ -90,7 +93,7 @@ h5 {
 }
 .btn-outline-primary {
   --bs-btn-color: var(--brand-600);
-  --bs-btn-border-color: #d9d1ff;
+  --bs-btn-border-color: #bcb0e5;
   --bs-btn-hover-bg: var(--brand-soft);
   --bs-btn-hover-color: var(--brand-700);
   --bs-btn-hover-border-color: #cbbfff;
@@ -127,25 +130,38 @@ h5 {
 .form-control,
 .form-select {
   border-radius: 12px;
-  border: 1px solid #e2def5;
+  border: 1px solid #bfb5d4;
   padding: 0.58rem 0.8rem;
   background-color: #fff;
   color: var(--ink);
 }
 .form-control::placeholder {
-  color: #aaa6c6;
+  color: #716985;
+  opacity: 1;
 }
 .form-control:focus,
 .form-select:focus {
-  border-color: #a995ff;
+  border-color: #8064d9;
   box-shadow: 0 0 0 4px rgba(109, 74, 255, 0.13);
 }
 .form-label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #5a5580;
+  color: #49405f;
   margin-bottom: 6px;
   letter-spacing: 0.01em;
+}
+.form-check-input {
+  border-color: #9a8caf;
+}
+.form-control:disabled,
+.form-select:disabled,
+.form-control[readonly] {
+  background-color: #f0edf5;
+  color: #625b78;
+}
+.form-check-label {
+  color: var(--text);
 }
 .form-check-input:checked {
   background-color: var(--brand-600);
@@ -153,7 +169,7 @@ h5 {
 }
 .input-group-text {
   background: #f7f5ff;
-  border-color: #e2def5;
+  border-color: #bfb5d4;
   color: var(--muted);
   border-radius: 12px;
 }
@@ -175,7 +191,7 @@ h5 {
 }
 .select2-container--bootstrap-5 .select2-selection {
   border-radius: 12px !important;
-  border: 1px solid #e2def5 !important;
+  border: 1px solid #bfb5d4 !important;
   min-height: 42px !important;
   padding: 0.58rem 0.8rem !important;
   background-color: #fff !important;
@@ -190,7 +206,7 @@ h5 {
 }
 .select2-container--bootstrap-5.select2-container--focus .select2-selection,
 .select2-container--bootstrap-5.select2-container--open .select2-selection {
-  border-color: #a995ff !important;
+  border-color: #8064d9 !important;
   box-shadow: 0 0 0 4px rgba(109, 74, 255, 0.13) !important;
 }
 .select2-container--bootstrap-5 .select2-selection--single {
@@ -212,19 +228,19 @@ h5 {
   .select2-selection--single
   .select2-selection__rendered
   .select2-selection__placeholder {
-  color: #5a5580 !important;
+  color: #625b78 !important;
 }
 .select2-container--bootstrap-5.select2-container--disabled .select2-selection,
 fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   background-color: #f8f7fd !important;
   border-color: #e8e4f5 !important;
-  color: #a49fc8 !important;
+  color: #716985 !important;
   cursor: not-allowed !important;
-  opacity: 0.75;
+  opacity: 1;
   pointer-events: none !important;
 }
 .select2-container--bootstrap-5 .select2-dropdown {
-  border: 1px solid #e2def5 !important;
+  border: 1px solid #bfb5d4 !important;
   border-radius: 12px !important;
   box-shadow:
     0 14px 30px -8px rgba(43, 29, 122, 0.16),
@@ -243,7 +259,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   .select2-search
   .select2-search__field {
   border-radius: 8px !important;
-  border: 1px solid #e2def5 !important;
+  border: 1px solid #bfb5d4 !important;
   padding: 0.42rem 0.75rem !important;
   font-size: 0.88rem !important;
   font-family: inherit !important;
@@ -253,7 +269,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   .select2-dropdown
   .select2-search
   .select2-search__field:focus {
-  border-color: #a995ff !important;
+  border-color: #8064d9 !important;
   box-shadow: 0 0 0 3px rgba(109, 74, 255, 0.13) !important;
   outline: none !important;
 }
@@ -280,7 +296,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   font-weight: 600;
 }
 .select2-container--bootstrap-5 .select2-results__option--disabled {
-  color: #aaa6c6 !important;
+  color: #716985 !important;
 }
 
 /* ---------- layout ---------- */
@@ -336,7 +352,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 .side-link i {
   font-size: 1.1rem;
-  color: #a49fc8;
+  color: #796b9d;
   transition: color 0.15s;
 }
 .side-link:hover {
@@ -347,7 +363,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   color: var(--brand);
 }
 .side-link.active {
-  background: linear-gradient(135deg, #7a58ff, #5b3df5);
+  background: linear-gradient(135deg, #6846e8, #5030d8);
   color: #fff;
   font-weight: 600;
   box-shadow: 0 10px 20px -10px rgba(91, 61, 245, 0.8);
@@ -431,7 +447,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 .sidebar-card .s {
   font-size: 0.76rem;
-  opacity: 0.8;
+  opacity: 0.94;
   margin-top: 2px;
   position: relative;
   z-index: 1;
@@ -529,10 +545,11 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 .table-clean {
   margin: 0;
   --bs-table-bg: transparent;
+  --bs-table-color: var(--text);
 }
 .table-clean thead th {
-  background: #faf9ff;
-  color: var(--muted);
+  background: #eeeaf7;
+  color: #493c67;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -546,11 +563,14 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   vertical-align: middle;
   border-color: var(--line);
 }
+.table-clean tbody tr:nth-child(even) {
+  background: #faf8fd;
+}
 .table-clean tbody tr {
   transition: background 0.12s;
 }
 .table-clean tbody tr:hover {
-  background: #faf8ff;
+  background: #eee8fb;
 }
 .table-clean tbody tr:last-child td {
   border-bottom: 0;
@@ -564,11 +584,11 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 .badge-soft-green {
   background: #e5f7ee;
-  color: #0e8a4f;
+  color: #07683c;
 }
 .badge-soft-red {
   background: #fdeceb;
-  color: #cf3a3f;
+  color: #ae2630;
 }
 .badge-soft-blue {
   background: var(--brand-soft);
@@ -576,11 +596,11 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 .badge-soft-gray {
   background: #f0eef8;
-  color: #6a6590;
+  color: #574b73;
 }
 .badge-soft-orange {
   background: #fff0e8;
-  color: #d4501f;
+  color: #a43b15;
 }
 .badge i.dot {
   width: 6px;
@@ -666,7 +686,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   font-size: 1.45rem;
 }
 .profile-hero .sub {
-  opacity: 0.8;
+  opacity: 0.94;
   font-size: 0.88rem;
 }
 .profile-hero .avatar {
@@ -884,7 +904,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   color: transparent;
 }
 .login-hero p {
-  color: rgba(255, 255, 255, 0.78);
+  color: rgba(255, 255, 255, 0.94);
   font-size: 1.04rem;
   max-width: 440px;
 }
@@ -990,7 +1010,7 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
   font-weight: 800;
 }
 .hero-banner .sub {
-  opacity: 0.82;
+  opacity: 0.94;
 }
 .hero-banner .btn-light {
   background: #fff;
@@ -1034,11 +1054,11 @@ fieldset:disabled .select2-container--bootstrap-5 .select2-selection {
 }
 .tone-green {
   background: #e5f7ee;
-  color: #0e8a4f;
+  color: #07683c;
 }
 .tone-red {
   background: #fdeceb;
-  color: #cf3a3f;
+  color: #ae2630;
 }
 .tone-amber {
   background: #fff3dc;
