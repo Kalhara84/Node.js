@@ -19,6 +19,7 @@ import Inqurgr from './pages/inqurgr.tsx';
 import Account from './pages/account.tsx';
 import Inqurgr2 from './pages/inqurgr2.tsx';
 import Blank from './pages/blank.tsx';
+import Depm from './pages/depm.tsx';
 import sidebarMenuData from './sidebar.json';
 
 // Same idea as the old ctx.alive(): false once the page was left (ignore late API answers)
@@ -132,8 +133,9 @@ const ROUTES: Route[] = [
     { path: '/program/programs', page: Program, screen: 'programs' },
     { path: '/program/users', page: Program, screen: 'users' },
 
-    // Department placeholder page
-    { path: '/departments', page: Blank },
+    // Department master page
+    { path: '/departments', page: Depm },
+    { path: '/depm', page: Depm },
 
     { path: '/program/rights', page: Usrenter, screen: 'rights' },
     { path: '/usrenter', page: Usrenter, screen: 'rights' },

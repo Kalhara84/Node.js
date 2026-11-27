@@ -2,6 +2,7 @@ import { Router } from 'express';
 import program from './program';
 import attendance from './attendance';
 import holidays from './holidays';
+import depm from './depm';
 import { requireActiveAccount, requireEmployee, requireScreen } from '../lib/permissions';
 import { requireAuth, wrap } from '../middleware';
 import { AuthController } from '../controllers/auth.controller';
@@ -27,6 +28,7 @@ router.get('/auth/me', AuthController.me);
 router.use('/program', program);
 router.use('/attendance', attendance);
 router.use('/holidays', holidays);
+router.use('/depm', depm);
 
 // --- 5. Dashboard & Master Lookups ---
 router.get('/dashboard', requireScreen('dashboard'), wrap(DashboardController.summary));
