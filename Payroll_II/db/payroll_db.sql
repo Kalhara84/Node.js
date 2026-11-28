@@ -2437,7 +2437,8 @@ FROM a_sysmast m CROSS JOIN a_sysmast s CROSS JOIN (VALUES
     ('rights', 'User Rights', '007', 'M'),
     ('depm', 'Department Master', '008', 'M'),
     ('noptrn', 'Direct Transactions', '009', 'M'),
-    ('disppays', 'Display Pay Slip', '010', 'S')
+    ('disppays', 'Display Pay Slip', '010', 'S'),
+    ('sysenter', 'System Master', '011', 'M')
 ) AS page(name, description, display_order, level)
 WHERE m.sysrtp=32 AND m.sysrno='WEBAPP' AND s.sysrtp=33 AND s.sysrno='WEBPAGES'
 ON CONFLICT DO NOTHING;

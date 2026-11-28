@@ -74,6 +74,9 @@ export function homeFor(user: AuthUser | null): string {
     if (user.access?.disppays?.view) {
         return '/disppays';
     }
+    if (user.access?.sysenter?.view) {
+        return '/sysenter';
+    }
     if (user.access?.users?.view) {
         return '/program/users';
     }
