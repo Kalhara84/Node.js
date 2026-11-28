@@ -85,6 +85,29 @@
                         "screen": "noptrn"
                     }
                 ]
+            },
+            {
+                "id": "payroll-report",
+                "label": "Report",
+                "icon": "bi-file-earmark-bar-graph",
+                "children": [
+                    {
+                        "id": "payroll-current-month-report",
+                        "label": "Current Month Report",
+                        "icon": "bi-calendar3",
+                        "children": [
+                            {
+                                "id": "payroll-display-pay-slip",
+                                "label": "Display Pay Slip",
+                                "icon": "bi-receipt",
+                                "href": "/disppays",
+                                "title": "Display Pay Slip",
+                                "sub": "View and print employee pay slip",
+                                "screen": "disppays"
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     },

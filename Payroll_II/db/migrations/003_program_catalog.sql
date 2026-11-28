@@ -35,7 +35,8 @@ BEGIN
         ('programs', 'Program Master', 'M'),
         ('rights', 'User Rights', 'M'),
         ('depm', 'Department Master', 'M'),
-        ('noptrn', 'Direct Transactions', 'M')
+        ('noptrn', 'Direct Transactions', 'M'),
+        ('disppays', 'Display Pay Slip', 'S')
     ) AS pages(name, description, level)
     LOOP
         IF NOT EXISTS (SELECT 1 FROM prgmast WHERE prgapp='payroll-web' AND prgnam=page.name) THEN
