@@ -7,10 +7,22 @@ import { AlertBox, Loading } from '../components/ui.tsx';
 import Select from '../components/Select.tsx';
 import { useAlive } from '../App.tsx';
 
-type TypeOption = { sysrno: string; sysdes: string };
-type LocationOption = { locsno: number; locnam: string | null };
-type DepartmentOption = { depsno: number; depdes: string | null };
-type SysOption = { syssno: number; sysdes: string };
+type TypeOption = { 
+    sysrno: string; 
+    sysdes: string 
+};
+type LocationOption = { 
+    locsno: number; 
+    locnam: string | null 
+};
+type DepartmentOption = { 
+    depsno: number; depdes: 
+    string | null 
+};
+type SysOption = { 
+    syssno: number; 
+    sysdes: string 
+};
 
 type OptionsData = {
     types: TypeOption[];
