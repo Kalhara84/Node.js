@@ -5,7 +5,7 @@ import holidays from './holidays';
 import depm from './depm';
 import noptrn from './noptrn';
 import disppays from './disppays';
-import sysenter from './sysenter';
+import sysenter from './p_sysenter';
 import { requireActiveAccount, requireEmployee, requireScreen } from '../lib/permissions';
 import { requireAuth, wrap } from '../middleware';
 import { AuthController } from '../controllers/auth.controller';

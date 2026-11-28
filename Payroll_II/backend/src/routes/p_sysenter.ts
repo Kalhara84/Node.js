@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { wrap } from '../middleware';
 import { requireScreen } from '../lib/permissions';
-import { SysenterController as controller } from '../controllers/sysenter.controller';
+import { SysenterController as controller } from '../controllers/p_sysenter.controller';
 
 const router = Router();
 

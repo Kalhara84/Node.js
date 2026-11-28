@@ -67,15 +67,6 @@
                         "title": "Department Master",
                         "sub": "Manage department records",
                         "screen": "depm"
-                    },
-                    {
-                        "id": "payroll-system-master",
-                        "label": "System Master",
-                        "icon": "bi-gear",
-                        "href": "/sysenter",
-                        "title": "System Master",
-                        "sub": "Manage payroll system parameters",
-                        "screen": "sysenter"
                     }
                 ]
             },
@@ -147,6 +138,15 @@
                         "title": "User Master",
                         "sub": "User profiles and accounts",
                         "screen": "users"
+                    },
+                    {
+                        "id": "admin-system-master",
+                        "label": "System Master",
+                        "icon": "bi-gear",
+                        "href": "/sysenter",
+                        "title": "System Master",
+                        "sub": "Manage payroll system parameters",
+                        "screen": "sysenter"
                     }
                 ]
             },

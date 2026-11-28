@@ -22,7 +22,7 @@ import Blank from './pages/blank.tsx';
 import Depm from './pages/depm.tsx';
 import Noptrn from './pages/noptrn.tsx';
 import Disppays from './pages/disppays.tsx';
-import Sysenter from './pages/sysenter.tsx';
+import Sysenter from './pages/p_sysenter.tsx';
 import sidebarMenuData from './sidebar.json';
 
 // Same idea as the old ctx.alive(): false once the page was left (ignore late API answers)
